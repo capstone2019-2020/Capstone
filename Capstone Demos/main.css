@@ -1,0 +1,13 @@
+body {
+  font-family: Calibri;
+}
+
+a {
+  color: #57aaa8;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #74dbd8;
+  transition: all .3s ease-out;
+}

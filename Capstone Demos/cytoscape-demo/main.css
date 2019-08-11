@@ -1,0 +1,23 @@
+body {
+  font-family: Calibri;
+}
+h2 {
+  text-align: center;
+}
+
+a {
+  color: #57aaa8;
+  text-decoration: none;
+}
+
+a:hover {
+  color: #74dbd8;
+  transition: all .3s ease-out;
+}
+
+#cy {
+  width: 100%;
+  height: 100%;
+  margin: 0 0 0 0;
+  position: absolute;
+}

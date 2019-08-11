@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <title>Cytoscape Demo</title>
+   <link rel="stylesheet" type="text/css" href="/cytoscape-demo/main.css">
+</head>
+<body>
+   <h2>Cytoscape Demo</h2>
+   <a href="/">Go Back</a>
+   <div id="cy"></div>
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.9.0/cytoscape.min.js"></script>
+   <script>
+      const cy = cy = cytoscape({
+
+        container: document.getElementById('cy'), // container to render in
+
+        elements: { // list of graph elements to start with
+          nodes: [
+             { // node a
+               data: { id: 'x0' }
+             },
+             { // node b
+               data: { id: 'x1' }
+             },
+             { // node c
+               data: { id: 'x2' }
+             },
+             { // node d
+               data: { id: 'x3' }
+             },
+             { // node d
+               data: { id: 'x4' }
+             }],
+          edges: [
+             { // edge ab
+               data: { id: '1', source: 'x0', target: 'x1' }
+             },
+             { // edge bc
+               data: { id: 'a', source: 'x1', target: 'x2' }
+             },
+             { // edge ab
+               data: { id: 'b', source: 'x2', target: 'x3' }
+             },
+             { // edge ab
+               data: { id: 'c', source: 'x3', target: 'x4' }
+             },
+             { // edge ab
+               data: { id: 'd', source: 'x4', target: 'x3' }
+             },
+             { // edge ab
+               data: { id: 'e', source: 'x4', target: 'x0' }
+             }]
+        },
+
+        style: [ // the stylesheet for the graph
+          {
+            selector: 'node',
+            style: {
+              'background-color': '#666',
+              'label': 'data(id)'
+            }
+          },
+
+          {
+            selector: 'edge',
+            style: {
+              'width': 3,
+              'curves-style': 'loop',
+              'line-color': '#ccc',
+              'target-arrow-color': '#ccc',
+              'target-arrow-shape': 'triangle',
+              'label': 'data(id)'
+            }
+          }
+        ],
+
+        layout: {
+          name: 'breadthfirst'
+        }
+
+      });
+   </script>
+</body>
+</html>
