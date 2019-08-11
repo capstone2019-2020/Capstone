@@ -49,7 +49,8 @@
 1. If it is your first time running the application you will have to install the dependencies:
     1. In your terminal, cd into the 'Capstone Demos' directory 
         * ```cd <path_to_your_repo>/Capstone\ Demos/```
-    1. run the ```npm install``` command
+    1. run ```npm install```
+    1. run ```npm install -g nodemon``` to install ```nodemon``` globally
 1. Still in the Capstone Demos directory, run ```nodemon server.js``` on your command line
 1. Go to any browser, navigate to http://localhost:8080, you should see a page with links to all the demos that we added
 
