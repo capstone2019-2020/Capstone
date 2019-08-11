@@ -7,6 +7,7 @@
 </head>
 <body>
    <h2>Cytoscape Demo</h2>
+   <a href="http://js.cytoscape.org/demos/edge-types/">Official Demo</a>
    <a href="/">Go Back</a>
    <div id="cy"></div>
    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.9.0/cytoscape.min.js"></script>
@@ -43,7 +44,7 @@
                data: { id: 'b', source: 'x2', target: 'x3' }
              },
              { // edge ab
-               data: { id: 'c', source: 'x3', target: 'x4' }
+               data: { id: '123', source: 'x3', target: 'x4' }
              },
              { // edge ab
                data: { id: 'd', source: 'x4', target: 'x3' }
@@ -66,7 +67,10 @@
             selector: 'edge',
             style: {
               'width': 3,
-              'curves-style': 'loop',
+              'curve-style': 'bezier',
+              'control-point-distance': '50px',
+              'control-point-weight': '0.7', // '0': curve towards source node, '1': towards target node.
+              'edge-distances': 'intersection',
               'line-color': '#ccc',
               'target-arrow-color': '#ccc',
               'target-arrow-shape': 'triangle',
@@ -76,7 +80,8 @@
         ],
 
         layout: {
-          name: 'breadthfirst'
+          name: 'grid',
+          rows: 1
         }
 
       });

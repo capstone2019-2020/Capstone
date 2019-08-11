@@ -8,6 +8,8 @@ h2 {
 a {
   color: #57aaa8;
   text-decoration: none;
+  display: block;
+  text-align: center;
 }
 
 a:hover {
