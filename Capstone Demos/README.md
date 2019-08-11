@@ -1,9 +1,9 @@
-##INTRODUCTION: 
+## INTRODUCTION: 
 * Capstone Demos will contain all the graph/UI demos that we are going to display to Khoman for the August 14th meeting
 * When the application is running, you will be able to navigate to 'http://localhost:8080' on your computer to see a list of links for the demos that we created
 * The implementation assumes that your demo can be accessed through an HTML file 
 
-##INSTRUCTIONS TO ADD DEMO:
+## INSTRUCTIONS TO ADD DEMO:
 1. Create another folder under Capstone Demos containing your code 
     * i.e. cytoscape-demo: Demo for the Cytoscape.js graph library
 1. Capstone Demos/server.js: add code to specify the URI for your demo 
@@ -40,12 +40,12 @@
     * You should be able to navigate to http://localhost:8080/<your_uri_path_from_step_2> and see your demo          
 
 
-##HOW TO START APPLICATION
-#####Preconditions:
+## HOW TO START APPLICATION
+##### Preconditions:
 1. Must have  Node.js and the node package manager (```npm```) installed in your computer 
     1. Follow instructions here: https://www.npmjs.com/get-npm
 
-#####Steps:
+##### Steps:
 1. If it is your first time running the application you will have to install the dependencies:
     1. In your terminal, cd into the 'Capstone Demos' directory 
         * ```cd <path_to_your_repo>/Capstone\ Demos/```
