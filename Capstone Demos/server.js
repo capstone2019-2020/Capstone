@@ -15,5 +15,9 @@ app.get('/cytoscape', function(req, res) {
   res.sendfile('cytoscape-demo/index.html'); // load the single view file (angular will handle the page changes on the front-end)
 });
 
+app.get('/gojs', function(req, res) {
+  res.sendfile('gojs-demo/index.html');
+});
+
 app.listen(8080);
 console.log("App listening on port 8080");
