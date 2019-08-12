@@ -19,5 +19,9 @@ app.get('/gojs', function(req, res) {
   res.sendfile('gojs-demo/index.html');
 });
 
+app.get('/svg-js', function(req, res) {
+  res.sendfile('svg-js-demo/index.html');
+});
+
 app.listen(8080);
 console.log("App listening on port 8080");

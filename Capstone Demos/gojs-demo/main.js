@@ -140,10 +140,7 @@
   load();
 })();
 
-// Show the diagram's model in JSON format
-function save() {
-  document.getElementById("mySavedModel").value = myDiagram.model.toJson();
-}
+
 function load() {
   myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
 }
