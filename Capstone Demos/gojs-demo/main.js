@@ -30,10 +30,10 @@
     $(go.Node, "Auto",
       new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
       // define the node's outer shape, which will surround the TextBlock
-      $(go.Shape, "RoundedRectangle",
+      $(go.Shape, "Circle",
         {
           parameter1: 20,  // the corner has a large radius
-          fill: $(go.Brush, "Linear", { 0: "rgb(254, 201, 0)", 1: "rgb(254, 162, 0)" }),
+          fill: "rgb(194, 194, 194)",
           stroke: null,
           portId: "",  // this Shape is the Node's port, not the whole Node
           fromLinkable: true, fromLinkableSelfNode: true, fromLinkableDuplicates: true,
