@@ -62,13 +62,13 @@ function getUserInput() {
 // The equation variables must be in the form of lowercase x 
 // Objects Node and Edge
 function Node (id) {
-	this.id = id,
-	this.outgoingEdges = []
+    this.id = id,
+    this.outgoingEdges = []
 };
 
 function Edge (weight, startNode, endNode) {
-	this.weight = weight,
-	this.startNode = startNode,
+    this.weight = weight,
+    this.startNode = startNode,
     this.endNode = endNode,
     this.id = startNode+endNode
 };
@@ -76,7 +76,7 @@ function Edge (weight, startNode, endNode) {
 // Determining if the coefficient is negative or positive
 function fnDetermineNegativeWeight (numberOfVariablesRHS, equation, node, traverse) {
 
-    if (equation.match('-') && numberOfVariablesRHS != 0) {
+    if (equation.toString().match('-') && numberOfVariablesRHS != 0) {
         // console.log(`Node id: ${node.id}, Equation: ${equation}, number of variables left: ${numberOfVariablesRHS}, traverse number is: ${traverse}`);
         let variable = node.outgoingEdges[traverse].endNode.toString();
         // console.log(`Variable to be split by is: ${variable}`);
@@ -111,9 +111,8 @@ function computeSFG (params) {
     // for (let i in nodes) {
     for (let i = 0; i < params.length; i++) {
         //Access the equations and split by lhs and rhs
-        let eq = algebra.parse(params[i]);
-        termsoflhs.push(eq.lhs.terms);
-        termsofrhs.push(eq.rhs.terms);
+        termsoflhs.push(params[i].lhs.terms);
+        termsofrhs.push(params[i].rhs.terms);
     }   
     
     // To store into the nodes, go thorugh the termsoflhs list array
@@ -126,11 +125,12 @@ function computeSFG (params) {
             let tempcoeff = math.rationalize(temp[j], {}, true);
             let endNode = tempcoeff.variables[0];
             let weight = tempcoeff.coefficients[1];
-            let verify = endNode.toString().split("x");
+	    let toSplit = endNode.match(/[a-z]/);
+            let verify = endNode.toString().split(toSplit);
             
             // If the coefficient is not just a number then ensure it is verified as a weight
             if (verify[0].match(/^[a-zA-Z]+$/)) {
-                endNode = "x"+verify[1];
+                endNode = toSplit+verify[1];
                 if (weight == 1) {
                     weight = verify[0];
                 } else {
