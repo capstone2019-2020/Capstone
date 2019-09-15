@@ -2,6 +2,7 @@
  * Import the required libraries
  */
 const algebra = require('algebra.js');
+const math = require('mathjs');
 const readline = require('readline');
 
 /**
