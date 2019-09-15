@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/capstone2019-2020/Capstone#readme",
   "devDependencies": {
-    "algebra.js": "^0.2.6"
+    "algebra.js": "^0.2.6",
+    "mathjs": "^6.2.1"
   }
 }
