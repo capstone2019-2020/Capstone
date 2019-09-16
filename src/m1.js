@@ -73,36 +73,7 @@ function Edge (weight, startNode, endNode) {
     this.id = startNode+endNode
 };
 
-// Determining if the coefficient is negative or positive
-function fnDetermineNegativeWeight (numberOfVariablesRHS, equation, node, traverse) {
-
-    if (equation.toString().match('-') && numberOfVariablesRHS != 0) {
-        // console.log(`Node id: ${node.id}, Equation: ${equation}, number of variables left: ${numberOfVariablesRHS}, traverse number is: ${traverse}`);
-        let variable = node.outgoingEdges[traverse].endNode.toString();
-        // console.log(`Variable to be split by is: ${variable}`);
-        let verify = equation.toString().split(variable);
-        // console.log(`Verifying: lhs is: ${verify[0]} and rhs is: ${verify[1]}`);
-        
-        if (verify[0].search("-") != -1) {
-            node.outgoingEdges[traverse].weight = "-"+node.outgoingEdges[traverse].weight; 
-            // console.log(`New weight of the Edge ${variable} is: ${node.outgoingEdges[traverse].weight}`);
-            if (numberOfVariablesRHS != traverse) {
-                value = fnDetermineNegativeWeight(numberOfVariablesRHS-1, verify[1], node, traverse+1);
-            }
-        } else if (numberOfVariablesRHS != traverse) {        
-            value = fnDetermineNegativeWeight(numberOfVariablesRHS-1, verify[1], node, traverse+1);
-        } else {
-            // console.log("No more equation to evaluate");
-            return 0;
-        }  
-    } else {
-        // console.log("The sign - does not exists.")
-        return 0;
-    }
-};
-
-// Create a dynamic array and input each node and return the array when completed
-// Creating nodes and edges
+// Create a dynamic array and input each node
 function computeSFG (params) {
     let nodes = [];
     let termsoflhs = [];
@@ -117,30 +88,36 @@ function computeSFG (params) {
     
     // To store into the nodes, go thorugh the termsoflhs list array
     for (let i = 0; i < termsoflhs.length; i++) {
-        temp = termsofrhs[i].toString().split(",");
+        var tempTerm = termsofrhs[i];
         newNode = new Node (termsoflhs[i].toString());
         
         // Divide the rhs into coefficients and variables and store into the edges
-        for (let j = 0; j < temp.length; j++) {
-            let tempcoeff = math.rationalize(temp[j], {}, true);
-            let endNode = tempcoeff.variables[0];
-            let weight = tempcoeff.coefficients[1];
-	    let toSplit = endNode.match(/[a-z]/);
-            let verify = endNode.toString().split(toSplit);
-            
-            // If the coefficient is not just a number then ensure it is verified as a weight
-            if (verify[0].match(/^[a-zA-Z]+$/)) {
-                endNode = toSplit+verify[1];
-                if (weight == 1) {
-                    weight = verify[0];
-                } else {
-                    weight = weight+verify[0]
-                }
+        for (let j = 0; j < tempTerm.length; j++) {
+            var weight = tempTerm[j].coefficient();
+            var endNode = tempTerm[j].variables;
+
+            // Means there is a alphabet as a coefficient
+            if (endNode.length != 1) {
+                
+              var temp = endNode[endNode.length-1].toString();
+              var toBeWeight = endNode.toString().split(temp)
+              endNode = endNode[endNode.length-1];
+
+              if (weight == 1) {
+                weight = toBeWeight;
+              } else if (weight == -1) {
+                weight = "-"+toBeWeight;
+              } else {
+                weight = weight.toString()+toBeWeight[0];
+              }
+              
+              // Get rid of the commas in the weight string
+              if (weight.toString().search(',') != -1) {
+                weight = weight.toString().replace(/,/g, '');
+              }
             }
             newNode.outgoingEdges.push(new Edge (weight, termsoflhs[i].toString(), endNode));      
         }
-        // Determine if the weight is negative or not using the endnodes and original equation given
-        testingNegativeCo = fnDetermineNegativeWeight (temp.length, params[i], newNode, 0);
         nodes.push(newNode);
     }
     return nodes;
