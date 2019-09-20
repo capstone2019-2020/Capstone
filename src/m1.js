@@ -5,6 +5,17 @@ const algebra = require('algebra.js');
 const math = require('mathjs');
 const readline = require('readline');
 
+
+function getEquations() {
+  /* TODO: implement */
+  return {};
+}
+
+function computeMasons(nodes, edges, start, end) {
+  /* TODO: implement */
+  return {};
+}
+
 /**
  * Retrieve user inputs:
  * - n - # of equations
@@ -41,6 +52,8 @@ function getUserInput() {
       }
     });
   });
+
+
 
   /*
    * For testing purposes, print out the variable values
@@ -134,4 +147,11 @@ function outputSFG (sfgnodes) {
         console.log(`Connections: `);
         sfgnodes[i].outgoingEdges.forEach((eq) => console.log(`Edge id ${eq.id}: connected node = ${eq.endNode}, weight = ${eq.weight}`));
     }
+};
+
+/**
+ * Export functions as part of m1 module
+ */
+module.exports = {
+  Node, Edge, outputSFG, computeSFG, computeMasons, getEquations, getUserInput
 };
