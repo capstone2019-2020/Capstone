@@ -21,8 +21,15 @@ function computeMasons(nodes, edges, start, end) {
   * 3. Generate denominator
   *   denom = 1 - all loop gains + all 2 non-touching loops - all 3 non-touching loops ...
   * */
-  const allLoops = m1helper.findAllLoops(nodes);
+  const allLoops = m1helper.findAllLoops(nodeList);
+  allLoops.forEach((loop) => m1helper.calculateLoopGain(loop));
+  // TODO: const nonTouchingLoops = m1helper.findNonTouching(allLoops);
+  // TODO: const denom = m1helper.getDenominator(allLoops, nonTouchingLoops);
   return {};
+}
+
+function printEquation(eq) {
+  console.log(eq.toString());
 }
 
 /**

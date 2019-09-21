@@ -1,3 +1,6 @@
+const algebra = require('algebra.js');
+const Expression = algebra.Expression;
+
 const DEBUG = 0;
 
 /**
@@ -84,6 +87,39 @@ function printEdges(edges) {
     str +=` -> ${e.endNode}`;
   })
   console.log(str);
+}
+
+function findNonTouchingLoops(loops) {
+
+}
+
+/**
+ * Returns the denominator for the transfer function using Mason's Rule formula
+ *   Denominator = 1 - all loop gains + all 2 non-touching - all 3 non-touching ...
+ *
+ * @param allLoops - All simple cycles in a graph
+ * @param nonTouching - List of nth order non-touching loops
+ */
+function getDenominator(allLoops, nonTouching) {
+
+}
+
+/**
+ * Calculate the loop gain using the edge weights
+ *
+ * @param edges
+ * @returns {Expression|*}
+ */
+function calculateLoopGain(edges) {
+  let ex = new Expression(1);
+  edges.forEach((e) => {
+    ex = ex.multiply(e.weight);
+  });
+
+  if (DEBUG) {
+    console.log(`Loop Gain: ${ex.toString()}`);
+  }
+  return ex;
 }
 
 /*
