@@ -4,6 +4,7 @@
 const algebra = require('algebra.js');
 const math = require('mathjs');
 const readline = require('readline');
+const m1helper = require('./m1helper.js');
 
 
 function getEquations() {
@@ -13,6 +14,14 @@ function getEquations() {
 
 function computeMasons(nodes, edges, start, end) {
   /* TODO: implement */
+
+  /* TODO: calculate denominator
+  * 1. Get all loops in the SFG -- DONE
+  * 2. Get all of the nth non-touching loops
+  * 3. Generate denominator
+  *   denom = 1 - all loop gains + all 2 non-touching loops - all 3 non-touching loops ...
+  * */
+  const allLoops = m1helper.findAllLoops(nodes);
   return {};
 }
 
