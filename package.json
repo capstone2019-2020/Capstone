@@ -4,7 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "mocha test/\\*.js"
+    "test_m1": "mocha --max-old-space-size=16384 test/m1.js"
   },
   "repository": {
     "type": "git",
@@ -18,7 +18,11 @@
   "homepage": "https://github.com/capstone2019-2020/Capstone#readme",
   "devDependencies": {
     "algebra.js": "^0.2.6",
+    "jsonschema": "^1.2.4",
     "mathjs": "^6.2.1",
     "mocha": "^6.2.0"
+  },
+  "dependencies": {
+    "uuid": "^3.3.3"
   }
 }
