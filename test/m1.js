@@ -144,7 +144,7 @@ describe('computeMasons()', function() {
   const {computeMasons} = require('../src/m1');
 
   const alg_equations = equations.map(eq_obj => ({
-    equations: eq_obj.equations.map(e => algebra.parse(e))
+    equations: eq_obj.equations.map(e => algebra.parse(e)),
     start: eq_obj.start,
     end: eq_obj.end,
     n: algebra.parse(eq_obj.n),
@@ -187,7 +187,7 @@ describe('computeMasons()', function() {
 
       for (let i = 0; i < I; i++) {
         try {
-          eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(I_EASY));
+          eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(I));
           sfg = suite.simple_sfg(eqns);
 
           start = process.hrtime.bigint();

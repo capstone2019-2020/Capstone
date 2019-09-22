@@ -2,6 +2,12 @@ const {Equation, Expression} = require('algebra.js');
 const {validate} = require('jsonschema');
 const DEBUG = true;
 
+/**
+ * Set DEBUG to true if want verbose logs on tests, else, won't print anything
+ * @param params - console.log params
+ */
+function debug_log(...params) { if (DEBUG) console.log(...params) }
+
 const Schema = function Schema() {
   return {
     Init: (rest) => ({
@@ -27,12 +33,6 @@ const Schema = function Schema() {
     PlainObject: () => ({type: 'object'}),
   };
 };
-
-function debug_log(...params) {
-  if (DEBUG) {
-    console.log(...params);
-  }
-}
 
 exports.gen_eqns_mat = function gen_eqns_mat(n) {
   let M = [];
@@ -270,6 +270,7 @@ exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d)
       map_of_terms[term] = Math.ceil(Math.random() * 1000)
     );
 
+    debug_log('map_of_terms', map_of_terms);
     output_n_eval = parseFloat(output_n.eval(map_of_terms).toString());
     output_d_eval = parseFloat(output_d.eval(map_of_terms).toString());
     ans_n_eval = parseFloat(ans_n.eval(map_of_terms).toString());
@@ -278,6 +279,7 @@ exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d)
     output_eval = output_n_eval / output_d_eval;
     ans_eval = ans_n_eval / ans_d_eval;
 
+    debug_log('output_eval | ans_eval', output_eval, ans_eval);
     if (output_eval !== ans_eval) {
       valid = false;
       break;
