@@ -237,3 +237,53 @@ exports.perf_stats = function perf_stats(highest, lowest, total, iters) {
     average: Number(total / iters) / 100000
   }
 };
+
+/**
+ * Samples random inputs for each expression (n / d); only when all iterations
+ * are successful is the answer deemed acceptable.
+ *
+ * Fraction = (n / d)
+ * where n = numerator
+ *       d = denominator
+ */
+exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d) {
+  let valid = true;
+
+  const map_expr_terms = (expr, map, default_val) => {
+    expr.terms.forEach(term =>
+      term.variables.forEach(v => map[v] = default_val)
+    );
+  };
+
+  let map_of_terms = {};
+  map_expr_terms(output_n, map_of_terms, 0);
+  map_expr_terms(output_d, map_of_terms, 0);
+  map_expr_terms(ans_n, map_of_terms, 0);
+  map_expr_terms(ans_d, map_of_terms, 0);
+
+  // for each term in n, d - substitute for random integer
+  let output_eval, output_n_eval, output_d_eval;
+  let ans_eval,ans_n_eval, ans_d_eval;
+  for (let i = 0; i < 100; i++) {
+    // perturb terms values - non-zero
+    Object.keys(map_of_terms).forEach(term =>
+      map_of_terms[term] = Math.ceil(Math.random() * 1000)
+    );
+
+    output_n_eval = parseFloat(output_n.eval(map_of_terms).toString());
+    output_d_eval = parseFloat(output_d.eval(map_of_terms).toString());
+    ans_n_eval = parseFloat(ans_n.eval(map_of_terms).toString());
+    ans_d_eval = parseFloat(ans_d.eval(map_of_terms).toString());
+
+    output_eval = output_n_eval / output_d_eval;
+    ans_eval = ans_n_eval / ans_d_eval;
+
+    if (output_eval !== ans_eval) {
+      valid = false;
+      break;
+    }
+  }
+
+  return valid;
+};
+
