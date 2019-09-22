@@ -122,9 +122,74 @@ function calculateLoopGain(edges) {
   return ex;
 }
 
+/**
+ * Returns a map of all sets of non-touching loops taken i at a time (i = [2, n]) given all of the loops in a graph
+ *
+ * @param allLoops
+ * @returns {Map<i, [list of loo[s]]} where i indicates that the loops were taken i at a time (starts with 2)
+ */
+function findNonTouching(allLoops) {
+  const numLoops = allLoops.length;
+  let nonTouchingLoops = new Map();
+  let prevSet, prevSetLength, ithNonTouch;
+  let currLoop, currNodes, remainingLoop, remainingNodes, touching, loopGain, concatLoops;
+  let existingGains = [];     // used to keep track of which loops were already counted
+
+  // Initialize result map
+  nonTouchingLoops.set(1, allLoops);
+
+  let i, j; // start with non-touching loops taken 2 at a time
+  for (i = 2; i <= numLoops; i++ ) {
+    prevSet = nonTouchingLoops.get(i - 1);
+    prevSetLength = prevSet.length;
+    ithNonTouch = nonTouchingLoops.set(i, []).get(i);
+
+    for (j = 0; j < prevSetLength; j++) {
+      currLoop = prevSet[j];
+      currNodes = prevSet[j].map((e) => e.endNode);
+
+      // Compare against other loops in the graph
+      for (innerIndex = 0; innerIndex < numLoops; innerIndex++ ) {
+        remainingLoop = allLoops[innerIndex];
+        concatLoops = remainingLoop.concat(currLoop);
+
+        // check for duplicates
+        loopGain = concatLoops.map((edge) => edge.weight).sort().toString();
+        if (existingGains.includes(loopGain))
+          continue;
+
+        remainingNodes = remainingLoop.map((e) => e.endNode);
+        touching = remainingNodes.some((node) => currNodes.includes(node));
+        if (!touching) {
+          existingGains.push(loopGain);
+          ithNonTouch.push(concatLoops);
+        }
+      }
+    }
+
+    // We didnt find any ith non-touching loops - won't find anymore so stop looking and cleanup result map
+    if (!ithNonTouch.length) {
+      nonTouchingLoops.delete(i);
+      nonTouchingLoops.delete(1);
+      break;
+    }
+  }
+
+  if (DEBUG) {
+    console.log('===================================');
+    console.log('PRINTING OUT ALL NON-TOUCHING LOOPS:');
+    console.log('===================================');
+    nonTouchingLoops.forEach((value, key) => {
+      console.log(`${key} =>`);
+      console.log(value);
+    });
+  }
+  return nonTouchingLoops;
+}
+
 /*
  * Export helper functions
  */
 module.exports = {
-  findAllLoops
+  findAllLoops, findNonTouching
 };

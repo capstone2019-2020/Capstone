@@ -17,12 +17,12 @@ function computeMasons(nodes, edges, start, end) {
 
   /* TODO: calculate denominator
   * 1. Get all loops in the SFG -- DONE
-  * 2. Get all of the nth non-touching loops
+  * 2. Get all of the nth non-touching loops -- DONE
   * 3. Generate denominator
   *   denom = 1 - all loop gains + all 2 non-touching loops - all 3 non-touching loops ...
   * */
-  const allLoops = m1helper.findAllLoops(nodeList);
-  // TODO: const nonTouchingLoops = m1helper.findNonTouching(allLoops);
+  const allLoops = m1helper.findAllLoops(nodes);
+  const nonTouchingLoops = m1helper.findNonTouching(allLoops);
   // TODO: const denom = m1helper.getDenominator(allLoops, nonTouchingLoops);
   return {};
 }
