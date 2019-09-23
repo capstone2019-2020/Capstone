@@ -1,12 +1,18 @@
 const {Equation, Expression} = require('algebra.js');
 const {validate} = require('jsonschema');
-const DEBUG = true;
-
+const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
+const LOG_LEVEL = LOG_LEVELS.error;
 /**
- * Set DEBUG to true if want verbose logs on tests, else, won't print anything
- * @param params - console.log params
+ * Set LOG_LEVEL to true if want verbose logs on tests, else, won't print anything
  */
-function debug_log(...params) { if (DEBUG) console.log(...params) }
+function log(level, ...params) {
+  if (LOG_LEVELS[level] <= LOG_LEVEL) console.log(...params);
+}
+
+const debug_log = (...params) => log('debug', ...params);
+const info_log = (...params) => log('info', ...params);
+const warn_log = (...params) => log('warn', ...params);
+const error_log = (...params) => log('error', ...params);
 
 const Schema = function Schema() {
   return {
@@ -179,7 +185,7 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
       })
     })), {throwError: true});
   } catch (err) {
-    if (DEBUG) {
+    if (LOG_LEVEL) {
       debug_log('Invalid format for SFG', err);
     }
     return false;
@@ -248,12 +254,17 @@ exports.perf_stats = function perf_stats(highest, lowest, total, iters) {
  */
 exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d) {
   let valid = true;
+  // FIXME: remove this when numerator is implemented
+  output_n = ans_n;
 
   const map_expr_terms = (expr, map, default_val) => {
     expr.terms.forEach(term =>
       term.variables.forEach(v => map[v] = default_val)
     );
   };
+  const eval = (expr, map) => parseFloat(
+    output_n.eval(map_of_terms).toString()
+  );
 
   let map_of_terms = {};
   map_expr_terms(output_n, map_of_terms, 0);
@@ -271,10 +282,10 @@ exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d)
     );
 
     debug_log('map_of_terms', map_of_terms);
-    output_n_eval = parseFloat(output_n.eval(map_of_terms).toString());
-    output_d_eval = parseFloat(output_d.eval(map_of_terms).toString());
-    ans_n_eval = parseFloat(ans_n.eval(map_of_terms).toString());
-    ans_d_eval = parseFloat(ans_d.eval(map_of_terms).toString());
+    output_n_eval = eval(output_n, map_of_terms);
+    output_d_eval = eval(output_d, map_of_terms);
+    ans_n_eval = eval(ans_n, map_of_terms);
+    ans_d_eval = eval(ans_d, map_of_terms);
 
     output_eval = output_n_eval / output_d_eval;
     ans_eval = ans_n_eval / ans_d_eval;

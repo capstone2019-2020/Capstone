@@ -24,7 +24,7 @@ function computeMasons(nodes, edges, start, end) {
   const allLoops = m1helper.findAllLoops(nodes);
   const nonTouchingLoops = m1helper.findNonTouching(allLoops);
   const denom = m1helper.calculateDenominator(allLoops, nonTouchingLoops);
-  return {};
+  return {d: denom};
 }
 
 /**

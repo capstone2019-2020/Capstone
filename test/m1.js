@@ -63,8 +63,8 @@ describe('computeSFG()', function() {
       const MAX_TOTAL_EXEC_MED = 6000;
       const MAX_TOTAL_EXEC_HARD = 7000;
       const I_EASY = 30;
-      const I_MED = 100;
-      const I_HARD = 200;
+      const I_MED = 30;
+      const I_HARD = 30;
 
       const perf_computeSFG = (I) => {
         let total = BigInt(0), highest = BigInt(0), lowest = BigInt(0);
@@ -178,34 +178,35 @@ describe('computeMasons()', function() {
     const MAX_TOTAL_EXEC_HARD = 7000;
     const I_EASY = 30;
     const I_MED = 100;
-    const I_HARD = 200;
+    const I_HARD = 500;
 
     const perf_computeMasons = (I) => {
       let total = BigInt(0), highest = BigInt(0), lowest = BigInt(0);
       let start, end;
-      let eqns, sfg;
+
+      const test_eqns = [alg_equations[0], alg_equations[2], alg_equations[3],
+        alg_equations[4], alg_equations[5]];
+      let alg_eqn;
 
       for (let i = 0; i < I; i++) {
-        try {
-          eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(I));
-          sfg = suite.simple_sfg(eqns);
+        alg_eqn = test_eqns[Math.floor(Math.random() * test_eqns.length)];
+        start = process.hrtime.bigint();
+        const sfg = suite.simple_sfg(alg_eqn.equations);
+        const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
+        end = process.hrtime.bigint();
 
-          start = process.hrtime.bigint();
-          computeMasons(sfg, 'x_0', `x_${eqns.length - 1}`);
-          end = process.hrtime.bigint();
+        let t = end - start; // nanoseconds
+        total += t;
+        highest = highest > t ? highest : t;
+        lowest = lowest < t ? lowest : t;
 
-          let t = end - start; // nanoseconds
-          total += t;
-          highest = highest > t ? highest : t;
-          lowest = lowest < t ? lowest : t;
-        } catch (err) {
-          throw err;
-        }
+        assert.ok(suite.verify_masons(n, d, alg_eqn.n, alg_eqn.d));
       }
       return suite.perf_stats(highest, lowest, total, BigInt(I));
     };
 
     it('easy', function() {
+      console.log('start perf easy');
       let result;
       try {
         result = perf_computeMasons(I_EASY);
