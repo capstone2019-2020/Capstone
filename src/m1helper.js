@@ -89,10 +89,6 @@ function printEdges(edges) {
   console.log(str);
 }
 
-function findNonTouchingLoops(loops) {
-
-}
-
 /**
  * Returns the denominator for the transfer function using Mason's Rule formula
  *   Denominator = 1 - all loop gains + all 2 non-touching - all 3 non-touching ...
@@ -100,8 +96,28 @@ function findNonTouchingLoops(loops) {
  * @param allLoops - All simple cycles in a graph
  * @param nonTouching - List of nth order non-touching loops
  */
-function getDenominator(allLoops, nonTouching) {
+function calculateDenominator(allLoops, nonTouching) {
+  let denom = new Expression(0).add(1);
 
+  // Calculate sum of individual loop gains and subtract from exp
+  allLoops.forEach((loop) => {
+    denom = denom.subtract(calculateLoopGain(loop));
+  });
+
+  // Calculate sum of non-touching loop gains and subtract/add to exp depending on its index
+  nonTouching.forEach((loops, index) => {
+    let loopGain = new Expression();
+    loops.forEach((loop) => {
+      loopGain = loopGain.add(calculateLoopGain(loop));
+    });
+    if ((index % 2) === 0) {
+      denom = denom.add(loopGain);
+    } else {
+      denom = denom.subtract(loopGain);
+    }
+  });
+
+  return denom;
 }
 
 /**
@@ -191,5 +207,5 @@ function findNonTouching(allLoops) {
  * Export helper functions
  */
 module.exports = {
-  findAllLoops, findNonTouching
+  findAllLoops, findNonTouching, calculateDenominator
 };

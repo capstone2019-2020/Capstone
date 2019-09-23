@@ -23,12 +23,8 @@ function computeMasons(nodes, edges, start, end) {
   * */
   const allLoops = m1helper.findAllLoops(nodes);
   const nonTouchingLoops = m1helper.findNonTouching(allLoops);
-  // TODO: const denom = m1helper.getDenominator(allLoops, nonTouchingLoops);
+  const denom = m1helper.calculateDenominator(allLoops, nonTouchingLoops);
   return {};
-}
-
-function printEquation(eq) {
-  console.log(eq.toString());
 }
 
 /**
