@@ -25,113 +25,107 @@ const algebra = require('algebra.js');
  * Each variable can be isolated through taking the inverse matrix.
  */
 describe('computeSFG()', function() {
-  (() => {
-    const {computeSFG} = require('../src/m1');
+  const {computeSFG} = require('../src/m1');
 
-    const alg_equations = equations.map(eq_obj =>
-      eq_obj.equations.map(e => algebra.parse(e))
-    );
+  const alg_equations = equations.map(eq_obj =>
+    eq_obj.equations.map(e => algebra.parse(e))
+  );
 
-    describe('func', function() {
-      it ('correctness 1', function() {
-        const test_eqns = [alg_equations[1], alg_equations[6], alg_equations[7]];
-        test_eqns.forEach(equations => {
-          const output = computeSFG(equations);
-          assert.ok(suite.verify_sfg(output, suite.simple_sfg(equations)));
-        });
+  describe('func', function() {
+    it ('correctness 1', function() {
+      const test_eqns = [alg_equations[1], alg_equations[6], alg_equations[7]];
+      test_eqns.forEach(equations => {
+        const output = computeSFG(equations);
+        assert.ok(suite.verify_sfg(output, suite.simple_sfg(equations)));
       });
-      it ('correctness 2', function() {
-        const test_eqns = [alg_equations[0], alg_equations[2], alg_equations[3],
-          alg_equations[4], alg_equations[5]];
+    });
+    it ('correctness 2', function() {
+      const test_eqns = [alg_equations[0], alg_equations[2], alg_equations[3],
+        alg_equations[4], alg_equations[5]];
 
-        test_eqns.forEach(equations => {
-          const output = computeSFG(equations);
-          assert.ok(suite.verify_sfg(output, suite.simple_sfg(equations)));
-        });
+      test_eqns.forEach(equations => {
+        const output = computeSFG(equations);
+        assert.ok(suite.verify_sfg(output, suite.simple_sfg(equations)));
       });
-      it ('correctness 3', function() {
-        // test large input
-        const eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(50));
+    });
+    it ('correctness 3', function() {
+      // test large input
+      const eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(50));
+      const output = computeSFG(eqns);
+      assert.ok(suite.verify_sfg(output, suite.simple_sfg(eqns)));
+    });
+  });
+  describe('perf', function() {
+    // perf test metrics (time in ms), I = iterations & size of input
+    const MAX_SINGLE_EXEC = 300;
+    const MAX_TOTAL_EXEC_EASY = 5000;
+    const MAX_TOTAL_EXEC_MED = 6000;
+    const MAX_TOTAL_EXEC_HARD = 7000;
+    const I_EASY = 30;
+    const I_MED = 30;
+    const I_HARD = 30;
+
+    const perf_computeSFG = (I) => {
+      let total = BigInt(0), highest = BigInt(0), lowest = BigInt(0);
+      let start, end;
+      let eqns;
+
+      for (let i = 0; i < I; i++) {
+        eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(I));
+        start = process.hrtime.bigint();
         const output = computeSFG(eqns);
+        end = process.hrtime.bigint();
+
+        let t = end - start; // nanoseconds
+        total += t;
+        highest = highest > t ? highest : t;
+        lowest = lowest < t ? lowest : t;
+
         assert.ok(suite.verify_sfg(output, suite.simple_sfg(eqns)));
-      });
+      }
+      return suite.perf_stats(highest, lowest, total, BigInt(I));
+    };
+
+    it('easy', function() {
+      let result;
+      try {
+        result = perf_computeSFG(I_EASY);
+      } catch (err) {
+        assert.ok(false);
+      }
+
+      this.timeout(100000);
+      assert.ok(result.highest < MAX_SINGLE_EXEC
+        && result.total < MAX_TOTAL_EXEC_EASY
+      );
     });
-    describe('perf', function() {
-      // perf test metrics (time in ms), I = iterations & size of input
-      const MAX_SINGLE_EXEC = 300;
-      const MAX_TOTAL_EXEC_EASY = 5000;
-      const MAX_TOTAL_EXEC_MED = 6000;
-      const MAX_TOTAL_EXEC_HARD = 7000;
-      const I_EASY = 30;
-      const I_MED = 30;
-      const I_HARD = 30;
+    it('medium', function() {
+      let result;
+      try {
+        result = perf_computeSFG(I_MED);
+      } catch (err) {
+        assert.ok(false);
+      }
 
-      const perf_computeSFG = (I) => {
-        let total = BigInt(0), highest = BigInt(0), lowest = BigInt(0);
-        let start, end;
-        let eqns;
-
-        for (let i = 0; i < I; i++) {
-          try {
-            eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(I));
-            start = process.hrtime.bigint();
-            const output = computeSFG(eqns);
-            end = process.hrtime.bigint();
-
-            let t = end - start; // nanoseconds
-            total += t;
-            highest = highest > t ? highest : t;
-            lowest = lowest < t ? lowest : t;
-
-            assert.ok(suite.verify_sfg(output, suite.simple_sfg(eqns)));
-          } catch (err) {
-            throw err;
-          }
-        }
-        return suite.perf_stats(highest, lowest, total, BigInt(I));
-      };
-
-      it('easy', function() {
-        let result;
-        try {
-          result = perf_computeSFG(I_EASY);
-        } catch (err) {
-          assert.ok(false);
-        }
-
-        this.timeout(100000);
-        assert.ok(result.highest < MAX_SINGLE_EXEC
-          && result.total < MAX_TOTAL_EXEC_EASY
-        );
-      });
-      it('medium', function() {
-        let result;
-        try {
-          result = perf_computeSFG(I_MED);
-        } catch (err) {
-          assert.ok(false);
-        }
-
-        this.timeout(100000);
-        assert.ok(result.highest < MAX_SINGLE_EXEC
-          && result.total < MAX_TOTAL_EXEC_MED
-        );
-      });
-      it ('hard', function() {
-        let result;
-        try {
-          result = perf_computeSFG(I_HARD);
-        } catch (err) {
-          assert.ok(false);
-        }
-
-        this.timeout(100000);
-        assert.ok(result.highest < MAX_SINGLE_EXEC
-          && result.total < MAX_TOTAL_EXEC_HARD
-        );
-      });
+      this.timeout(100000);
+      assert.ok(result.highest < MAX_SINGLE_EXEC
+        && result.total < MAX_TOTAL_EXEC_MED
+      );
     });
-  })();
+    it ('hard', function() {
+      let result;
+      try {
+        result = perf_computeSFG(I_HARD);
+      } catch (err) {
+        assert.ok(false);
+      }
+
+      this.timeout(100000);
+      assert.ok(result.highest < MAX_SINGLE_EXEC
+        && result.total < MAX_TOTAL_EXEC_HARD
+      );
+    });
+  });
 });
 
 /*
