@@ -1,7 +1,7 @@
 const {Equation, Expression} = require('algebra.js');
 const {validate} = require('jsonschema');
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
-const LOG_LEVEL = LOG_LEVELS.error;
+const LOG_LEVEL = LOG_LEVELS.info;
 /**
  * Set LOG_LEVEL to true if want verbose logs on tests, else, won't print anything
  */
@@ -171,7 +171,9 @@ exports.simple_sfg = function get_sfg_mat(eqns) {
  *      - Verify existence of all adjacent nodes
  */
 exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
+  debug_log('verify sfg: ', JSON.stringify(output_sfg));
   let valid = true;
+
   // (1)
   try {
     let schema = Schema();
@@ -186,7 +188,7 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
     })), {throwError: true});
   } catch (err) {
     if (LOG_LEVEL) {
-      debug_log('Invalid format for SFG', err);
+      info_log('Invalid format for SFG', err);
     }
     return false;
   }
@@ -195,7 +197,7 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
   output_sfg.forEach(node => {
     let ans_node = ans_sfg.find(a_n => a_n.id === node.id);
     if (!ans_node) {
-      debug_log(`could not find node: ${node.id} in solution`);
+      info_log(`could not find node: ${node.id} in solution`);
       valid = false;
     }
 
@@ -204,9 +206,9 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
     let ans_edges = ans_node.outgoingEdges;
 
     if (edges.length !== ans_edges.length) {
-      debug_log(`expecting node ${node.id} to have\
-                  ${ans_edges.length} number of edges,\
-                  got ${edges.length}`);
+      info_log(`expecting node ${node.id} to have:`,
+                  `${ans_edges.length} number of edges`,
+                  `got ${edges.length}`);
       valid = false;
     }
 
@@ -215,8 +217,8 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
     ans_edges.forEach(ans_e => {
       let e = adj[ans_e.endNode];
       if (!e) {
-        debug_log(`expecting node ${node.id} to be\
-                    connected to node ${ans_e.endNode}`);
+        info_log(`expecting node ${node.id} to be`,
+                    `connected to node ${ans_e.endNode}`);
         valid = false;
         return;
       }
@@ -225,13 +227,16 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
       let ans_e_weight = ans_e.weight.toString();
 
       if (e_weight !== ans_e_weight) {
-        debug_log(`expecting edge ${e.id} to have\
-                    weight ${ans_e_weight}, got ${e_weight}`);
+        info_log(`expecting edge ${e.id} to have`,
+                    `weight ${ans_e_weight}, got ${e_weight}`);
         valid = false;
       }
     })
   });
 
+  if (!valid) {
+    debug_log('expected graph to look like: ', JSON.stringify(ans_sfg));
+  }
   return valid;
 };
 
