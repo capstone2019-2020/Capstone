@@ -99,57 +99,104 @@ function Edge (weight, startNode, endNode) {
 
 // Create a dynamic array and input each node
 function computeSFG (params) {
-    let nodes = [];
-    let termsoflhs = [];
-    let termsofrhs = [];
+  let nodes = [];
+  let termsoflhs = [];
+  let termsofrhs = [];
+  let vNodeNotFound = 0;
 
-    // for (let i in nodes) {
-    for (let i = 0; i < params.length; i++) {
-        //Access the equations and split by lhs and rhs
-        termsoflhs.push(params[i].lhs.terms);
-        termsofrhs.push(params[i].rhs.terms);
-    }   
-    
-    // To store into the nodes, go thorugh the termsoflhs list array
-    for (let i = 0; i < termsoflhs.length; i++) {
-        newNode = new Node (termsoflhs[i].toString());
+  // for (let i in nodes) {
+  for (let i = 0; i < params.length; i++) {
+      //Access the equations and split by lhs and rhs
+      termsoflhs.push(params[i].lhs.terms);
+      termsofrhs.push(params[i].rhs.terms);
+  }   
+  
+  // To store into the nodes, go thorugh the termsoflhs list array
+  for (let i = 0; i < termsoflhs.length; i++) {
+      newNode = new Node (termsoflhs[i].toString());
 
-        // Find the Node corresponding to the termsoflhs to determine the outoging edges
-        // Divide the rhs into coefficients and variables and store into the edges
-          for (let j = 0; j < termsofrhs.length; j++) {
-            var tempTermOfrhs = termsofrhs[j];
+      // Find the Node corresponding to the termsoflhs to determine the outoging edges
+      // Divide the rhs into coefficients and variables and store into the edges
+        for (let j = 0; j < termsofrhs.length; j++) {
+          var tempTermOfrhs = termsofrhs[j];
 
-            // The variable is found in the rhs of the equation then it must be an outgoing node
-            // More than one term in the rhs of the equation
-            for (k = 0; k < tempTermOfrhs.length; k++) {
-              if (tempTermOfrhs[k].toString().search(termsoflhs[i].toString()) != -1) {
-                var weight = tempTermOfrhs[k].coefficient();
-                var startNode = tempTermOfrhs[k].variables;
+          // The variable is found in the rhs of the equation then it must be an outgoing node
+          // More than one term in the rhs of the equation
+          for (k = 0; k < tempTermOfrhs.length; k++) {
+            if (tempTermOfrhs[k].toString().search(termsoflhs[i].toString()) != -1) {
+              var weight = tempTermOfrhs[k].coefficient();
+              var startNode = tempTermOfrhs[k].variables;
 
-                // Means there is an alphabet as part of the coefficient
-                if (startNode.length != 1) {
-                  var toBeWeight = startNode.toString().split(termsoflhs[i].toString());
+              // Means there is an alphabet as part of the coefficient
+              if (startNode.length != 1) {
+                var toBeWeight = startNode.toString().split(termsoflhs[i].toString());
 
-                  if (weight == 1) {
-                    weight = toBeWeight;
-                  } else if (weight == -1) {
-                    weight = "-"+toBeWeight;
-                  } else {
-                    weight = weight.toString()+toBeWeight[0];
-                  }
-                  
-                  // Get rid of the commas in the weight string
-                  if (weight.toString().search(',') != -1) {
-                    weight = weight.toString().replace(/,/g, '');
-                  }
+                if (weight == 1) {
+                  weight = toBeWeight;
+                } else if (weight == -1) {
+                  weight = "-"+toBeWeight;
+                } else {
+                  weight = weight.toString()+toBeWeight[0];
                 }
-                newNode.outgoingEdges.push(new Edge (weight, termsoflhs[i].toString(), termsoflhs[j].toString()));
+                
+                // Get rid of the commas in the weight string
+                if (weight.toString().search(',') != -1) {
+                  weight = weight.toString().replace(/,/g, '');
+                }
               }
-            }      
+              newNode.outgoingEdges.push(new Edge (weight, termsoflhs[i].toString(), termsoflhs[j].toString()));
+            }
+          }      
+        }
+      nodes.push(newNode);
+  }
+
+  // Corner case: the Node only has outgoing edges
+  for (let i = 0; i < termsofrhs.length; i++) {
+    var tempTerm = termsofrhs[i];
+    
+    for (let j = 0; j < tempTerm.length; j++) {
+      vNodeNotFound = 0;
+
+      for (let numOfNodes = 0; numOfNodes < nodes.length; numOfNodes++) {
+        if (tempTerm[j].toString().search(nodes[numOfNodes].id) === -1) {
+          vNodeNotFound += 1;
+        }
+      }
+
+      if (vNodeNotFound === nodes.length) {
+        var weight = tempTerm[j].coefficient();
+        var tempVariable = tempTerm[j].variables;
+
+        // Means there is an alphabet as part of the coefficient
+        if (tempVariable.length != 1) {
+          var temp = tempVariable[tempVariable.length-1].toString();
+          var toBeWeight = tempVariable.toString().split(temp)
+          startNode = tempVariable[tempVariable.length-1];
+
+          if (weight == 1) {
+            weight = toBeWeight;
+          } else if (weight == -1) {
+            weight = "-"+toBeWeight;
+          } else {
+            weight = weight.toString()+toBeWeight[0];
           }
+          
+          // Get rid of the commas in the weight string
+          if (weight.toString().search(',') != -1) {
+            weight = weight.toString().replace(/,/g, '');
+          }
+        } else if (tempVariable.length === 1) {
+          startNode = tempVariable;
+        }
+
+        newNode = new Node(startNode.toString());
+        newNode.outgoingEdges.push(new Edge (weight, startNode.toString(), termsoflhs[i].toString()));
         nodes.push(newNode);
+      }
     }
-    return nodes;
+  }
+  return nodes;
 };
 
 // Output into the console
