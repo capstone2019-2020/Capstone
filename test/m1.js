@@ -50,7 +50,7 @@ describe('computeSFG()', function() {
     });
     it ('correctness 3', function() {
       // test large input
-      const eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(50));
+      const eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(20));
       const output = computeSFG(eqns);
       assert.ok(suite.verify_sfg(output, suite.simple_sfg(eqns)));
     });
