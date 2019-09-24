@@ -112,36 +112,41 @@ function computeSFG (params) {
     
     // To store into the nodes, go thorugh the termsoflhs list array
     for (let i = 0; i < termsoflhs.length; i++) {
-        var tempTerm = termsofrhs[i];
         newNode = new Node (termsoflhs[i].toString());
-        
+
+        // Find the Node corresponding to the termsoflhs to determine the outoging edges
         // Divide the rhs into coefficients and variables and store into the edges
-        for (let j = 0; j < tempTerm.length; j++) {
-            var weight = tempTerm[j].coefficient();
-            var endNode = tempTerm[j].variables;
+          for (let j = 0; j < termsofrhs.length; j++) {
+            var tempTermOfrhs = termsofrhs[j];
 
-            // Means there is a alphabet as a coefficient
-            if (endNode.length != 1) {
-                
-              var temp = endNode[endNode.length-1].toString();
-              var toBeWeight = endNode.toString().split(temp)
-              endNode = endNode[endNode.length-1];
+            // The variable is found in the rhs of the equation then it must be an outgoing node
+            // More than one term in the rhs of the equation
+            for (k = 0; k < tempTermOfrhs.length; k++) {
+              if (tempTermOfrhs[k].toString().search(termsoflhs[i].toString()) != -1) {
+                var weight = tempTermOfrhs[k].coefficient();
+                var startNode = tempTermOfrhs[k].variables;
 
-              if (weight == 1) {
-                weight = toBeWeight;
-              } else if (weight == -1) {
-                weight = "-"+toBeWeight;
-              } else {
-                weight = weight.toString()+toBeWeight[0];
+                // Means there is an alphabet as part of the coefficient
+                if (startNode.length != 1) {
+                  var toBeWeight = startNode.toString().split(termsoflhs[i].toString());
+
+                  if (weight == 1) {
+                    weight = toBeWeight;
+                  } else if (weight == -1) {
+                    weight = "-"+toBeWeight;
+                  } else {
+                    weight = weight.toString()+toBeWeight[0];
+                  }
+                  
+                  // Get rid of the commas in the weight string
+                  if (weight.toString().search(',') != -1) {
+                    weight = weight.toString().replace(/,/g, '');
+                  }
+                }
+                newNode.outgoingEdges.push(new Edge (weight, termsoflhs[i].toString(), termsoflhs[j].toString()));
               }
-              
-              // Get rid of the commas in the weight string
-              if (weight.toString().search(',') != -1) {
-                weight = weight.toString().replace(/,/g, '');
-              }
-            }
-            newNode.outgoingEdges.push(new Edge (weight, termsoflhs[i].toString(), endNode));      
-        }
+            }      
+          }
         nodes.push(newNode);
     }
     return nodes;
