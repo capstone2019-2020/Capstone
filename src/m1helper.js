@@ -85,7 +85,7 @@ function printEdges(edges) {
     if (i === 0)
       str += `${e.startNode}`;
     str +=` -> ${e.endNode}`;
-  })
+  });
   console.log(str);
 }
 
