@@ -15,7 +15,7 @@ function getEquations() {
 function computeMasons(nodes, start, end) {
   /* TODO: implement */
 
-  /* TODO: calculate denominator
+  /* Calculate denominator
   * 1. Get all loops in the SFG -- DONE
   * 2. Get all of the nth non-touching loops -- DONE
   * 3. Generate denominator
@@ -24,7 +24,21 @@ function computeMasons(nodes, start, end) {
   const allLoops = m1helper.findAllLoops(nodes);
   const nonTouchingLoops = m1helper.findNonTouching(allLoops);
   const denom = m1helper.calculateDenominator(allLoops, nonTouchingLoops);
-  return {d: denom};
+  return {
+    n: 'numerator_goes_here',
+    d: denom
+  };
+}
+
+/**
+ * Print out the transfer function - need to format this ourselves since currently algebra.js only supports dividing by constant integers/fractions
+ *
+ * @param func -- transfer function object of the form {n: numerator, d: denominator} - each field is an algebra.Expression object
+ * @param start -- start node (a string)
+ * @param end -- end node (a string)
+ */
+function printTransferFunction(func, start, end) {
+  console.log(`${end}/${start} = (${func.n.toString()}) / (${func.d.toString()})`);
 }
 
 /**
@@ -216,5 +230,5 @@ function outputSFG (sfgnodes) {
  * Export functions as part of m1 module
  */
 module.exports = {
-  Node, Edge, outputSFG, computeSFG, computeMasons, getEquations, getUserInput
+  Node, Edge, outputSFG, computeSFG, computeMasons, getEquations
 };
