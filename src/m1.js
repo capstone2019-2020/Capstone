@@ -230,5 +230,5 @@ function outputSFG (sfgnodes) {
  * Export functions as part of m1 module
  */
 module.exports = {
-  Node, Edge, outputSFG, computeSFG, computeMasons, getEquations
+  Node, Edge, outputSFG, computeSFG, computeMasons, getEquations, getUserInput
 };
