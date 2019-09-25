@@ -170,7 +170,7 @@ function findNonTouching(allLoops) {
         concatLoops = remainingLoop.concat(currLoop);
 
         // check for duplicates
-        loopGain = concatLoops.map((edge) => edge.weight).sort().toString();
+        loopGain = concatLoops.map((edge) => edge.id).sort().toString();
         if (existingGains.includes(loopGain))
           continue;
 
