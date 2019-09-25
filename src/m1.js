@@ -12,7 +12,7 @@ function getEquations() {
   return {};
 }
 
-function computeMasons(nodes, edges, start, end) {
+function computeMasons(nodes, start, end) {
   /* TODO: implement */
 
   /* TODO: calculate denominator
