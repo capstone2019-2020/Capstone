@@ -5,6 +5,7 @@ const algebra = require('algebra.js');
 const math = require('mathjs');
 const readline = require('readline');
 const m1helper = require('./m1helper.js');
+const datamodel = require('./datamodel.js').default;
 
 
 function getEquations() {
@@ -96,20 +97,6 @@ function getUserInput() {
   });
 }
 
-// --------------------------------------------------------------------------------------------
-// The equation variables must be in the form of lowercase x 
-// Objects Node and Edge
-function Node (id) {
-    this.id = id,
-    this.outgoingEdges = []
-};
-
-function Edge (weight, startNode, endNode) {
-    this.weight = weight,
-    this.startNode = startNode,
-    this.endNode = endNode,
-    this.id = startNode+endNode
-};
 
 // Create a dynamic array and input each node
 function computeSFG (params) {
@@ -128,7 +115,7 @@ function computeSFG (params) {
   
   // To store into the nodes, go thorugh the termsoflhs list array
   for (let i = 0; i < termsoflhs.length; i++) {
-    newNode = new Node (termsoflhs[i].toString());
+    newNode = new datamodel.Node (termsoflhs[i].toString());
 
     // Find the Node corresponding to the termsoflhs to determine the outoging edges
     // Divide the rhs into coefficients and variables and store into the edges
@@ -165,7 +152,7 @@ function computeSFG (params) {
 
           // Verifying it is the exact value of the node not just an instance of it
           if (check === termsoflhs[i].toString()) {
-            newNode.outgoingEdges.push(new Edge (weight.toString(), termsoflhs[i].toString(), termsoflhs[j].toString()));
+            newNode.outgoingEdges.push(new datamodel.Edge (weight, termsoflhs[i].toString(), termsoflhs[j].toString()));
           }
         }
       }      
@@ -200,7 +187,7 @@ function computeSFG (params) {
           startNode = tempVariable;
         }
 
-        newNode = new Node(startNode.toString()); 
+        newNode = new datamodel.Node(startNode.toString()); 
         nodes.push(newNode);
       }
     }
@@ -238,7 +225,7 @@ function computeSFG (params) {
             }
 
             if (temp === nodes[searchNeeded].id) {
-              nodes[searchNeeded].outgoingEdges.push(new Edge (weight.toString(), nodes[searchNeeded].id, termsoflhs[i].toString()));
+              nodes[searchNeeded].outgoingEdges.push(new datamodel.Edge (weight, nodes[searchNeeded].id, termsoflhs[i].toString()));
             }
           }
         }
@@ -266,5 +253,5 @@ function outputSFG (sfgnodes) {
  * Export functions as part of m1 module
  */
 module.exports = {
-  Node, Edge, outputSFG, computeSFG, computeMasons, getEquations, getUserInput
+  outputSFG, computeSFG, computeMasons, getEquations, getUserInput
 };
