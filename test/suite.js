@@ -1,7 +1,7 @@
 const {Equation, Expression} = require('algebra.js');
 const {validate} = require('jsonschema');
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
-const LOG_LEVEL = LOG_LEVELS.info;
+const LOG_LEVEL = LOG_LEVELS.error;
 /**
  * Set LOG_LEVEL to true if want verbose logs on tests, else, won't print anything
  */
@@ -261,8 +261,6 @@ exports.perf_stats = function perf_stats(highest, lowest, total, iters) {
  */
 exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d) {
   let valid = true;
-  // FIXME: remove this when numerator is implemented
-  output_n = ans_n;
 
   const map_expr_terms = (expr, map, default_val) => {
     expr.terms.forEach(term =>

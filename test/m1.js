@@ -50,7 +50,7 @@ describe('computeSFG()', function() {
     });
     it ('correctness 3', function() {
       // test large input
-      const eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(20));
+      const eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(50));
       const output = computeSFG(eqns);
       assert.ok(suite.verify_sfg(output, suite.simple_sfg(eqns)));
     });
@@ -61,8 +61,8 @@ describe('computeSFG()', function() {
     const MAX_TOTAL_EXEC_EASY = 5000;
     const MAX_TOTAL_EXEC_MED = 6000;
     const MAX_TOTAL_EXEC_HARD = 7000;
-    const I_EASY = 30;
-    const I_MED = 30;
+    const I_EASY = 10;
+    const I_MED = 20;
     const I_HARD = 30;
 
     const perf_computeSFG = (I) => {
@@ -170,9 +170,9 @@ describe('computeMasons()', function() {
     const MAX_TOTAL_EXEC_EASY = 5000;
     const MAX_TOTAL_EXEC_MED = 6000;
     const MAX_TOTAL_EXEC_HARD = 7000;
-    const I_EASY = 30;
-    const I_MED = 100;
-    const I_HARD = 500;
+    const I_EASY = 10;
+    const I_MED = 50;
+    const I_HARD = 100;
 
     const perf_computeMasons = (I) => {
       let total = BigInt(0), highest = BigInt(0), lowest = BigInt(0);
@@ -252,11 +252,8 @@ describe('computeMasons()', function() {
  */
 describe('integration', function() {
   describe('func', function() {
-    it ('input/output', function() {
-
-    });
     it ('correctness 1', function() {
-
+      
     });
     it ('correctness 2', function() {
 
