@@ -5,8 +5,36 @@ const algebra = require('algebra.js');
 const math = require('mathjs');
 const readline = require('readline');
 const m1helper = require('./m1helper.js');
-const datamodel = require('./datamodel.js').default;
+const datamodel = require('./datamodel.js');
 
+
+(function main() {
+  var a_b = new datamodel.Edge("1", "a", "b");
+  var a_c = new datamodel.Edge("1", "a", "c");
+  var b_d = new datamodel.Edge("1", "b", "d");
+  var b_e = new datamodel.Edge("1", "b", "e");
+  var c_b = new datamodel.Edge("1", "c", "b");
+  var e_f = new datamodel.Edge("1", "e", "f");
+
+  var a = new datamodel.Node("a");
+  a.outgoingEdges = [a_b, a_c];
+  var b = new datamodel.Node("b");
+  b.outgoingEdges = [b_d, b_e];
+  var c = new datamodel.Node("c");
+  c.outgoingEdges = [c_b];
+  //d = new datamodel.Node("d");
+  var e = new datamodel.Node("e");
+  var f = new datamodel.Node("f");
+  f.outgoingEdges = [e_f];
+
+  curr_path = [];
+  paths = [];
+  m1helper.findForwardPaths(a, f, paths, curr_path);
+  if ((a.outgoingEdges).length > 0){
+    console.log("a has outgoing edges");
+  }
+  //console.log(paths);
+})();
 
 function getEquations() {
   /* TODO: implement */
@@ -25,8 +53,10 @@ function computeMasons(nodes, start, end) {
   const allLoops = m1helper.findAllLoops(nodes);
   const nonTouchingLoops = m1helper.findNonTouching(allLoops);
   const denom = m1helper.calculateDenominator(allLoops, nonTouchingLoops);
+  const numer = m1helper.calculateNumerator();
+
   return {
-    n: 'numerator_goes_here',
+    n: numer,
     d: denom
   };
 }

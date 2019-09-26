@@ -89,6 +89,54 @@ function printEdges(edges) {
   console.log(str);
 }
 
+/*TODO*/
+function calculateNumerator(){
+
+}
+
+/**
+ * Find all available forward paths from start to end node 
+ *
+ * @param start
+ * @param end
+ * @paths 
+ */
+function findForwardPaths(start, end, paths, currPath){
+  // The destination node is reached
+  if (start === end){
+    paths.push(currPath);
+    return;
+  }
+  // Loop is detected
+  else if (paths.includes(start) || (start.outgoingEdges).length < 1){
+    return; 
+  }
+  else{
+    currPath.push(start);
+  }
+
+  e = start.outgoingEdges;
+
+  for (let i=0; i < e.length; i++){
+    nextNode = e[i].endNode;
+
+    // In js, an array passed in as a parameter is passed by reference
+    if (i == 0){
+      findForwardPaths(nextNode, end, paths);
+    }
+    else{
+      currPathCopy = [];
+
+      // Manually make a copy of currPath
+      currPath.foreach(e => {
+        currPathCopy.push(e);
+      });
+
+      findForwardPaths(nextNode, end, paths, currPathCopy);
+    }
+  }
+}
+
 /**
  * Returns the denominator for the transfer function using Mason's Rule formula
  *   Denominator = 1 - all loop gains + all 2 non-touching - all 3 non-touching ...
@@ -207,5 +255,5 @@ function findNonTouching(allLoops) {
  * Export helper functions
  */
 module.exports = {
-  findAllLoops, findNonTouching, calculateDenominator
+  findAllLoops, findNonTouching, calculateDenominator, calculateNumerator, findForwardPaths
 };
