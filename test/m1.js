@@ -251,26 +251,99 @@ describe('computeMasons()', function() {
  * from computeMasons().
  */
 describe('integration', function() {
+  const {computeSFG, computeMasons} = require('../src/m1');
+
+  const alg_equations = equations.map(eq_obj => ({
+    equations: eq_obj.equations.map(e => algebra.parse(e)),
+    start: eq_obj.start,
+    end: eq_obj.end,
+    n: algebra.parse(eq_obj.n),
+    d: algebra.parse(eq_obj.d)
+  }));
+
+  const perf_integration = (I) => {
+    let total = BigInt(0), highest = BigInt(0), lowest = BigInt(0);
+    let start, end;
+
+    const test_eqns = [alg_equations[0], alg_equations[2], alg_equations[3],
+      alg_equations[4], alg_equations[5]];
+    let alg_eqn;
+
+    for (let i = 0; i < I; i++) {
+      alg_eqn = test_eqns[Math.floor(Math.random() * test_eqns.length)];
+      start = process.hrtime.bigint();
+      const sfg = computeSFG(alg_eqn.equations);
+      const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
+      end = process.hrtime.bigint();
+
+      let t = end - start; // nanoseconds
+      total += t;
+      highest = highest > t ? highest : t;
+      lowest = lowest < t ? lowest : t;
+
+      assert.ok(suite.verify_masons(n, d, alg_eqn.n, alg_eqn.d));
+    }
+    return suite.perf_stats(highest, lowest, total, BigInt(I));
+  };
+
   describe('func', function() {
     it ('correctness 1', function() {
-      
+      const test_eqns = [alg_equations[1], alg_equations[6], alg_equations[7]];
+      test_eqns.forEach(alg_eqn => {
+        const sfg = computeSFG(alg_eqn.equations);
+        const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
+        assert.ok(suite.verify_masons(n, d, alg_eqn.n, alg_eqn.d));
+      });
     });
     it ('correctness 2', function() {
-
-    });
-    it ('correctness 3', function() {
-
+      const test_eqns = [alg_equations[0], alg_equations[2], alg_equations[3],
+        alg_equations[4], alg_equations[5]];
+      test_eqns.forEach(alg_eqn => {
+        const sfg = computeSFG(alg_eqn.equations);
+        const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
+        assert.ok(suite.verify_masons(n, d, alg_eqn.n, alg_eqn.d));
+      });
     });
   });
   describe('perf', function() {
     it('easy', function() {
+      let result;
+      try {
+        result = perf_integration(I_MED);
+      } catch (err) {
+        assert.ok(false);
+      }
 
+      this.timeout(100000);
+      assert.ok(result.highest < MAX_SINGLE_EXEC
+        && result.total < MAX_TOTAL_EXEC_EASY
+      );
     });
     it('medium', function() {
+      let result;
+      try {
+        result = perf_integration(I_MED);
+      } catch (err) {
+        assert.ok(false);
+      }
 
+      this.timeout(100000);
+      assert.ok(result.highest < MAX_SINGLE_EXEC
+        && result.total < MAX_TOTAL_EXEC_MED
+      );
     });
     it ('hard', function() {
+      let result;
+      try {
+        result = perf_integration(I_MED);
+      } catch (err) {
+        assert.ok(false);
+      }
 
+      this.timeout(100000);
+      assert.ok(result.highest < MAX_SINGLE_EXEC
+        && result.total < MAX_TOTAL_EXEC_HARD
+      );
     });
   });
 });
