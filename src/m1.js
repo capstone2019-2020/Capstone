@@ -61,9 +61,11 @@ const datamodel = require('./datamodel.js');
   curr_path = [];
   paths = [];
   nodes = [a,b,c,d,e,f];*/
-  var equations = getUserInput();
-  var nodes = computeSFG(equations);
-  outputSFG(nodes);
+
+  getUserInput();
+  var x1 = new datamodel.Node("x1");
+  var x2 = new datamodel.Node("x2");
+  var x3 = new datamodel.Node("x3");
 })();
 
 function getEquations() {
@@ -154,9 +156,10 @@ function getUserInput() {
     console.log(`start node: ${startNode}`);
     console.log(`end node: ${endNode}`);
     console.log('------------------------------------');
-  });
 
-  return equations;
+    var nodes = computeSFG(equations);
+    outputSFG(nodes);
+  });
 }
 
 
