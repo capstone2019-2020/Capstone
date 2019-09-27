@@ -101,42 +101,54 @@ function calculateNumerator(){
  * @param end
  * @paths 
  */
-function findForwardPaths(start, end, paths, currPath){
+function findForwardPaths(start, end, nodes, paths, currPath){
   // The destination node is reached
   if (start === end){
+    currPath.push(start);
     paths.push(currPath);
     return;
   }
   // Loop is detected
-  else if (paths.includes(start) || (start.outgoingEdges).length < 1){
+  else if (currPath.includes(start) || (start.outgoingEdges).length < 1){
     return; 
   }
   else{
     currPath.push(start);
   }
 
-  e = start.outgoingEdges;
+  for (let i=0; i < start.outgoingEdges.length; i++){
+    nextNodeId = start.outgoingEdges[i].endNode;
+    nextNode = nodes.find(x => x.id === nextNodeId);
 
-  for (let i=0; i < e.length; i++){
-    nextNode = e[i].endNode;
+    currPathCopy = [];
 
     // In js, an array passed in as a parameter is passed by reference
-    if (i == 0){
-      findForwardPaths(nextNode, end, paths);
-    }
-    else{
-      currPathCopy = [];
+    // Manually make a copy of currPath to avoid mixing up different forward paths
+    currPath.forEach(e => {
+      currPathCopy.push(e);
+    });
 
-      // Manually make a copy of currPath
-      currPath.foreach(e => {
-        currPathCopy.push(e);
-      });
-
-      findForwardPaths(nextNode, end, paths, currPathCopy);
-    }
+    findForwardPaths(nextNode, end, nodes, paths, currPathCopy);
   }
 }
 
+function getForwardPathsLoopgains(paths){
+  forwardLoopgains = [];
+
+  paths.forEach(p => {
+    forwardEdges = [];
+
+    for (let i=0; i < p.length-2; i++){
+      edge = allEdges.find(x => x.startNode === p[i].id && x.endNode === p[i+1].id);
+      forwardEdges.push(edge);
+    }
+
+    flg = calculateLoopGain(forwardEdges);
+    forwardLoopgains.push(flg);
+  });
+
+  return forwardLoopgains;
+}
 /**
  * Returns the denominator for the transfer function using Mason's Rule formula
  *   Denominator = 1 - all loop gains + all 2 non-touching - all 3 non-touching ...

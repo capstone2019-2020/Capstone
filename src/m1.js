@@ -9,12 +9,13 @@ const datamodel = require('./datamodel.js');
 
 
 (function main() {
-  var a_b = new datamodel.Edge("1", "a", "b");
+  /***** Case 1 *****/
+  var a_b = new datamodel.Edge("4", "a", "b");
   var a_c = new datamodel.Edge("1", "a", "c");
   var b_d = new datamodel.Edge("1", "b", "d");
-  var b_e = new datamodel.Edge("1", "b", "e");
+  var b_e = new datamodel.Edge("3", "b", "e");
   var c_b = new datamodel.Edge("1", "c", "b");
-  var e_f = new datamodel.Edge("1", "e", "f");
+  var e_f = new datamodel.Edge("2", "e", "f");
 
   var a = new datamodel.Node("a");
   a.outgoingEdges = [a_b, a_c];
@@ -22,18 +23,51 @@ const datamodel = require('./datamodel.js');
   b.outgoingEdges = [b_d, b_e];
   var c = new datamodel.Node("c");
   c.outgoingEdges = [c_b];
-  //d = new datamodel.Node("d");
+  var d = new datamodel.Node("d");
   var e = new datamodel.Node("e");
   var f = new datamodel.Node("f");
-  f.outgoingEdges = [e_f];
+  e.outgoingEdges = [e_f];
 
   curr_path = [];
   paths = [];
-  m1helper.findForwardPaths(a, f, paths, curr_path);
-  if ((a.outgoingEdges).length > 0){
-    console.log("a has outgoing edges");
-  }
-  //console.log(paths);
+  nodes = [a,b,c,d,e,f];
+
+  m1helper.findForwardPaths(a, f, nodes, paths, curr_path);
+
+  console.log(paths);
+
+  /***** case 2 *****/
+  /*var a_b = new datamodel.Edge("1", "a", "b");
+  var b_c = new datamodel.Edge("1", "b", "c");
+  var c_d = new datamodel.Edge("1", "c", "d");
+  var d_e = new datamodel.Edge("1", "d", "e");
+  var e_f = new datamodel.Edge("1", "e", "f");
+  var c_b = new datamodel.Edge("1", "c", "b");
+  var d_c = new datamodel.Edge("1", "d", "c");
+  var e_d = new datamodel.Edge("1", "e", "d");
+  var b_e = new datamodel.Edge("1", "b", "e");
+
+  var a = new datamodel.Node("a");
+  var b = new datamodel.Node("b");
+  var c = new datamodel.Node("c");
+  var d = new datamodel.Node("d");
+  var e = new datamodel.Node("e");
+  var f = new datamodel.Node("f");
+  
+  a.outgoingEdges = [a_b];
+  b.outgoingEdges = [b_c, b_e];
+  c.outgoingEdges = [c_b, c_d];
+  d.outgoingEdges = [d_c, d_e];
+  e.outgoingEdges = [e_d, e_f];
+
+  curr_path = [];
+  paths = [];
+  nodes = [a,b,c,d,e,f];
+
+  m1helper.findForwardPaths(a, f, nodes, paths, curr_path);
+
+  console.log(paths);*/
+
 })();
 
 function getEquations() {
