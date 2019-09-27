@@ -102,6 +102,7 @@ function calculateNumerator(start, end , nodes){
   var paths = [];
   var forwardLoopgains = [];
   var delta_k = [];
+  let numer = new Expression(0);
 
   // Step 1 - handle forward paths (this is P_k in the equation)
   findForwardPaths(start, end, nodes, paths, curr_path); // paths variable is now filled in 
@@ -114,6 +115,22 @@ function calculateNumerator(start, end , nodes){
     const nonTouchingLoops = findNonTouching(allLoops);
     delta_k.push(calculateDenominator(allLoops, nonTouchingLoops));
   });
+
+  // Find the sum of P_k * delta_k
+  if (forwardLoopgains. length == delta_k.length){  // Sanity check
+    let ex = new Expression(1);
+    
+    for (let i=0; i<forwardLoopgains.length; i++){
+        ex = ex.multiply(forwardLoopgains[i].toString());
+        ex = ex.multiply(delta_k[i].toString());
+        numer = numer.add(ex);
+    }
+    return numer;
+  }
+  else{
+    console.log("The number of P-K and delta_k do no match")
+    return undefined
+  }
 }
 
 /**
@@ -346,5 +363,5 @@ function findNonTouching(allLoops) {
  * Export helper functions
  */
 module.exports = {
-  findAllLoops, findNonTouching, calculateDenominator, calculateNumerator, findForwardPaths, getForwardPathsLoopgains, subtractNodes
+  findAllLoops, findNonTouching, calculateDenominator, calculateNumerator
 };

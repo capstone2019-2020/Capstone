@@ -10,7 +10,7 @@ const datamodel = require('./datamodel.js');
 
 (function main() {
   /***** Case 1 *****/
-  var a_b = new datamodel.Edge("4", "a", "b");
+  /*var a_b = new datamodel.Edge("4", "a", "b");
   var a_c = new datamodel.Edge("1", "a", "c");
   var b_d = new datamodel.Edge("1", "b", "d");
   var b_e = new datamodel.Edge("3", "b", "e");
@@ -32,8 +32,7 @@ const datamodel = require('./datamodel.js');
   paths = [];
   nodes = [a,b,c,d,e,f];
 
-  console.log(m1helper.findForwardPaths(a, f, nodes, paths, curr_path));
-  console.log(m1helper.subtractNodes(nodes, paths[1]));
+  console.log(m1helper.calculateNumerator(a, f, nodes));*/
 
   /***** case 2 *****/
   /*var a_b = new datamodel.Edge("1", "a", "b");
@@ -61,13 +60,7 @@ const datamodel = require('./datamodel.js');
 
   curr_path = [];
   paths = [];
-  nodes = [a,b,c,d,e,f];
-
-  m1helper.findForwardPaths(a, f, nodes, paths, curr_path);
-
-  console.log(paths);*/
-
-
+  nodes = [a,b,c,d,e,f];*/
 })();
 
 function getEquations() {
@@ -87,7 +80,7 @@ function computeMasons(nodes, start, end) {
   const allLoops = m1helper.findAllLoops(nodes);
   const nonTouchingLoops = m1helper.findNonTouching(allLoops);
   const denom = m1helper.calculateDenominator(allLoops, nonTouchingLoops);
-  const numer = m1helper.calculateNumerator();
+  const numer = m1helper.calculateNumerator(start, end, nodes);
 
   return {
     n: numer,
