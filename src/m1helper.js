@@ -92,11 +92,13 @@ function printEdges(edges) {
 /**
  * Wrapper function for calcaulting numerator of Mason's rule
  * 
- * @param start - start node object
- * @param end  - end node object
+ * @param start - start node id
+ * @param end  - end node id
  * @param nodes - entire SFG represented as a list of node objects
  */
 function calculateNumerator(start, end , nodes){
+  var start = nodes.find(x => x.id === start);
+  var end = nodes.find(x => x.id === end);
   var curr_path = [];
   // The following three arrays are mapped using index
   var paths = [];
@@ -111,9 +113,17 @@ function calculateNumerator(start, end , nodes){
   // Step 2 - handle loops that do not touch kth forward path (this is delta_k)
   paths.forEach(p => { 
     const subgraph = subtractNodes(nodes, p);
-    const allLoops = findAllLoops(subgraph);
-    const nonTouchingLoops = findNonTouching(allLoops);
-    delta_k.push(calculateDenominator(allLoops, nonTouchingLoops));
+
+    if (subgraph.length < 1){
+      delta_k.push(0);
+    }
+    else{
+      const allLoops = findAllLoops(subgraph);
+      const nonTouchingLoops = findNonTouching(allLoops);
+      delta_k.push(calculateDenominator(allLoops, nonTouchingLoops));
+    }
+
+    
   });
 
   // Find the sum of P_k * delta_k
