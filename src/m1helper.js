@@ -89,17 +89,43 @@ function printEdges(edges) {
   console.log(str);
 }
 
-/*TODO*/
-function calculateNumerator(){
+/**
+ * Wrapper function for calcaulting numerator of Mason's rule
+ * 
+ * @param start - start node object
+ * @param end  - end node object
+ * @param nodes - entire SFG represented as a list of node objects
+ */
+function calculateNumerator(start, end , nodes){
+  var curr_path = [];
+  // The following three arrays are mapped using index
+  var paths = [];
+  var forwardLoopgains = [];
+  var delta_k = [];
 
+  // Step 1 - handle forward paths (this is P_k in the equation)
+  findForwardPaths(start, end, nodes, paths, curr_path); // paths variable is now filled in 
+  var forwardLoopgains = getForwardPathsLoopgains(paths);
+
+  // Step 2 - handle loops that do not touch kth forward path (this is delta_k)
+  paths.forEach(p => { 
+    const subgraph = subtractNodes(nodes, p);
+    const allLoops = findAllLoops(subgraph);
+    const nonTouchingLoops = findNonTouching(allLoops);
+    delta_k.push(calculateDenominator(allLoops, nonTouchingLoops));
+  });
 }
 
 /**
  * Find all available forward paths from start to end node 
- *
+ * and put that information in paths input parameter as a 2D array
+ * using depth first search
+ * 
  * @param start
  * @param end
- * @paths 
+ * @param nodes
+ * @param paths - a list of valid forward paths (a.k.a 2D array of nodes)
+ * @param currPath - the path DFS is currently pursuing
  */
 function findForwardPaths(start, end, nodes, paths, currPath){
   // The destination node is reached
@@ -108,7 +134,7 @@ function findForwardPaths(start, end, nodes, paths, currPath){
     paths.push(currPath);
     return;
   }
-  // Loop is detected
+  // Stop if loop is detected or there is no outgoing edges
   else if (currPath.includes(start) || (start.outgoingEdges).length < 1){
     return; 
   }
@@ -132,6 +158,12 @@ function findForwardPaths(start, end, nodes, paths, currPath){
   }
 }
 
+/**
+ * Given paths, calculate the forward loop gains
+ * 
+ * @param paths - a list of forward paths
+ * @returns a list of forward loop gains (indices match with the parameter paths)
+ */
 function getForwardPathsLoopgains(paths){
   var forwardLoopgains = [];
 
@@ -144,6 +176,14 @@ function getForwardPathsLoopgains(paths){
   return forwardLoopgains;
 }
 
+/**
+ * Helper function for getForwardPathsLoopgains()
+ * Given a list of nodes that consist a path, extract relevant edges
+ * that forms the same path
+ * 
+ * @param pathNodes - a list of node objects
+ * @return a list of edge objects
+ */
 function extractPathEdges(pathNodes){
   var pathEdges = [];
 
@@ -157,6 +197,14 @@ function extractPathEdges(pathNodes){
   return pathEdges;
 }
 
+/**
+ * A = the original SFG
+ * B = sub-SFG in A 
+ * Returns A- B
+ * @param originalNodes - the original, entire SFG represented as a list of nodes
+ * @param nodesToSubtract - a sub-SFG that needs to be removed from originalNodes
+ * @returns a sub-graph of originalNodes after nodesToSubtract has been removed
+ */
 function subtractNodes(originalNodes, nodesToSubtract){
   subgraph = [];
 
