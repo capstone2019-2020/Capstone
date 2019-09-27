@@ -85,10 +85,10 @@ function computeMasons(nodes, start, end) {
   const allLoops = m1helper.findAllLoops(nodes);
   const nonTouchingLoops = m1helper.findNonTouching(allLoops);
   const denom = m1helper.calculateDenominator(allLoops, nonTouchingLoops);
-  // const numer = m1helper.calculateNumerator(start, end, nodes);
+  const numer = m1helper.calculateNumerator(start, end, nodes);
 
   return {
-    n: null,
+    n: numer,
     d: denom
   };
 }

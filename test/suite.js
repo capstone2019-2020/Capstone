@@ -261,7 +261,6 @@ exports.perf_stats = function perf_stats(highest, lowest, total, iters) {
  */
 exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d) {
   let valid = true;
-  output_n = ans_n; 
 
   error_log('verify masons:', {
     output: `(${output_n.toString()})/(${output_d.toString()})`, 
