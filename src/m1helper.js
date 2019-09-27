@@ -132,23 +132,38 @@ function findForwardPaths(start, end, nodes, paths, currPath){
   }
 }
 
-function getForwardPathsLoopgains(paths){
-  forwardLoopgains = [];
+function getForwardPathsLoopgains(paths, allEdges){
+  var forwardLoopgains = [];
 
   paths.forEach(p => {
-    forwardEdges = [];
+    var forwardEdges = [];
 
     for (let i=0; i < p.length-2; i++){
-      edge = allEdges.find(x => x.startNode === p[i].id && x.endNode === p[i+1].id);
+      var edge = allEdges.find(x => x.startNode === p[i].id && x.endNode === p[i+1].id);
       forwardEdges.push(edge);
     }
 
-    flg = calculateLoopGain(forwardEdges);
+    var flg = calculateLoopGain(forwardEdges);
     forwardLoopgains.push(flg);
   });
 
   return forwardLoopgains;
 }
+
+function extractPathEdges(pathNodes){
+  var pathEdges = [];
+
+  pathNodes.forEach((pn, i) => {
+    if (i < pathNodes.length - 1){
+      pe = pn.outgoingEdges.find(x => x.endNode === pathNodes[i+1].id);
+      pathEdges.push(pe);
+    }
+  });
+
+  return pathEdges;
+}
+
+
 /**
  * Returns the denominator for the transfer function using Mason's Rule formula
  *   Denominator = 1 - all loop gains + all 2 non-touching - all 3 non-touching ...
@@ -267,5 +282,5 @@ function findNonTouching(allLoops) {
  * Export helper functions
  */
 module.exports = {
-  findAllLoops, findNonTouching, calculateDenominator, calculateNumerator, findForwardPaths
+  findAllLoops, findNonTouching, calculateDenominator, calculateNumerator, findForwardPaths, extractPathEdges
 };
