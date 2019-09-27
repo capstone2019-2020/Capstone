@@ -132,19 +132,13 @@ function findForwardPaths(start, end, nodes, paths, currPath){
   }
 }
 
-function getForwardPathsLoopgains(paths, allEdges){
+function getForwardPathsLoopgains(paths){
   var forwardLoopgains = [];
 
   paths.forEach(p => {
-    var forwardEdges = [];
-
-    for (let i=0; i < p.length-2; i++){
-      var edge = allEdges.find(x => x.startNode === p[i].id && x.endNode === p[i+1].id);
-      forwardEdges.push(edge);
-    }
-
+    var forwardEdges = extractPathEdges(p);
     var flg = calculateLoopGain(forwardEdges);
-    forwardLoopgains.push(flg);
+    forwardLoopgains.push(flg.toString());
   });
 
   return forwardLoopgains;
@@ -282,5 +276,5 @@ function findNonTouching(allLoops) {
  * Export helper functions
  */
 module.exports = {
-  findAllLoops, findNonTouching, calculateDenominator, calculateNumerator, findForwardPaths, extractPathEdges
+  findAllLoops, findNonTouching, calculateDenominator, calculateNumerator, findForwardPaths, getForwardPathsLoopgains
 };
