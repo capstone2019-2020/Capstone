@@ -17,6 +17,7 @@ function findAllLoops(nodes) {
   let stack = [];
   let cycles = [];
 
+console.log(JSON.stringify(nodes));
   nodes.forEach((node) => {
     dfsFindLoops(nodes, node, node.id, visited, stack, cycles);
   });
@@ -352,7 +353,6 @@ function findNonTouching(allLoops) {
     // We didnt find any ith non-touching loops - won't find anymore so stop looking and cleanup result map
     if (!ithNonTouch.length) {
       nonTouchingLoops.delete(i);
-      nonTouchingLoops.delete(1);
       break;
     }
   }
@@ -366,6 +366,8 @@ function findNonTouching(allLoops) {
       console.log(value);
     });
   }
+
+  nonTouchingLoops.delete(1);
   return nonTouchingLoops;
 }
 

@@ -10,7 +10,7 @@ exports.equations = [
     start: 'x2',
     end: 'x6',
     n: 'a * b * c + d * (1 - b * f)',
-    d: 'l - a * e - h * f - c * g - d * g * f * e + a * e * c * g'
+    d: '1 - a * e - b * f - c * g - d * g * f * e + a * e * c * g'
   },
   { // 1
     equations: [
@@ -42,7 +42,7 @@ exports.equations = [
     start: 'x1',
     end: 'x4',
     n: 'd * (l - b * e) + a * b * c',
-    d: 'l - b * e'
+    d: '1 - b * e'
   },
   { // 4
     equations: [
@@ -54,7 +54,7 @@ exports.equations = [
     start: 'x1',
     end: 'x5',
     n: 'a + b * c',
-    d: 'l - a * d - b * e - c * f - b * c * d - a * f * e'
+    d: '1 - a * d - b * e - c * f - b * c * d - a * f * e'
   },
   { // 5
     equations: [
@@ -66,7 +66,7 @@ exports.equations = [
     start: 'x1',
     end: 'x5',
     n: 'c + a * b',
-    d: 'l - a * d - b * e - a * b * f - c * e * d - c * f'
+    d: '1 - a * d - b * e - a * b * f - c * e * d - c * f'
   },
   { // 6
     equations: [
