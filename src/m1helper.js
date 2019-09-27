@@ -157,6 +157,28 @@ function extractPathEdges(pathNodes){
   return pathEdges;
 }
 
+function subtractNodes(originalNodes, nodesToSubtract){
+  subgraph = [];
+
+  originalNodes.forEach(n => {
+    if (!nodesToSubtract.includes(n)){
+      if (n.outgoingEdges.length < 1){
+        subgraph.push(n);
+      }
+      else{
+        n.outgoingEdges.forEach((e, i) => {
+          nts = nodesToSubtract.find(x => x.id === e.endNode);
+          if (nts != undefined){
+            n.outgoingEdges.splice(i, 1);
+          }
+        subgraph.push(n);
+        });
+      }
+    }
+  });
+
+  return subgraph;
+}
 
 /**
  * Returns the denominator for the transfer function using Mason's Rule formula
@@ -276,5 +298,5 @@ function findNonTouching(allLoops) {
  * Export helper functions
  */
 module.exports = {
-  findAllLoops, findNonTouching, calculateDenominator, calculateNumerator, findForwardPaths, getForwardPathsLoopgains
+  findAllLoops, findNonTouching, calculateDenominator, calculateNumerator, findForwardPaths, getForwardPathsLoopgains, subtractNodes
 };

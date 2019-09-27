@@ -32,10 +32,8 @@ const datamodel = require('./datamodel.js');
   paths = [];
   nodes = [a,b,c,d,e,f];
 
-  m1helper.findForwardPaths(a, f, nodes, paths, curr_path);
-
-  console.log(paths);
-  console.log(m1helper.getForwardPathsLoopgains(paths));
+  console.log(m1helper.findForwardPaths(a, f, nodes, paths, curr_path));
+  console.log(m1helper.subtractNodes(nodes, paths[1]));
 
   /***** case 2 *****/
   /*var a_b = new datamodel.Edge("1", "a", "b");
