@@ -61,9 +61,9 @@ describe('computeSFG()', function() {
     const MAX_TOTAL_EXEC_EASY = 5000;
     const MAX_TOTAL_EXEC_MED = 6000;
     const MAX_TOTAL_EXEC_HARD = 7000;
-    const I_EASY = 10;
-    const I_MED = 20;
-    const I_HARD = 30;
+    const I_EASY = 3;
+    const I_MED = 10;
+    const I_HARD = 50;
 
     const perf_computeSFG = (I) => {
       let total = BigInt(0), highest = BigInt(0), lowest = BigInt(0);
@@ -71,7 +71,7 @@ describe('computeSFG()', function() {
       let eqns;
 
       for (let i = 0; i < I; i++) {
-        eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(I));
+        eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(5));
         start = process.hrtime.bigint();
         const output = computeSFG(eqns);
         end = process.hrtime.bigint();

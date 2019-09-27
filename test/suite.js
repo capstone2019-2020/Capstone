@@ -1,7 +1,7 @@
 const {Equation, Expression} = require('algebra.js');
 const {validate} = require('jsonschema');
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
-const LOG_LEVEL = LOG_LEVELS.error;
+const LOG_LEVEL = LOG_LEVELS.info;
 /**
  * Set LOG_LEVEL to true if want verbose logs on tests, else, won't print anything
  */
@@ -261,6 +261,10 @@ exports.perf_stats = function perf_stats(highest, lowest, total, iters) {
  */
 exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d) {
   let valid = true;
+  info_log('verify masons:', {
+    output: `(${output_n.toString()})/(${output_d.toString()})`, 
+    expected: `(${ans_n.toString()})/(${ans_d.toString()})`
+  });
 
   const map_expr_terms = (expr, map, default_val) => {
     expr.terms.forEach(term =>
