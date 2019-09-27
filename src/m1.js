@@ -209,7 +209,7 @@ function computeSFG (params) {
 
           // Verifying it is the exact value of the node not just an instance of it
           if (check === termsoflhs[i].toString()) {
-            newNode.outgoingEdges.push(new datamodel.Edge (weight,toString(), termsoflhs[i].toString(), termsoflhs[j].toString()));
+            newNode.outgoingEdges.push(new datamodel.Edge (weight.toString(), termsoflhs[i].toString(), termsoflhs[j].toString()));
           }
         }
       }      
