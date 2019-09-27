@@ -209,7 +209,7 @@ function computeSFG (params) {
 
           // Verifying it is the exact value of the node not just an instance of it
           if (check === termsoflhs[i].toString()) {
-            newNode.outgoingEdges.push(new datamodel.Edge (weight, termsoflhs[i].toString(), termsoflhs[j].toString()));
+            newNode.outgoingEdges.push(new datamodel.Edge (weight,toString(), termsoflhs[i].toString(), termsoflhs[j].toString()));
           }
         }
       }      
@@ -282,7 +282,7 @@ function computeSFG (params) {
             }
 
             if (temp === nodes[searchNeeded].id) {
-              nodes[searchNeeded].outgoingEdges.push(new datamodel.Edge (weight, nodes[searchNeeded].id, termsoflhs[i].toString()));
+              nodes[searchNeeded].outgoingEdges.push(new datamodel.Edge (weight.toString(), nodes[searchNeeded].id, termsoflhs[i].toString()));
             }
           }
         }
