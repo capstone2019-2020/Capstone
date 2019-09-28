@@ -17,7 +17,9 @@ function findAllLoops(nodes) {
   let stack = [];
   let cycles = [];
 
-console.log(JSON.stringify(nodes));
+  if (DEBUG) {
+    console.log(JSON.stringify(nodes));
+  }
   nodes.forEach((node) => {
     dfsFindLoops(nodes, node, node.id, visited, stack, cycles);
   });

@@ -50,7 +50,7 @@ describe('computeSFG()', function() {
     });
     it ('correctness 3', function() {
       // test large input
-      const eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(50));
+      const eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(30));
       const output = computeSFG(eqns);
       assert.ok(suite.verify_sfg(output, suite.simple_sfg(eqns)));
     });
@@ -87,43 +87,22 @@ describe('computeSFG()', function() {
     };
 
     it('easy', function() {
-      let result;
-      try {
-        result = perf_computeSFG(I_EASY);
-      } catch (err) {
-        assert.ok(false);
-      }
-
       this.timeout(100000);
-      assert.ok(result.highest < MAX_SINGLE_EXEC
-        && result.total < MAX_TOTAL_EXEC_EASY
-      );
+      let result = perf_computeSFG(I_EASY);
+      assert.ok(result.highest < MAX_SINGLE_EXEC 
+        && result.total < MAX_TOTAL_EXEC_EASY);
     });
     it('medium', function() {
-      let result;
-      try {
-        result = perf_computeSFG(I_MED);
-      } catch (err) {
-        assert.ok(false);
-      }
-
       this.timeout(100000);
-      assert.ok(result.highest < MAX_SINGLE_EXEC
-        && result.total < MAX_TOTAL_EXEC_MED
-      );
+      let result = perf_computeSFG(I_MED);
+      assert.ok(result.highest < MAX_SINGLE_EXEC 
+        && result.total < MAX_TOTAL_EXEC_MED);
     });
     it ('hard', function() {
-      let result;
-      try {
-        result = perf_computeSFG(I_HARD);
-      } catch (err) {
-        assert.ok(false);
-      }
-
       this.timeout(100000);
-      assert.ok(result.highest < MAX_SINGLE_EXEC
-        && result.total < MAX_TOTAL_EXEC_HARD
-      );
+      let result = perf_computeSFG(I_HARD);
+      assert.ok(result.highest < MAX_SINGLE_EXEC 
+        && result.total < MAX_TOTAL_EXEC_HARD);
     });
   });
 });
@@ -198,46 +177,23 @@ describe('computeMasons()', function() {
       }
       return suite.perf_stats(highest, lowest, total, BigInt(I));
     };
-
     it('easy', function() {
-      console.log('start perf easy');
-      let result;
-      try {
-        result = perf_computeMasons(I_EASY);
-      } catch (err) {
-        assert.ok(false);
-      }
-
       this.timeout(100000);
+      let result = perf_computeMasons(I_EASY);
       assert.ok(result.highest < MAX_SINGLE_EXEC
-        && result.total < MAX_TOTAL_EXEC_EASY
-      );
+        && result.total < MAX_TOTAL_EXEC_EASY);
     });
     it('medium', function() {
-      let result;
-      try {
-        result = perf_computeMasons(I_MED);
-      } catch (err) {
-        assert.ok(false);
-      }
-
       this.timeout(100000);
-      assert.ok(result.highest < MAX_SINGLE_EXEC
-        && result.total < MAX_TOTAL_EXEC_MED
-      );
+      let result = perf_computeMasons(I_MED);
+      assert.ok(result.highest < MAX_SINGLE_EXEC 
+        && result.total < MAX_TOTAL_EXEC_MED);
     });
     it ('hard', function() {
-      let result;
-      try {
-        result = perf_computeMasons(I_HARD);
-      } catch (err) {
-        assert.ok(false);
-      }
-
       this.timeout(100000);
-      assert.ok(result.highest < MAX_SINGLE_EXEC
-        && result.total < MAX_TOTAL_EXEC_HARD
-      );
+      let result = perf_computeMasons(I_HARD);
+      assert.ok(result.highest < MAX_SINGLE_EXEC 
+        && result.total < MAX_TOTAL_EXEC_HARD);
     });
   });
 });
@@ -307,43 +263,22 @@ describe('integration', function() {
   });
   describe('perf', function() {
     it('easy', function() {
-      let result;
-      try {
-        result = perf_integration(I_MED);
-      } catch (err) {
-        assert.ok(false);
-      }
-
       this.timeout(100000);
-      assert.ok(result.highest < MAX_SINGLE_EXEC
-        && result.total < MAX_TOTAL_EXEC_EASY
-      );
+      let result = perf_integration(I_MED);
+      assert.ok(result.highest < MAX_SINGLE_EXEC 
+        && result.total < MAX_TOTAL_EXEC_EASY);
     });
     it('medium', function() {
-      let result;
-      try {
-        result = perf_integration(I_MED);
-      } catch (err) {
-        assert.ok(false);
-      }
-
       this.timeout(100000);
-      assert.ok(result.highest < MAX_SINGLE_EXEC
-        && result.total < MAX_TOTAL_EXEC_MED
-      );
+      let result = perf_integration(I_MED);
+      assert.ok(result.highest < MAX_SINGLE_EXEC 
+        && result.total < MAX_TOTAL_EXEC_MED);
     });
     it ('hard', function() {
-      let result;
-      try {
-        result = perf_integration(I_MED);
-      } catch (err) {
-        assert.ok(false);
-      }
-
       this.timeout(100000);
-      assert.ok(result.highest < MAX_SINGLE_EXEC
-        && result.total < MAX_TOTAL_EXEC_HARD
-      );
+      let result = perf_integration(I_MED);
+      assert.ok(result.highest < MAX_SINGLE_EXEC 
+        && result.total < MAX_TOTAL_EXEC_HARD);
     });
   });
 });

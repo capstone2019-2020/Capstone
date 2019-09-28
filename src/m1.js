@@ -66,7 +66,7 @@ const datamodel = require('./datamodel.js');
   var x1 = new datamodel.Node("x1");
   var x2 = new datamodel.Node("x2");
   var x3 = new datamodel.Node("x3");
-})();
+});
 
 function getEquations() {
   /* TODO: implement */

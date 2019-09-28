@@ -1,12 +1,14 @@
 const {Equation, Expression} = require('algebra.js');
 const {validate} = require('jsonschema');
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
-const LOG_LEVEL = LOG_LEVELS.error;
+const LOG_LEVEL = LOG_LEVELS[process.env.M1_LOG_LEVEL];
 /**
  * Set LOG_LEVEL to true if want verbose logs on tests, else, won't print anything
  */
 function log(level, ...params) {
-  if (LOG_LEVELS[level] <= LOG_LEVEL) console.log(...params);
+  if (LOG_LEVELS[level] <= LOG_LEVEL) {
+    console.log(...params);
+  }
 }
 
 const debug_log = (...params) => log('debug', ...params);
@@ -173,7 +175,7 @@ exports.simple_sfg = function get_sfg_mat(eqns) {
  *      - Verify existence of all adjacent nodes
  */
 exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
-  debug_log('verify sfg: ', JSON.stringify(output_sfg));
+  debug_log('verify sfg: ', JSON.stringify(output_sfg, null, 2));
   let valid = true;
 
   // (1)
@@ -237,7 +239,7 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
   });
 
   if (!valid) {
-    debug_log('expected graph to look like: ', JSON.stringify(ans_sfg));
+    debug_log('expected graph to look like: ', JSON.stringify(ans_sfg, null, 2));
   }
   return valid;
 };
@@ -262,7 +264,7 @@ exports.perf_stats = function perf_stats(highest, lowest, total, iters) {
 exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d) {
   let valid = true;
 
-  error_log('verify masons:', {
+  info_log('verify masons:', {
     output: `(${output_n.toString()})/(${output_d.toString()})`, 
     expected: `(${ans_n.toString()})/(${ans_d.toString()})`
   });
@@ -291,7 +293,7 @@ exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d)
       map_of_terms[term] = Math.ceil(Math.random() * 100)
     );
 
-    error_log('map_of_terms', map_of_terms);
+    info_log('map_of_terms', map_of_terms);
     output_n_eval = eval(output_n, map_of_terms);
     output_d_eval = eval(output_d, map_of_terms);
     ans_n_eval = eval(ans_n, map_of_terms);
@@ -300,7 +302,7 @@ exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d)
     output_eval = output_n_eval / output_d_eval;
     ans_eval = ans_n_eval / ans_d_eval;
 
-    error_log('output_eval | ans_eval', output_eval, ans_eval);
+    info_log('output_eval | ans_eval', output_eval, ans_eval);
     if (output_eval !== ans_eval) {
       valid = false;
       break;
