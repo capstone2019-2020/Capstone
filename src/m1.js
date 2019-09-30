@@ -9,64 +9,8 @@ const datamodel = require('./datamodel.js');
 
 
 (function main() {
-  /***** Case 1 *****/
-  /*var a_b = new datamodel.Edge("4", "a", "b");
-  var a_c = new datamodel.Edge("1", "a", "c");
-  var b_d = new datamodel.Edge("1", "b", "d");
-  var b_e = new datamodel.Edge("3", "b", "e");
-  var c_b = new datamodel.Edge("1", "c", "b");
-  var e_f = new datamodel.Edge("2", "e", "f");
-
-  var a = new datamodel.Node("a");
-  a.outgoingEdges = [a_b, a_c];
-  var b = new datamodel.Node("b");
-  b.outgoingEdges = [b_d, b_e];
-  var c = new datamodel.Node("c");
-  c.outgoingEdges = [c_b];
-  var d = new datamodel.Node("d");
-  var e = new datamodel.Node("e");
-  var f = new datamodel.Node("f");
-  e.outgoingEdges = [e_f];
-
-  curr_path = [];
-  paths = [];
-  nodes = [a,b,c,d,e,f];
-
-  console.log(m1helper.calculateNumerator(a, f, nodes));*/
-
-  /***** case 2 *****/
-  /*var a_b = new datamodel.Edge("1", "a", "b");
-  var b_c = new datamodel.Edge("1", "b", "c");
-  var c_d = new datamodel.Edge("1", "c", "d");
-  var d_e = new datamodel.Edge("1", "d", "e");
-  var e_f = new datamodel.Edge("1", "e", "f");
-  var c_b = new datamodel.Edge("1", "c", "b");
-  var d_c = new datamodel.Edge("1", "d", "c");
-  var e_d = new datamodel.Edge("1", "e", "d");
-  var b_e = new datamodel.Edge("1", "b", "e");
-
-  var a = new datamodel.Node("a");
-  var b = new datamodel.Node("b");
-  var c = new datamodel.Node("c");
-  var d = new datamodel.Node("d");
-  var e = new datamodel.Node("e");
-  var f = new datamodel.Node("f");
-  
-  a.outgoingEdges = [a_b];
-  b.outgoingEdges = [b_c, b_e];
-  c.outgoingEdges = [c_b, c_d];
-  d.outgoingEdges = [d_c, d_e];
-  e.outgoingEdges = [e_d, e_f];
-
-  curr_path = [];
-  paths = [];
-  nodes = [a,b,c,d,e,f];*/
-
   getUserInput();
-  var x1 = new datamodel.Node("x1");
-  var x2 = new datamodel.Node("x2");
-  var x3 = new datamodel.Node("x3");
-});
+})();
 
 function getEquations() {
   /* TODO: implement */
@@ -74,12 +18,10 @@ function getEquations() {
 }
 
 function computeMasons(nodes, start, end) {
-  /* TODO: implement */
-
   /* Calculate denominator
   * 1. Get all loops in the SFG -- DONE
   * 2. Get all of the nth non-touching loops -- DONE
-  * 3. Generate denominator
+  * 3. Generate denominator -- DONE (with some known issues)
   *   denom = 1 - all loop gains + all 2 non-touching loops - all 3 non-touching loops ...
   * */
   const allLoops = m1helper.findAllLoops(nodes);
@@ -159,6 +101,8 @@ function getUserInput() {
 
     var nodes = computeSFG(equations);
     outputSFG(nodes);
+    var transferfunc = computeMasons(nodes, startNode, endNode);
+    printTransferFunction(transferfunc, startNode, endNode);
   });
 }
 

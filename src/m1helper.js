@@ -116,17 +116,10 @@ function calculateNumerator(start, end , nodes){
   // Step 2 - handle loops that do not touch kth forward path (this is delta_k)
   paths.forEach(p => { 
     const subgraph = subtractNodes(nodes, p);
+    const allLoops = findAllLoops(subgraph);
+    const nonTouchingLoops = findNonTouching(allLoops);
+    delta_k.push(calculateDenominator(allLoops, nonTouchingLoops));
 
-    if (subgraph.length < 1){
-      delta_k.push(0);
-    }
-    else{
-      const allLoops = findAllLoops(subgraph);
-      const nonTouchingLoops = findNonTouching(allLoops);
-      delta_k.push(calculateDenominator(allLoops, nonTouchingLoops));
-    }
-
-    
   });
 
   // Find the sum of P_k * delta_k
@@ -134,8 +127,8 @@ function calculateNumerator(start, end , nodes){
     let ex = new Expression(1);
     
     for (let i=0; i<forwardLoopgains.length; i++){
-        ex = ex.multiply(forwardLoopgains[i].toString());
-        ex = ex.multiply(delta_k[i].toString());
+        ex = ex.multiply(forwardLoopgains[i]);
+        ex = ex.multiply(delta_k[i]);
         numer = numer.add(ex);
     }
     return numer;
@@ -200,7 +193,7 @@ function getForwardPathsLoopgains(paths){
   paths.forEach(p => {
     var forwardEdges = extractPathEdges(p);
     var flg = calculateLoopGain(forwardEdges);
-    forwardLoopgains.push(flg.toString());
+    forwardLoopgains.push(flg);
   });
 
   return forwardLoopgains;
@@ -298,7 +291,7 @@ function calculateDenominator(allLoops, nonTouching) {
 function calculateLoopGain(edges) {
   let ex = new Expression(1);
   edges.forEach((e) => {
-    ex = ex.multiply(e.weight);
+    ex = ex.multiply(algebra.parse(e.weight));
   });
 
   if (DEBUG) {
