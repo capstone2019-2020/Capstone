@@ -66,7 +66,9 @@ describe('computeSFG()', function() {
     const I_HARD = 50;
 
     const perf_computeSFG = (I) => {
-      let total = BigInt(0), highest = BigInt(0), lowest = BigInt(0);
+      let total = BigInt(0);
+      let highest = BigInt(0);
+      let lowest = BigInt(0);
       let start, end;
       let eqns;
 
@@ -124,24 +126,21 @@ describe('computeMasons()', function() {
     d: algebra.parse(eq_obj.d)
   }));
 
+  const test_masons = (alg_eqn) => {
+    const sfg = suite.simple_sfg(alg_eqn.equations);
+    const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
+    assert.ok(suite.verify_masons(n, d, alg_eqn.n, alg_eqn.d));
+  };
+
   describe('func', function() {
-    it ('correctness 1', function() {
-      const test_eqns = [alg_equations[1], alg_equations[6], alg_equations[7]];
-      test_eqns.forEach(alg_eqn => {
-        const sfg = suite.simple_sfg(alg_eqn.equations);
-        const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
-        assert.ok(suite.verify_masons(n, d, alg_eqn.n, alg_eqn.d));
-      });
-    });
-    it ('correctness 2', function() {
-      const test_eqns = [alg_equations[0], alg_equations[2], alg_equations[3],
-        alg_equations[4], alg_equations[5]];
-      test_eqns.forEach(alg_eqn => {
-        const sfg = suite.simple_sfg(alg_eqn.equations);
-        const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
-        assert.ok(suite.verify_masons(n, d, alg_eqn.n, alg_eqn.d));
-      });
-    });
+    it ('correctness 1', () => test_masons(alg_equations[0]));
+    it ('correctness 2', () => test_masons(alg_equations[1]));
+    it ('correctness 3', () => test_masons(alg_equations[2]));
+    it ('correctness 4', () => test_masons(alg_equations[3]));
+    it ('correctness 5', () => test_masons(alg_equations[4]));
+    it ('correctness 6', () => test_masons(alg_equations[5]));
+    it ('correctness 7', () => test_masons(alg_equations[6]));
+    it ('correctness 8', () => test_masons(alg_equations[7]));
   });
   describe('perf', function() {
     // perf test metrics (time in ms), I = iterations & size of input
@@ -154,15 +153,13 @@ describe('computeMasons()', function() {
     const I_HARD = 100;
 
     const perf_computeMasons = (I) => {
-      let total = BigInt(0), highest = BigInt(0), lowest = BigInt(0);
+      let total = BigInt(0);
+      let highest = BigInt(0);
+      let lowest = BigInt(0);
       let start, end;
-
-      const test_eqns = [alg_equations[0], alg_equations[2], alg_equations[3],
-        alg_equations[4], alg_equations[5]];
-      let alg_eqn;
+      let alg_eqn = alg_equations[1];
 
       for (let i = 0; i < I; i++) {
-        alg_eqn = test_eqns[Math.floor(Math.random() * test_eqns.length)];
         start = process.hrtime.bigint();
         const sfg = suite.simple_sfg(alg_eqn.equations);
         const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
@@ -217,16 +214,20 @@ describe('integration', function() {
     d: algebra.parse(eq_obj.d)
   }));
 
-  const perf_integration = (I) => {
-    let total = BigInt(0), highest = BigInt(0), lowest = BigInt(0);
-    let start, end;
+  const test_masons = (alg_eqn) => {
+    const sfg = computeSFG(alg_eqn.equations);
+    const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
+    assert.ok(suite.verify_masons(n, d, alg_eqn.n, alg_eqn.d));
+  };
 
-    const test_eqns = [alg_equations[0], alg_equations[2], alg_equations[3],
-      alg_equations[4], alg_equations[5]];
-    let alg_eqn;
+  const perf_integration = (I) => {
+    let total = BigInt(0);
+    let highest = BigInt(0);
+    let lowest = BigInt(0);
+    let start, end;
+    let alg_eqn = alg_equations[1];
 
     for (let i = 0; i < I; i++) {
-      alg_eqn = test_eqns[Math.floor(Math.random() * test_eqns.length)];
       start = process.hrtime.bigint();
       const sfg = computeSFG(alg_eqn.equations);
       const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
@@ -243,23 +244,14 @@ describe('integration', function() {
   };
 
   describe('func', function() {
-    it ('correctness 1', function() {
-      const test_eqns = [alg_equations[1], alg_equations[6], alg_equations[7]];
-      test_eqns.forEach(alg_eqn => {
-        const sfg = computeSFG(alg_eqn.equations);
-        const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
-        assert.ok(suite.verify_masons(n, d, alg_eqn.n, alg_eqn.d));
-      });
-    });
-    it ('correctness 2', function() {
-      const test_eqns = [alg_equations[0], alg_equations[2], alg_equations[3],
-        alg_equations[4], alg_equations[5]];
-      test_eqns.forEach(alg_eqn => {
-        const sfg = computeSFG(alg_eqn.equations);
-        const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
-        assert.ok(suite.verify_masons(n, d, alg_eqn.n, alg_eqn.d));
-      });
-    });
+    it ('correctness 1', () => test_masons(alg_equations[0]));
+    it ('correctness 2', () => test_masons(alg_equations[1]));
+    it ('correctness 3', () => test_masons(alg_equations[2]));
+    it ('correctness 4', () => test_masons(alg_equations[3]));
+    it ('correctness 5', () => test_masons(alg_equations[4]));
+    it ('correctness 6', () => test_masons(alg_equations[5]));
+    it ('correctness 7', () => test_masons(alg_equations[6]));
+    it ('correctness 8', () => test_masons(alg_equations[7]));
   });
   describe('perf', function() {
     it('easy', function() {

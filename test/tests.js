@@ -1,11 +1,11 @@
 exports.equations = [
   { // 0
     equations: [
-      'x2 = l * x1 + e * x3',
+      'x2 = 1 * x1 + e * x3',
       'x3 = a * x2 + f * x4',
       'x4 = b * x3 + g * x5',
       'x5 = c * x4 + d * x2',
-      'x6 = l * x5'
+      'x6 = 1 * x5'
     ],
     start: 'x2',
     end: 'x6',
@@ -88,8 +88,8 @@ exports.equations = [
     equations: [
       'x1 = a * x2'
     ],
-    start: 'x1',
-    end: 'x2',
+    start: 'x2',
+    end: 'x1',
     n: 'a',
     d: '1'
   }
