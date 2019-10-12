@@ -78,73 +78,37 @@ function generate(event) {
   event.preventDefault();
 }
 
+function sfgToCyto(sfg) {
+  if (!sfg) {
+    return;
+  }
+
+  const nodes = [], edges = [];
+  sfg.forEach(n => {
+    nodes.push({
+      data: {id: n.id}
+    });
+
+    n.outgoingEdges.forEach(e => {
+      edges.push({
+        data: {
+          id: e.weight,
+          source: e.startNode,
+          target: e.endNode
+        }
+      });
+    });
+  });
+
+  return {nodes, edges};
+}
+
 function renderSFG() {
   cytoscape({
     container: document.getElementById('sfg_canvas'), // container to render in
-    elements: { // list of graph elements to start with
-      nodes: [
-        { // node a
-          data: { id: 'x0' }
-        },
-        { // node b
-          data: { id: 'x1' }
-        },
-        { // node c
-          data: { id: 'x2' }
-        },
-        { // node d
-          data: { id: 'x3' }
-        },
-        { // node d
-          data: { id: 'x4' }
-        }],
-      edges: [
-        { // edge ab
-          data: { id: '1', source: 'x0', target: 'x1' }
-        },
-        { // edge bc
-          data: { id: 'a', source: 'x1', target: 'x2' }
-        },
-        { // edge ab
-          data: { id: 'b', source: 'x2', target: 'x3' }
-        },
-        { // edge ab
-          data: { id: '123', source: 'x3', target: 'x4' }
-        },
-        { // edge ab
-          data: { id: 'd', source: 'x4', target: 'x3' }
-        },
-        { // edge ab
-          data: { id: 'e', source: 'x4', target: 'x0' }
-        }]
-    },
-    style: [ // the stylesheet for the graph
-      {
-        selector: 'node',
-        style: {
-          'background-color': '#666',
-          'label': 'data(id)'
-        }
-      },
-      {
-        selector: 'edge',
-        style: {
-          'width': 3,
-          'curve-style': 'bezier',
-          'control-point-distance': '50px',
-          'control-point-weight': '0.7', // '0': curve towards source node, '1': towards target node.
-          'edge-distances': 'intersection',
-          'line-color': '#ccc',
-          'target-arrow-color': '#ccc',
-          'target-arrow-shape': 'triangle',
-          'label': 'data(id)'
-        }
-      }
-    ],
-    layout: {
-      name: 'grid',
-      rows: 1
-    }
+    elements: sfgToCyto(),
+    style: cyto.style,
+    layout: cyto.layout
   });
 }
 
