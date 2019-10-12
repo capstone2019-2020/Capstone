@@ -41,10 +41,20 @@
             </form>
         </div>
         <div>
-            <div class="sfg-canvas-wrapper">
-                <div id="sfg_canvas"/>
+            <div class="sfg-canvas-variable-wrapper">
+                <div class="sfg-variables-wrapper">
+                    <form id="variable-form">
+                        <h3>Edge Weights</h3>
+                        <div id="edge-weight-list" class="sfg-variables-inner-wrapper">
+                            <table id="edge-weight-table"></table>
+                        </div>
+                        <input type="submit" value="EVALUATE">
+                    </form>
+                </div>
+                <div class="sfg-canvas-wrapper">
+                    <div id="sfg_canvas"></div>
+                </div>
             </div>
-            <div>Variables</div>
             <div>
                 <span>Transfer function:</span>
                 <span>TRANSFER_FUNCTION_GOES_HERE</span>

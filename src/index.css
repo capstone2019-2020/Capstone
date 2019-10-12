@@ -3,6 +3,10 @@ body {
   font-family: 'Nunito Sans', serif;
 }
 
+h3 {
+  margin: 0;
+}
+
 tr {
   height: 30px;
 }
@@ -40,8 +44,36 @@ table {
 }
 
 .sfg-canvas-wrapper {
+  position: relative;
+  display: inline-block;
+  float: left;
   width: 70%;
-  height: 50%;
+  height: 100%;
   margin: auto;
   border: 1px solid black;
 }
+
+.sfg-variables-wrapper {
+  position: relative;
+  display: inline-block;
+  float: left;
+  width: 20%;
+  height: 100%;
+}
+
+.sfg-canvas-variable-wrapper {
+  width: 80%;
+  max-width: 1000px;
+  height: 50%;
+  min-height: 500px;
+  margin: auto;
+  padding-bottom: 10px;
+}
+
+.sfg-variables-inner-wrapper {
+  overflow-y: scroll;
+  height: 85%;
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+

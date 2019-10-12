@@ -1,7 +1,10 @@
 const inputForm = document.getElementById("input-form");
+const variableForm = document.getElementById("variable-form");
 const equations = document.getElementById("equations");
 inputForm.onsubmit = generate;
+variableForm.onsubmit = evaluate;
 
+const test_sfg = [{"id":"x_0","outgoingEdges":[{"id":"e_x_0x_1","weight":"a_10","startNode":"x_0","endNode":"x_1"},{"id":"e_x_0x_3","weight":"a_30","startNode":"x_0","endNode":"x_3"},{"id":"e_x_0x_4","weight":"a_40","startNode":"x_0","endNode":"x_4"},{"id":"e_x_0x_5","weight":"a_50","startNode":"x_0","endNode":"x_5"}]},{"id":"x_1","outgoingEdges":[{"id":"e_x_1x_0","weight":"-a_01","startNode":"x_1","endNode":"x_0"},{"id":"e_x_1x_3","weight":"-a_31","startNode":"x_1","endNode":"x_3"}]},{"id":"x_2","outgoingEdges":[{"id":"e_x_2x_0","weight":"-a_02","startNode":"x_2","endNode":"x_0"},{"id":"e_x_2x_1","weight":"a_12","startNode":"x_2","endNode":"x_1"},{"id":"e_x_2x_3","weight":"a_32","startNode":"x_2","endNode":"x_3"},{"id":"e_x_2x_4","weight":"-a_42","startNode":"x_2","endNode":"x_4"}]},{"id":"x_4","outgoingEdges":[{"id":"e_x_4x_0","weight":"-a_04","startNode":"x_4","endNode":"x_0"},{"id":"e_x_4x_2","weight":"a_24","startNode":"x_4","endNode":"x_2"},{"id":"e_x_4x_5","weight":"-a_54","startNode":"x_4","endNode":"x_5"}]},{"id":"x_5","outgoingEdges":[{"id":"e_x_5x_0","weight":"a_05","startNode":"x_5","endNode":"x_0"},{"id":"e_x_5x_1","weight":"a_15","startNode":"x_5","endNode":"x_1"},{"id":"e_x_5x_2","weight":"a_25","startNode":"x_5","endNode":"x_2"},{"id":"e_x_5x_3","weight":"-a_35","startNode":"x_5","endNode":"x_3"}]},{"id":"x_3","outgoingEdges":[{"id":"e_x_3x_1","weight":"a_13","startNode":"x_3","endNode":"x_1"},{"id":"e_x_3x_4","weight":"-a_43","startNode":"x_3","endNode":"x_4"}]}];
 
 function validate(schema) {
   if (!schema.equations.length || !schema.start_node || !schema.end_node) {
@@ -74,7 +77,22 @@ function generate(event) {
     return;
   }
 
-  renderSFG();
+  // fetch shit
+  renderSFG(test_sfg);
+  event.preventDefault();
+}
+
+function evaluate(event) {
+  alert('evaluating!');
+  const form = document.getElementById("variable-form");
+  const formData = new FormData(form);
+
+  let key;
+  for (let pair of formData.entries()) {
+    key = pair[0];
+    console.log(key);
+  }
+
   event.preventDefault();
 }
 
@@ -103,12 +121,48 @@ function sfgToCyto(sfg) {
   return {nodes, edges};
 }
 
-function renderSFG() {
+function renderSFG(sfg) {
+  const elements = sfgToCyto(sfg);
   cytoscape({
     container: document.getElementById('sfg_canvas'), // container to render in
-    elements: sfgToCyto(),
+    elements,
     style: cyto.style,
     layout: cyto.layout
+  });
+
+  // reset weights list
+  const uniqWeights = {};
+  document.getElementById('edge-weight-table').innerHTML = "";
+  elements.edges.forEach(({data: e}) => {
+    if (isNaN(parseFloat(e.id))) {
+      // don't put duplicate weights here
+      if (uniqWeights.hasOwnProperty(e.id)) {
+        return;
+      } else {
+        uniqWeights[e.id] = true; // arbitrary value
+      }
+
+      const tr = document.createElement('tr');
+      const leftCell = document.createElement('td');
+      const rightCell = document.createElement('td');
+      const input = document.createElement('input');
+      const label = document.createElement('label');
+
+      input.id = `${e.id}_${e.source}_${e.target}`;
+      input.style.width = '70px';
+      input.name = e.id;
+      label.innerHTML = e.id;
+      label.for = input.id;
+      leftCell.style.width = '70px';
+      leftCell.style.textAlign = 'right';
+      leftCell.style.paddingRight = '5px';
+
+      leftCell.appendChild(label);
+      rightCell.appendChild(input);
+      const children = [leftCell, rightCell];
+      children.forEach(c => tr.appendChild(c));
+      document.getElementById('edge-weight-table').appendChild(tr);
+    }
   });
 }
 
