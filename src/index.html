@@ -1,28 +1,50 @@
 <html>
     <head>
         <title>SFG Generator</title>
+        <link rel="stylesheet" type="text/css" href="index.css"/>
+        <link href='https://fonts.googleapis.com/css?family=Open Sans' rel='stylesheet'>
+        <link href='https://fonts.googleapis.com/css?family=Nunito Sans' rel='stylesheet'>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.9.0/cytoscape.min.js"></script>
     </head>
     <body>
         <div>
             <div><h1>SFG Generator</h1></div>
             <form id="input-form">
-                <div id="equations">
-                    <span onclick="addEquation()">Add equation</span>
-                </div>
-                <div>
-                    <label for="start">Start Node: </label>
-                    <input type="text" id="start" name="start_node">
-                </div>
-                <div>
-                    <label for="end">End Node: </label>
-                    <input type="text" id="end" name="end_node">
-                </div>
-                <input type="submit" value="Generate">
+                <table>
+                    <tr>
+                        <td class="left-cell">Equations</td>
+                        <td class="right-cell">
+                            <div id="equations">
+                                <span onclick="addEquation()"><i class="eqn">Add equation</i></span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="left-cell">
+                            <label for="start">Start Node</label>
+                        </td>
+                        <td class="right-cell">
+                            <input type="text" id="start" name="start_node">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="left-cell">
+                            <label for="end">End Node</label>
+                        </td>
+                        <td class="right-cell">
+                            <input type="text" id="end" name="end_node">
+                        </td>
+                    </tr>
+                </table>
+                <input type="submit" value="GENERATE">
             </form>
         </div>
         <div>
+            <div class="sfg-canvas-wrapper">
+                <div id="sfg_canvas"/>
+            </div>
             <div>Variables</div>
-            <div id="sfg_canvas"></div>
             <div>
                 <span>Transfer function:</span>
                 <span>TRANSFER_FUNCTION_GOES_HERE</span>
@@ -31,7 +53,6 @@
                 <span>EVALUATED_VALUE_GOES_HERE</span>
             </div>
         </div>
-
         <script type="text/javascript" src="index.js"></script>
     </body>
 </html>
