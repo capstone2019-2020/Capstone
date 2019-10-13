@@ -13,9 +13,9 @@ var urlencodedParser = bodyParser.urlencoded({ extended: false});
 app.use(express.static('public'));
 app.use(bodyParser.json());
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname+ '/index.html'));
-});
+// app.get('/', (req, res) => {
+//     res.sendFile(path.join(__dirname+ '/index.html'));
+// });
 
 // Receive user request and parse into the equations
 // Saves the equations into an array named equations 
