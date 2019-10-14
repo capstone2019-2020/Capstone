@@ -7,11 +7,6 @@ const readline = require('readline');
 const m1helper = require('./m1helper.js');
 const datamodel = require('./datamodel.js');
 
-
-(function main() {
-  getUserInput();
-})();
-
 function getEquations() {
   /* TODO: implement */
   return {};
@@ -48,8 +43,8 @@ function printTransferFunction(func, start, end) {
 
 /**
  * Retrieve user inputs:
- * - n - # of equations
- * - List of equations
+ * - n - # of eqns
+ * - List of eqns
  * - Start node
  * - End node
  * Note: Assumes that the user will enter valid values
@@ -66,7 +61,7 @@ function getUserInput() {
   let endNode = '';
 
   // Get the user inputs
-  rl.question('Please type in the number of equations: ', (ans) => {
+  rl.question('Please type in the number of eqns: ', (ans) => {
     n = parseInt(ans);
     rl.on('line', (input) => {
       equations.push(algebra.parse(input));
@@ -117,7 +112,7 @@ function computeSFG (params) {
 
   // for (let i in nodes) {
   for (let i = 0; i < params.length; i++) {
-    //Access the equations and split by lhs and rhs
+    //Access the eqns and split by lhs and rhs
     termsoflhs.push(params[i].lhs.terms);
     termsofrhs.push(params[i].rhs.terms);
   }   
@@ -202,7 +197,7 @@ function computeSFG (params) {
     }
   }
 
-  // Searching through the rhs of the equations again to ensure the new nodes are also connected 
+  // Searching through the rhs of the eqns again to ensure the new nodes are also connected
   if (needToSearchRelation === true) {
     for (let searchNeeded = nodesNum; searchNeeded < nodes.length; searchNeeded++) {
       for (let i = 0; i < termsofrhs.length; i++) {

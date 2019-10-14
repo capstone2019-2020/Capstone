@@ -25,7 +25,7 @@ const style = [ // the stylesheet for the graph
       'line-color': '#ccc',
       'target-arrow-color': '#ccc',
       'target-arrow-shape': 'triangle',
-      'label': 'data(id)'
+      'label': 'data(edgeWeight)'
     }
   }
 ];

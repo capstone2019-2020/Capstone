@@ -1,6 +1,6 @@
 exports.equations = [
   { // 0
-    equations: [
+    eqns: [
       'x2 = 1 * x1 + e * x3',
       'x3 = a * x2 + f * x4',
       'x4 = b * x3 + g * x5',
@@ -13,7 +13,7 @@ exports.equations = [
     d: '1 - a * e - b * f - c * g - d * g * f * e + a * e * c * g'
   },
   { // 1
-    equations: [
+    eqns: [
       'x2 = x1 + L * x2',
       'x3 = x2'
     ],
@@ -23,7 +23,7 @@ exports.equations = [
     d: '1 - L'
   },
   { // 2
-    equations: [
+    eqns: [
       'x2 = a * x1 + e * x4',
       'x3 = b * x2 + d * x4',
       'x4 = c * x3'
@@ -34,7 +34,7 @@ exports.equations = [
     d: '1 - c * d - b * c * e'
   },
   { // 3
-    equations: [
+    eqns: [
       'x2 = a * x1 + e * x3',
       'x3 = b * x2',
       'x4 = d * x1 + c * x3'
@@ -45,7 +45,7 @@ exports.equations = [
     d: '1 - b * e'
   },
   { // 4
-    equations: [
+    eqns: [
       'x2 = e * x3 + l * x1 + d * x4',
       'x3 = b * x2 + f * x4',
       'x4 = a * x2 + c * x3',
@@ -57,7 +57,7 @@ exports.equations = [
     d: '1 - a * d - b * e - c * f - b * c * d - a * f * e'
   },
   { // 5
-    equations: [
+    eqns: [
       'x2 = l * x1 + d * x3 + f * x4',
       'x3 = a * x2 + e * x4',
       'x4 = b * x3 + c * x2',
@@ -69,7 +69,7 @@ exports.equations = [
     d: '1 - a * d - b * e - a * b * f - c * e * d - c * f'
   },
   { // 6
-    equations: [
+    eqns: [
       'x2 = a * x1',
       'x3 = b * x2',
       'x4 = c * x3',
@@ -85,7 +85,7 @@ exports.equations = [
     d: '1'
   },
   { // 7
-    equations: [
+    eqns: [
       'x1 = a * x2'
     ],
     start: 'x2',

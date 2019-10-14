@@ -117,7 +117,7 @@ exports.matmult_to_eqn = function eqns_mat_to_eqns(M) {
  *    x_2 = x_1
  */
 exports.simple_sfg = function get_sfg_mat(eqns) {
-  info_log('simple sfg equations:');
+  info_log('simple sfg eqns:');
   eqns.forEach(eqn => info_log(eqn.toString()));
   let nodes = {};
 

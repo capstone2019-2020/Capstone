@@ -9,6 +9,12 @@ const port = process.env.PORT || 3000;
 const equations = [];
 let nodes, startNode, endNode, masonsdata;
 
+app.use(function(req, res, next) {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+    next();
+});
+
 var urlencodedParser = bodyParser.urlencoded({ extended: false});
 app.use(express.static('public'));
 app.use(bodyParser.json());
@@ -17,25 +23,29 @@ app.use(bodyParser.json());
 //     res.sendFile(path.join(__dirname+ '/index.html'));
 // });
 
-// Receive user request and parse into the equations
-// Saves the equations into an array named equations 
+// Receive user request and parse into the eqns
+// Saves the eqns into an array named eqns
 // Also saves the start and end node information
 app.post("/input-form", (req, res) => {
     let eqns = req.body.eqns;
+    console.log(req.body);
     startNode = req.body.start;
     endNode = req.body.end;
 
-    // No equations has been entered
+    // No eqns has been entered
     if (!req.body.eqns) {
         return res.status(400).send("Missing Equation");
     }
     
-    // The equations array is emptied every time the input post is used
+    // The eqns array is emptied every time the input post is used
     if (equations.length != 0) {
         equations.length = 0;
     }
 
     eqns.forEach((eq) => equations.push(algebra.parse(eq)));
+    res.set({
+
+    });
     return res.status(200).send(eqns);
 });
 
@@ -45,10 +55,10 @@ app.get("/computeSFG", (req, res) => {
     res.status(200).send(nodes);
 });
 
-// Get the computeMasons equations 
+// Get the computeMasons eqns
 app.get("/computeMasons", (req, res) => {
     masonsdata = m1.computeMasons(nodes, startNode, endNode);
-    res.status(200).send(masonsdata);
+    res.status(200).send({n: masonsdata.n.toString(), d: masonsdata.d.toString()});
 });
 
 

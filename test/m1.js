@@ -18,7 +18,7 @@ const algebra = require('algebra.js');
  * tests as much as possible as this hinders scalability of testing.
  * But for now, it seems like the only solution.
  * 
- * Inputs can be formed from a system of equations represented through
+ * Inputs can be formed from a system of eqns represented through
  * generation of size-n square matrice A, each matrix element can be 
  * in Algebra.js equation format.
  * AX = B (where A is the square nxn matrix, X = nx1, B = nx1)
@@ -28,7 +28,7 @@ describe('computeSFG()', function() {
   const {computeSFG} = require('../src/m1');
 
   const alg_equations = equations.map(eq_obj =>
-    eq_obj.equations.map(e => algebra.parse(e))
+    eq_obj.eqns.map(e => algebra.parse(e))
   );
 
   describe('func', function() {
@@ -111,7 +111,7 @@ describe('computeSFG()', function() {
 
 /*
  * This is very easy to test on a general level. Solve size-n square
- * matrix representation of system of equations. Simplify or compute
+ * matrix representation of system of eqns. Simplify or compute
  * variety of values to test whether the given transfer function gives
  * the same result.
  */
@@ -119,7 +119,7 @@ describe('computeMasons()', function() {
   const {computeMasons} = require('../src/m1');
 
   const alg_equations = equations.map(eq_obj => ({
-    equations: eq_obj.equations.map(e => algebra.parse(e)),
+    eqns: eq_obj.eqns.map(e => algebra.parse(e)),
     start: eq_obj.start,
     end: eq_obj.end,
     n: algebra.parse(eq_obj.n),
@@ -127,7 +127,7 @@ describe('computeMasons()', function() {
   }));
 
   const test_masons = (alg_eqn) => {
-    const sfg = suite.simple_sfg(alg_eqn.equations);
+    const sfg = suite.simple_sfg(alg_eqn.eqns);
     const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
     assert.ok(suite.verify_masons(n, d, alg_eqn.n, alg_eqn.d));
   };
@@ -161,7 +161,7 @@ describe('computeMasons()', function() {
 
       for (let i = 0; i < I; i++) {
         start = process.hrtime.bigint();
-        const sfg = suite.simple_sfg(alg_eqn.equations);
+        const sfg = suite.simple_sfg(alg_eqn.eqns);
         const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
         end = process.hrtime.bigint();
 
@@ -199,7 +199,7 @@ describe('computeMasons()', function() {
  * Step 1: SFG = computeSFG()
  * Step 2: computeMasons(SFG, ...)
  * 
- * Also easy to test, pass in system of equations, which can be solved
+ * Also easy to test, pass in system of eqns, which can be solved
  * through non-SFG means, compare this result with the result yielded
  * from computeMasons().
  */
@@ -207,7 +207,7 @@ describe('integration', function() {
   const {computeSFG, computeMasons} = require('../src/m1');
 
   const alg_equations = equations.map(eq_obj => ({
-    equations: eq_obj.equations.map(e => algebra.parse(e)),
+    eqns: eq_obj.eqns.map(e => algebra.parse(e)),
     start: eq_obj.start,
     end: eq_obj.end,
     n: algebra.parse(eq_obj.n),
@@ -215,7 +215,7 @@ describe('integration', function() {
   }));
 
   const test_masons = (alg_eqn) => {
-    const sfg = computeSFG(alg_eqn.equations);
+    const sfg = computeSFG(alg_eqn.eqns);
     const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
     assert.ok(suite.verify_masons(n, d, alg_eqn.n, alg_eqn.d));
   };
@@ -229,7 +229,7 @@ describe('integration', function() {
 
     for (let i = 0; i < I; i++) {
       start = process.hrtime.bigint();
-      const sfg = computeSFG(alg_eqn.equations);
+      const sfg = computeSFG(alg_eqn.eqns);
       const {n, d} = computeMasons(sfg, alg_eqn.start, alg_eqn.end);
       end = process.hrtime.bigint();
 

@@ -3,8 +3,8 @@ const m1 = require('../src/m1');
 const {equations} = require('./tests');
 const algebra = require('algebra.js');
 
-// let alg_eqns = equations.map(eq_obj => {
-//   let eqns = eq_obj.equations.map(e => {
+// let alg_eqns = eqns.map(eq_obj => {
+//   let eqns = eq_obj.eqns.map(e => {
 //     return algebra.parse(e);
 //   });
 //   let parsed_n = algebra.parse(eq_obj.n);
