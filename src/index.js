@@ -237,6 +237,7 @@ function addEquation() {
   span.style.paddingLeft = '5px';
   span.style.fontStyle = 'italic';
   span.style.cursor = 'pointer';
+  span.classList.add('remove');
   span.onclick = () => {
     document.getElementById(newEqnInput.id).remove();
   };

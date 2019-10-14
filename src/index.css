@@ -35,6 +35,16 @@ table {
 
 .eqn {
   cursor: pointer;
+  transition: 0.3s;
+}
+
+.eqn:hover {
+  color: #57aaa8;
+}
+
+.remove:hover {
+  color: tomato;
+  transition: 0.3s;
 }
 
 #sfg_canvas {
