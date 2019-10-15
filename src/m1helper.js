@@ -118,16 +118,15 @@ function calculateNumerator(start, end , nodes){
     const subgraph = subtractNodes(nodes, p);
     const allLoops = findAllLoops(subgraph);
     const nonTouchingLoops = findNonTouching(allLoops);
-    delta_k.push(calculateDenominator(allLoops, nonTouchingLoops));
+    const d_k = calculateDenominator(allLoops, nonTouchingLoops);
+    delta_k.push(d_k);
 
   });
 
   // Find the sum of P_k * delta_k
   if (forwardLoopgains. length == delta_k.length){  // Sanity check
-    let ex = new Expression(1);
-    
     for (let i=0; i<forwardLoopgains.length; i++){
-        ex = ex.multiply(forwardLoopgains[i]);
+        let ex = forwardLoopgains[i];
         ex = ex.multiply(delta_k[i]);
         numer = numer.add(ex);
     }
@@ -229,22 +228,26 @@ function extractPathEdges(pathNodes){
  * @returns a sub-graph of originalNodes after nodesToSubtract has been removed
  */
 function subtractNodes(originalNodes, nodesToSubtract){
+  allnodes_copy = [];
   subgraph = [];
-
+  
+  // Quite inefficent... maybe optimize it somehow later
   originalNodes.forEach(n => {
-    if (!nodesToSubtract.includes(n)){
-      if (n.outgoingEdges.length < 1){
-        subgraph.push(n);
-      }
-      else{
-        n.outgoingEdges.forEach((e, i) => {
-          nts = nodesToSubtract.find(x => x.id === e.endNode);
-          if (nts != undefined){
-            n.outgoingEdges.splice(i, 1);
+    allnodes_copy.push(n);
+  });
+
+  allnodes_copy.forEach(n => {
+    // Check if the node should not be subtracted
+    if (!nodesToSubtract.includes(n) && n.outgoingEdges.length > 0){
+        nodesToSubtract.forEach((nts, i) => {
+          edge_i = n.outgoingEdges.findIndex(e => e.endNode === nts.id);
+
+          if (edge_i != -1){
+            n.outgoingEdges.splice(edge_i, 1);
           }
-        subgraph.push(n);
-        });
-      }
+        
+      });
+      subgraph.push(n);
     }
   });
 
