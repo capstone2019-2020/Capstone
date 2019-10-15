@@ -41,15 +41,15 @@ exports.equations = [
     ],
     start: 'x1',
     end: 'x4',
-    n: 'd * (l - b * e) + a * b * c',
+    n: 'd * (1 - b * e) + a * b * c',
     d: '1 - b * e'
   },
   { // 4
     eqns: [
-      'x2 = e * x3 + l * x1 + d * x4',
+      'x2 = e * x3 + 1 * x1 + d * x4',
       'x3 = b * x2 + f * x4',
       'x4 = a * x2 + c * x3',
-      'x5 = l * x4'
+      'x5 = 1 * x4'
     ],
     start: 'x1',
     end: 'x5',
@@ -58,10 +58,10 @@ exports.equations = [
   },
   { // 5
     eqns: [
-      'x2 = l * x1 + d * x3 + f * x4',
+      'x2 = 1 * x1 + d * x3 + f * x4',
       'x3 = a * x2 + e * x4',
       'x4 = b * x3 + c * x2',
-      'x5 = l * x4'
+      'x5 = 1 * x4'
     ],
     start: 'x1',
     end: 'x5',
