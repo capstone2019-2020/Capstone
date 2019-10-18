@@ -215,8 +215,10 @@ function renderSFG(sfg) {
 
 function renderTFunc(tfunc) {
   const tfuncElem = document.getElementById('tfunc');
-  const n = tfunc.n.length > 1 ? `(${tfunc.n})` : tfunc.n;
-  const d = tfunc.d.length > 1 ? `(${tfunc.d})` : tfunc.d;
+  let n = algebra.parse(tfunc.n).toString();
+  let d = algebra.parse(tfunc.d).toString();
+  n = n.length > 1 ? `(${n})` : n;
+  d = d.length > 1 ? `(${d})` : d;
   tfuncElem.innerHTML = `${n} / ${d}`;
 }
 
