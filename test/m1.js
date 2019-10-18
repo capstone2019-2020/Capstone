@@ -205,6 +205,13 @@ describe('computeMasons()', function() {
  */
 describe('integration', function() {
   const {computeSFG, computeMasons} = require('../src/m1');
+  const MAX_SINGLE_EXEC = 300;
+  const MAX_TOTAL_EXEC_EASY = 5000;
+  const MAX_TOTAL_EXEC_MED = 6000;
+  const MAX_TOTAL_EXEC_HARD = 7000;
+  const I_EASY = 3;
+  const I_MED = 10;
+  const I_HARD = 50;
 
   const alg_equations = equations.map(eq_obj => ({
     eqns: eq_obj.eqns.map(e => algebra.parse(e)),
