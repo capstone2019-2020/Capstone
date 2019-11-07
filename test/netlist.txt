@@ -1,0 +1,5 @@
+R1sc 0 1 100k
+R2sc 1 3 100k
+Cnsn 1 0 5p
+RLsc 3 0 2k
+CLsc 3 0 100p
