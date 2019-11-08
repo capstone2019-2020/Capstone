@@ -9,14 +9,55 @@ function Node(id, v) {
     this.id = id,
     this.voltage = v,
     this.passiveComponents = [] // array of connected passive components
+    this.currentSources = []
+};
+Node.prototype.allCurrentKnown = function(){
+    // only current source(s) is/are connected to the node
+    if (this.passiveComponents.length == 0 && this.currentSources.length != 0){
+        return true;
+    }
+    else if (this.passiveComponents.length > this.currentSources.length){
+        return false;
+    }
+    else if (this.passiveComponents.length == this.currentSources.length){
+        var ret = true;
+
+        this.passiveComponents.forEach((p) => {
+            this.currentSources.forEach((c) => {
+                 ret = resistorInSeriesWithCSrc(p, c);
+
+                 //if(ret){
+                 //   p.currentNumeric = c.value;
+                 //}
+            });
+
+            if (!ret){
+                return ret;
+            }
+            
+        });
+        return ret;
+    }
 };
 
 Node.prototype.kcl = function(){
+    if (this.allCurrentKnown()){
+        return;
+    }
+
     var sum_string = "";
     console.log(`KCL at node ${this.id.toString()}`);
     for (var i = 0; i < this.passiveComponents.length; i++){
-        console.log(`I${i} = ${this.passiveComponents[i].i}`);
-        sum_string += `I${i} + `;
+        pComp = this.passiveComponents[i];
+        
+        if (pComp.currentNumeric != undefined){
+            console.log(`${pComp.currentNumeric} = ${pComp.current}`);
+            sum_string += `(${pComp.currentNumeric}) + `;
+        }
+        else{
+            console.log(`I${i} = ${pComp.current}`);
+            sum_string += `I${i} + `;
+        }
     }
     var last_plus_index = sum_string.lastIndexOf('+');
     sum_string = sum_string.slice(0, last_plus_index);
@@ -61,6 +102,7 @@ function Resistor(r, p, n){
     this.pnode = p;
     this.nnode = n;
     this.current = undefined;
+    this.currentNumeric = undefined;
 };
 
 Resistor.prototype.ohmsLaw = function(circuit){
@@ -81,9 +123,36 @@ Resistor.prototype.ohmsLaw = function(circuit){
 
     var numer = new Expression(vp).subtract(np);
     var denom = this.value;
-    this.i = '(' +  numer.toString() + ')' + '/' + denom.toString();
+    this.current = '(' +  numer.toString() + ')' + '/' + denom.toString();
 };
 
+function CurrentSource(i, p, n){
+    this.value = i;
+    this.pnode = p;
+    this.nnode = n;
+};
+
+function resistorInSeriesWithCSrc(r, csrc){
+    if (r.pnode == csrc.pnode){
+        r.currentNumeric = -1 * csrc.value;
+        return true;
+    }
+    else if (r.pnode == csrc.nnode){
+        r.currentNumeric = csrc.value;
+        return true;
+    }
+    else if (r.nnode == csrc.pnode){
+        r.currentNumeric = csrc.value;
+        return true;
+    }
+    else if (r.nnode == csrc.nnode){
+        r.currentNumeric = -1 * csrc.value;
+        return true;
+    }
+    else {
+        false;
+    }
+}
 function createCircuit(components){
     // Initialize an empty Circuit object
     var circuit = new Circuit([], 0);
@@ -121,6 +190,13 @@ function createCircuit(components){
         if (c.type == 'V'){
             circuit.numVsrc ++;
         }
+        else if(c.type == 'I'){
+            cSrc  = new CurrentSource(c.value, c.pnode, c.nnode);
+            pnode = circuit.findNodeById(c.pnode);
+            nnode = circuit.findNodeById(c.nnode);
+            pnode.currentSources.push(cSrc);
+            nnode.currentSources.push(cSrc);
+        }
         else if (c.type == 'R'){
             r = new Resistor(c.value, c.pnode, c.nnode);
             r.ohmsLaw(circuit);
@@ -139,8 +215,10 @@ function createCircuit(components){
 (function main(){
     const voltage_div = 'test/netlist_ann1.txt'
     const var_simple = 'test/netlist_ann2.txt'
+    const curr_src = 'test/netlist_ann_csrc.txt'
 
-    example1 = nl.nlConsume(var_simple);
+    example1 = nl.nlConsume(voltage_div);
+    //console.log(JSON.stringify(example1));
     var circuit = createCircuit(example1);
     circuit.nodalAnalysis();
 
