@@ -137,12 +137,11 @@ function createCircuit(components){
 
 
 (function main(){
-    var example = [ { id: 'V1', type: 'V', pnode: 1, nnode: 0, value: 8 },
-    { id: 'V2', type: 'V', pnode: 0, nnode: 3, value: 2 },
-    { id: 'R1', type: 'R', pnode: 1, nnode: 2, value: 1000 },
-    { id: 'R2', type: 'R', pnode: 2, nnode: 0, value: 2000 },
-    { id: 'R3', type: 'R', pnode: 2, nnode: 3, value: 3000 } ];
-    var circuit = createCircuit(example);
-    //console.log(JSON.stringify(circuit));
+    const voltage_div = 'test/netlist_ann1.txt'
+    const var_simple = 'test/netlist_ann2.txt'
+
+    example1 = nl.nlConsume(var_simple);
+    var circuit = createCircuit(example1);
     circuit.nodalAnalysis();
+
 })();
