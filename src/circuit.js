@@ -52,16 +52,25 @@ Node.prototype.kcl = function(){
         
         if (pComp.currentNumeric != undefined){
             console.log(`${pComp.currentNumeric} = ${pComp.current}`);
-            sum_string += `(${pComp.currentNumeric}) + `;
+            sum_string += `+ (${pComp.currentNumeric})`;
         }
         else{
             console.log(`I${i} = ${pComp.current}`);
-            sum_string += `I${i} + `;
+            var sign = "";
+            if (this.id == pComp.pnode){
+                sign = '-';
+            } 
+            else{
+                if (i != 0){
+                    sign = '+';
+                }
+            }
+            sum_string += `${sign} I${i} `;
         }
     }
-    var last_plus_index = sum_string.lastIndexOf('+');
-    sum_string = sum_string.slice(0, last_plus_index);
-    sum_string += '= 0';
+    //var last_plus_index = sum_string.lastIndexOf('+');
+    //sum_string = sum_string.replace(1, last_plus_index);
+    sum_string += ' = 0';
     console.log(sum_string);
 };
 
@@ -217,7 +226,7 @@ function createCircuit(components){
     const var_simple = 'test/netlist_ann2.txt'
     const curr_src = 'test/netlist_ann_csrc.txt'
 
-    example1 = nl.nlConsume(voltage_div);
+    example1 = nl.nlConsume(curr_src);
     //console.log(JSON.stringify(example1));
     var circuit = createCircuit(example1);
     circuit.nodalAnalysis();
