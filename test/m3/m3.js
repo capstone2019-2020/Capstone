@@ -24,8 +24,8 @@ describe('nlConsume()', function() {
   };
 
   describe('func', function() {
-    it ('correctness 1 - no sources', () => test_netlist(netlists[0]));
-    it ('correctness 2 - independent source', () => test_netlist(netlists[1]));
+    it ('correctness 1 - independent source', () => test_netlist(netlists[0]));
+    it ('correctness 2 - dependent source', () => test_netlist(netlists[1]));
     it ('correctness 3 - all supported types', () => test_netlist(netlists[2]));
     it ('correctness 4 - invalid 1', () => test_netlist(netlists[3]));
     it ('correctness 5 - invalid 2', () => test_netlist(netlists[4]));

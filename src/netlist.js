@@ -66,7 +66,7 @@ exports.nlConsume = filepath => {
     multiplier = a[3].slice(-1);
     if (CONVERSION_LUT.hasOwnProperty(multiplier)) {
       multiplier = CONVERSION_LUT[multiplier];
-      console.log('multiplier: ', multiplier);
+      // console.log('multiplier: ', multiplier);
       val = parseFloat(a[3].slice(0, -1));
     } else {
       multiplier = 1;
