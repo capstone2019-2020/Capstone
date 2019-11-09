@@ -1,4 +1,5 @@
 const fs = require('fs');
+const assert = require('assert');
 
 const MAX_SUPPORTED_PARAMS = 6;
 const R_t = 'R';
