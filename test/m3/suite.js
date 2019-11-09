@@ -8,6 +8,16 @@ const debug_log = (...params) => {
   }
 }
 
+const CONVERSION_UNIT = {
+  'G': 1000000000,
+  'M': 1000000,
+  'k': 1000,
+  'm': 0.001,
+  'u': 0.000001,
+  'n': 0.000000001,
+  'p': 0.000000000001
+};
+
 const Schema = function Schema() {
   return {
     Init: (rest) => ({
@@ -37,15 +47,22 @@ const Schema = function Schema() {
 
 
 /**
+ * Function to verify output of netlist.js -> nlConsume() function
+ * Compares actual output with expected output as outlined in tests.js
  *
- * @param output
- * @param expected
+ * NOTE: due to issues with javascript floating point storage, could not
+ *       hard-code the values defined in tests.js - have to do the parsing of
+ *       the conversion units manually
+ *
+ * @param output - actual output obtained from nlConsume()
+ * @param expected - expected output as defined in m3/test.js
  * @returns true if output matches expected, false otherwise
  */
 exports.verifyNetList = function (output, expected) {
   let valid = true;
   let actual = {};
 
+  /* Verify schema */
   let schema = Schema();
   try {
     validate(output, schema.Init(schema.ObjectArray({
@@ -71,14 +88,38 @@ exports.verifyNetList = function (output, expected) {
     }
 
     Object.keys(ans_ele).forEach(k => {
-      if (!ele.hasOwnProperty(k) || ans_ele[k] !== ele[k]) {
+      /* Compute the expected value using conversion factor and compare*/
+      if (k === 'value') {
+        let value = ans_ele[k];
+        let factor = value.slice(-1);
+        factor = CONVERSION_UNIT.hasOwnProperty(factor) ? CONVERSION_UNIT[factor] : 1;
+        value = parseFloat(value) * factor;
+
+        if (value !== ele[k]) {
+          debug_log(`ERROR: Expected ${JSON.stringify(ans_ele)} -> Actual ${JSON.stringify(ele)}`);
+          valid = false;
+          return;
+        }
+      }
+
+      /* Verify expected property matches actual */
+      else if (!ele.hasOwnProperty(k) || ans_ele[k] !== ele[k]) {
         debug_log(`ERROR: Expected ${JSON.stringify(ans_ele)} -> Actual ${JSON.stringify(ele)}`);
         valid = false;
         return;
       }
     })
   });
-
   return valid;
+};
+
+/**
+ * Used to verify the equations produced by circuit.js -> nodalAnalysis() function
+ *
+ * @param output
+ * @param expected
+ * @returns true if actual output matches expected
+ */
+exports.verifyCircuit = function(output, expected) {
 
 };

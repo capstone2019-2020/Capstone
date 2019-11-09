@@ -6,8 +6,19 @@ const algebra = require('algebra.js');
 /**
  * netlist -> nlConsume();
  *
- * TODO
- * 1. For each test case in tests.js verify the output given by nlConsume() function
+ * Verifies the following cases for netlist parsing functionality:
+ *  1. RLC circuit with independent source
+ *  2. RLC circuit with dependent source
+ *  3. Circuit containing all supported types: R, L, C,
+ *      independent voltage + current sources,
+ *      depdendent voltage + current sources
+ *  4. Invalid netlist inputs:
+ *    - Unsupported types (i.e. not one of R, L, C, I, V, E, G)
+ *    - Too many arguments (> 5)
+ * Hardcoded the test cases - all can be found in test/m3/test.js
+ *
+ * Input: Filepath
+ * Output: Circuit data structures obtained from net list
  */
 describe('nlConsume()', function() {
   const {nlConsume} = require('../../src/netlist');
@@ -32,3 +43,14 @@ describe('nlConsume()', function() {
   });
 
 });
+
+/**
+ * circuit.js -> nodalAnalysis()
+ */
+// describe('nodalAnalysis()', function () {
+//   const {createCircuit, nodalAnalysis} = require('../../src/circuit');
+//
+//   describe('func', function() {
+//
+//   });
+// });
