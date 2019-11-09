@@ -11,9 +11,9 @@ const VCVS_t = 'E';
 const VCCS_t = 'G';
 const SUPPORTED_TYPES = [R_t, L_t, C_t, I_t, V_t, VCVS_t, VCCS_t];
 const CONVERSION_LUT = {
-  'k': 1000,
-  'M': 1000000,
   'G': 1000000000,
+  'M': 1000000,
+  'k': 1000,
   'm': 0.001,
   'u': 0.000001,
   'n': 0.000000001,
