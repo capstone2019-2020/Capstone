@@ -61,10 +61,7 @@ exports.nlConsume = filepath => {
 
     a = line.replace(/[!@#$%^&*\r]/g, '')
       .trim().split(' ');
-
-    if (a.length > MAX_SUPPORTED_PARAMS) {
-      console.log('WARN: invalid input');
-    }
+    assert(a.length <= MAX_SUPPORTED_PARAMS);
 
     multiplier = a[3].slice(-1);
     if (CONVERSION_LUT.hasOwnProperty(multiplier)) {
