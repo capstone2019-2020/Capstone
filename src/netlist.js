@@ -63,15 +63,9 @@ exports.nlConsume = filepath => {
       .trim().split(' ');
     assert(a.length <= MAX_SUPPORTED_PARAMS);
 
-    multiplier = a[3].slice(-1);
-    if (CONVERSION_LUT.hasOwnProperty(multiplier)) {
-      multiplier = CONVERSION_LUT[multiplier];
-      // console.log('multiplier: ', multiplier);
-      val = parseFloat(a[3].slice(0, -1));
-    } else {
-      multiplier = 1;
-      val = parseFloat(a[3]);
-    }
+
+    // value for 4-operand input
+    val = a[3];
 
     // Check for dependent voltage source
     let cpnode, cnnode;
@@ -80,7 +74,15 @@ exports.nlConsume = filepath => {
       cpnode = a[3];
       cnnode = a[4];
       val = a[5];
+    }
+
+    multiplier = val.slice(-1);
+    if (CONVERSION_LUT.hasOwnProperty(multiplier)) {
+      multiplier = CONVERSION_LUT[multiplier];
+      val = parseFloat(val.slice(0, -1));
+    } else {
       multiplier = 1;
+      val = parseFloat(val);
     }
 
     components.push({
@@ -90,7 +92,7 @@ exports.nlConsume = filepath => {
       nnode: parseInt(a[2]),
       ctrlPNode: cpnode || undefined, // voltage dep sources only
       ctrlNNode: cnnode || undefined, // voltage dep source only
-      value: ((val * multiplier * 100) / 100) // fix js issue with fp arithmetic
+      value: val * multiplier
     });
   }
 
