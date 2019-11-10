@@ -180,10 +180,18 @@ function createCircuit(components){
                     // V_pnode > V_nnode
                     if (i == 0 && c.nnode == 0){
                         v = c.value;
+                        var indexUnknownVnodes = circuit.unknownVnodes.findIndex(x => x.id == c.pnode);
+                        if (indexUnknownVnodes != -1){
+                            circuit.unknownVnodes.splice(indexUnknownVnodes, 1);
+                        }
                     }
                     // V_pnode < V_nnode
                     else if (i == 1 && c.pnode == 0){
                         v = c.value * -1;
+                        var indexUnknownVnodes = circuit.unknownVnodes.findIndex(x => x.id == c.nnode);
+                        if (indexUnknownVnodes != -1){
+                            circuit.unknownVnodes.splice(indexUnknownVnodes, 1);
+                        }
                     }
                 }
                 else{
@@ -198,6 +206,16 @@ function createCircuit(components){
 
         if (c.type == 'V'){
             circuit.numVsrc ++;
+
+            var indexUnknownVnodes;
+            indexUnknownVnodes = circuit.unknownVnodes.indexOf(c.pnode);
+            if (indexUnknownVnodes != -1){
+                circuit.unknownVnodes.splice(indexUnknownVnodes, 1);
+            }
+            indexUnknownVnodes = circuit.unknownVnodes.indexOf(c.nnode);
+            if (indexUnknownVnodes != -1){
+                circuit.unknownVnodes.splice(indexUnknownVnodes, 1);
+            }
         }
         else if(c.type == 'I'){
             cSrc  = new CurrentSource(c.value, c.pnode, c.nnode);
@@ -227,6 +245,12 @@ function createCircuit(components){
     const curr_src = 'test/netlist_ann_csrc.txt'
 
     example1 = nl.nlConsume(curr_src);
+    example1 = [
+        { id: 'I1', type: 'I', pnode: 1, nnode: 0, value: '0.003'  },
+        { id: 'R1', type: 'R', pnode: 1, nnode: 0, value: '4000'  },
+        { id: 'R2', type: 'R', pnode: 1, nnode: 2, value: '5600'  },
+        { id: 'V1', type: 'V', pnode: 2, nnode: 0, value: '12'  }
+      ]
     //console.log(JSON.stringify(example1));
     var circuit = createCircuit(example1);
     circuit.nodalAnalysis();
