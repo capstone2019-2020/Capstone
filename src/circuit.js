@@ -255,24 +255,28 @@ function createCircuit(components){
     return circuit;
 }
 
-module.exports = { createCircuit };
+// module.exports = { createCircuit };
 
 
 
-// (function main(){
-//     const voltage_div = 'test/netlist_ann1.txt'
-//     const var_simple = 'test/netlist_ann2.txt'
-//     const curr_src = 'test/netlist_ann_csrc.txt'
-//
-//     const c = [
-//         { id: 'I1', type: 'I', pnode: 1, nnode: 0, value: '0.003'  },
-//         { id: 'R1', type: 'R', pnode: 1, nnode: 0, value: '4000'  },
-//         { id: 'R2', type: 'R', pnode: 1, nnode: 2, value: '5600'  },
-//         { id: 'V1', type: 'V', pnode: 2, nnode: 0, value: '12'  }
-//     ];
-//
-//     // example1 = nl.nlConsume(var_simple);
-//     var circuit = createCircuit(c);
-//     console.log(circuit.nodalAnalysis());
-//
-// })();
+(function main(){
+    const voltage_div = 'test/netlist_ann1.txt'
+    const var_simple = 'test/netlist_ann2.txt'
+    const curr_src = 'test/netlist_ann_csrc.txt'
+
+    const c = [
+        { id: 'V1', type: 'V', pnode: 1, nnode: 0, value: '15'  },
+        { id: 'R1', type: 'R', pnode: 1, nnode: 2, value: '12000'  },
+        { id: 'R2', type: 'R', pnode: 2, nnode: 3, value: '2000'  },
+        { id: 'R3', type: 'R', pnode: 2, nnode: 3, value: '8000'  },
+        { id: 'R4', type: 'R', pnode: 3, nnode: 0, value: '1000'  },
+        { id: 'R5', type: 'R', pnode: 4, nnode: 3, value: '7000'  },
+        { id: 'R6', type: 'R', pnode: 2, nnode: 4, value: '6000'  },
+        { id: 'I1', type: 'I', pnode: 4, nnode: 0, value: '0.0045'  },
+    ];
+
+    // example1 = nl.nlConsume(var_simple);
+    var circuit = createCircuit(c);
+    console.log(circuit.nodalAnalysis());
+
+})();
