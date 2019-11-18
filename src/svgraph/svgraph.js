@@ -5,6 +5,7 @@ const SVG_GRAPH_ID = 'svg-graph';
 
 /* fake macros */
 const ROUND = (f) => parseFloat(Math.round(f*100)/100).toFixed(0);
+const FIXED = (f, d) => parseFloat(Math.round(f*100)/100).toFixed(d);
 const OFFSET = (margin, idx) => margin * idx;
 const SCALE_VAL = (part, i) => part * i;
 const HALF = (v) => v/2;
@@ -144,7 +145,7 @@ function yaxis(leny, lenx, lb, ub, parts, label, grid) {
     );
     partitions.push(
       text(LEFT(ORIGIN_X,10), DOWN(y_coord,5),
-        ROUND(lb+SCALE_VAL(part_val, i)), {
+        FIXED(lb+SCALE_VAL(part_val, i), 2), {
         'text-anchor': 'end'
       })
     );
@@ -179,19 +180,20 @@ function yaxis(leny, lenx, lb, ub, parts, label, grid) {
 }
 
 function init() {
+  const SAMPLE_RATE = 300;
   const lenx = 600, leny = 400;
   const y_grid = 10;
   const x_grid = 10;
-  let x_lb = 0, x_ub = 100, y_lb = 0, y_ub = 0;
+  let x_lb = 0, x_ub = 10, y_lb = 0, y_ub = 0;
 
   /* plot */
   const parser = math.parser();
-  parser.evaluate('f(x) = log(x)');
+  parser.evaluate('f(x) = sin(x) * cos(20x) + 1');
   let points = [];
-  let xval, yval;
-  const sample_amt = (x_ub-x_lb) / (x_grid * 5);
+  let i=0, xval, yval;
+  const sample_amt = (x_ub-x_lb) / (x_grid*SAMPLE_RATE);
   for (xval=x_lb; xval<x_ub; xval+=sample_amt) {
-    // for logs :)
+    // in case anything goes down to negative infinity
     if (xval === 0) {
       xval+=0.0001;
     }
@@ -206,19 +208,22 @@ function init() {
       x: xval,
       y: yval
     });
+
+    i++;
   }
+  console.log(`${i} samples calculated`);
 
   const p = g('plot', plot(points, RATIO(lenx, x_ub),
     RATIO(leny, y_ub), 'blue'));
   const x = g('x-axis', ...xaxis(
     leny, lenx, x_lb,
     x_ub, x_grid,
-    'frequency', true)
+    'X_AXIS_LABEL', true)
   );
   const y = g('y-axis', ...yaxis(
     leny, lenx,
     y_lb, y_ub,
-    y_grid, 'phase margin', true));
+    y_grid, 'Y_AXIS_LABEL', true));
 
   Svgraph().appendChild(g('wrapper', p, x, y));
 }
