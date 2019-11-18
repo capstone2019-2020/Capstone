@@ -103,12 +103,12 @@ exports.circuits = [
         'I0 = (12 - n2) / 9000',
         'I1 = (n2) / 6000',
         'I2 = (n2 - n3) / 3000',
-        '-I0 + I1 + I2 = 0'
+        'I0 - I1 - I2 = 0'
       ],
       [ /* Node 3 */
         'I0 = (n2 - n3) / 3000',
         'I1 = (n3) / 4000',
-        '-I0 + I1 = 0'
+        'I0 - I1 = 0'
       ]
     ]
   },
@@ -124,11 +124,11 @@ exports.circuits = [
       [ /* Node 1 */
         'I0 = (n1) / 4000',
         'I1 = (n1 - n2) / 5600',
-        '-0.003 + I0 + I1 = 0'
+        '0.003 - I0 - I1 = 0'
       ],
       [ /* Node 2 */
         'I0 = (n1 - n2) / 5600',
-        '-I0 + 0.002 = 0'
+        'I0 - 0.002 = 0'
       ]
     ]
   },
@@ -162,41 +162,42 @@ exports.circuits = [
       [ /* Node 1 */
         'I0 = (n1) / 4000',
         'I1 = (n1 - 12) /5600',
-        '-0.003 + I0 + I1 = 0'
+        '0.003 - I0 - I1 = 0'
       ]
     ]
   },
   /* CASE 6: Medium RLC circuit + independent voltage & current src*/
   {
     c: [
-      { id: 'V1', type: 'V', pnode: 1, nnode: 3, value: '15'  },
-      { id: 'R1', type: 'R', pnode: 2, nnode: 1, value: '12000'  },
-      { id: 'R2', type: 'R', pnode: 3, nnode: 2, value: '2000'  },
-      { id: 'R3', type: 'R', pnode: 2, nnode: 0, value: '8000'  },
+      { id: 'V1', type: 'V', pnode: 1, nnode: 0, value: '15'  },
+      { id: 'R1', type: 'R', pnode: 1, nnode: 2, value: '12000'  },
+      { id: 'R2', type: 'R', pnode: 2, nnode: 3, value: '2000'  },
+      { id: 'R3', type: 'R', pnode: 2, nnode: 3, value: '8000'  },
       { id: 'R4', type: 'R', pnode: 3, nnode: 0, value: '1000'  },
       { id: 'R5', type: 'R', pnode: 4, nnode: 3, value: '7000'  },
-      { id: 'R6', type: 'R', pnode: 1, nnode: 4, value: '6000'  },
-      { id: 'I1', type: 'I', pnode: 4, nnode: 0, value: '0.0045'  }
+      { id: 'R6', type: 'R', pnode: 2, nnode: 4, value: '6000'  },
+      { id: 'I1', type: 'I', pnode: 4, nnode: 0, value: '0.0045'  },
     ],
     eqns: [
-      'I0 = (n3 - n2)/2000',
-      'I1 = (n2 - n1)/12000',
-      'I2 = (n1 - n4)/6000',
-      'I3 = (n3)/1000',
-      'I4 = (n2)/8000',
-      'I6 = (n4 - n3)/7000',
-      '-I3 - I4 + 0.0045 = 0',
-      '- I0 + I1 + I4 = 0',
-      '- I2 - 0.0045 + I6 = 0'
+      [ /* Node 2 */
+        'I1 = (15 - n2) / 12000',
+        'I4 = (n2 - n3) / 2000',
+        'I5 = (n2 - n3) / 8000',
+        'I2 = (n2 - n4) / 6000',
+        'I1 - I4 - 15 - I2 = 0'
+      ],
+      [ /* Node 3 */
+        'I4 = (n2 - n3)/2000',
+        'I5 = (n2 - n3)/8000',
+        'I6 = (n4 - n3)/7000',
+        'I3 = (n3)/1000',
+        'I4 + I6 + I5 - I3 = 0'
+      ],
+      [ /* Node 4 */
+        'I6 = (n4 - n3)/7000',
+        'I2 = (n2 - n4)/6000',
+        '0.0045 + I2 - I6 = 0'
+      ]
     ]
-  },
-  /* TODO CASE 7: Hard circuit + independent voltage & current src*/
-  {
-    c: [
-
-    ],
-    eqns: [
-
-    ]
-  },
+  }
 ];

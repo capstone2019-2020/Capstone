@@ -253,17 +253,26 @@ function createCircuit(components){
     });
 
     return circuit;
-} 
+}
+
+module.exports = { createCircuit };
 
 
 
-(function main(){
-    const voltage_div = 'test/netlist_ann1.txt'
-    const var_simple = 'test/netlist_ann2.txt'
-    const curr_src = 'test/netlist_ann_csrc.txt'
-
-    example1 = nl.nlConsume(var_simple);
-    var circuit = createCircuit(example1);
-    console.log(circuit.nodalAnalysis());
-
-})();
+// (function main(){
+//     const voltage_div = 'test/netlist_ann1.txt'
+//     const var_simple = 'test/netlist_ann2.txt'
+//     const curr_src = 'test/netlist_ann_csrc.txt'
+//
+//     const c = [
+//         { id: 'I1', type: 'I', pnode: 1, nnode: 0, value: '0.003'  },
+//         { id: 'R1', type: 'R', pnode: 1, nnode: 0, value: '4000'  },
+//         { id: 'R2', type: 'R', pnode: 1, nnode: 2, value: '5600'  },
+//         { id: 'V1', type: 'V', pnode: 2, nnode: 0, value: '12'  }
+//     ];
+//
+//     // example1 = nl.nlConsume(var_simple);
+//     var circuit = createCircuit(c);
+//     console.log(circuit.nodalAnalysis());
+//
+// })();
