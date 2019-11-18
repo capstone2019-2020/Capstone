@@ -46,16 +46,20 @@ Node.prototype.kcl = function(){
     }
 
     var sum_string = "";
+    var equations = [];
+
     console.log(`KCL at node ${this.id.toString()}`);
     for (var i = 0; i < this.passiveComponents.length; i++){
         pComp = this.passiveComponents[i];
         
         if (pComp.currentNumeric != undefined){
-            console.log(`${pComp.currentNumeric} = ${pComp.current}`);
+            //console.log(`${pComp.currentNumeric} = ${pComp.current}`);
+            equations.push(`${pComp.currentNumeric} = ${pComp.current}`);
             sum_string += `+ (${pComp.currentNumeric})`;
         }
         else{
-            console.log(`I${i} = ${pComp.current}`);
+            //console.log(`I${i} = ${pComp.current}`);
+            equations.push(`I${i} = ${pComp.current}`);
             var sign = "";
             if (this.id == pComp.pnode){
                 sign = '-';
@@ -64,6 +68,10 @@ Node.prototype.kcl = function(){
                 if (i != 0){
                     sign = '+';
                 }
+                else{
+                    sum_string += `I${i} `;
+                    continue;
+                }
             }
             sum_string += `${sign} I${i} `;
         }
@@ -71,7 +79,9 @@ Node.prototype.kcl = function(){
     //var last_plus_index = sum_string.lastIndexOf('+');
     //sum_string = sum_string.replace(1, last_plus_index);
     sum_string += ' = 0';
-    console.log(sum_string);
+    //console.log(sum_string);
+    equations.push(sum_string);
+    return equations;
 };
 
 function Circuit(n, vsrc) {
@@ -101,9 +111,16 @@ Circuit.prototype.nodalAnalysis = function(){
     const numEqToSolve = this.nodes.length - this.numVsrc - 1;
     assert(this.unknownVnodes.length == numEqToSolve);
 
+    var equations_at_nodes = [];
     this.unknownVnodes.forEach((n_id) => {
-        this.findNodeById(n_id).kcl();
+        var equations = this.findNodeById(n_id).kcl();
+
+        if (equations != undefined){
+            console.log(equations);
+        }
     });
+
+    return equations_at_nodes;
 };
 
 function Resistor(r, p, n){
@@ -245,13 +262,6 @@ function createCircuit(components){
     const curr_src = 'test/netlist_ann_csrc.txt'
 
     example1 = nl.nlConsume(curr_src);
-    example1 = [
-        { id: 'I1', type: 'I', pnode: 1, nnode: 0, value: '0.003'  },
-        { id: 'R1', type: 'R', pnode: 1, nnode: 0, value: '4000'  },
-        { id: 'R2', type: 'R', pnode: 1, nnode: 2, value: '5600'  },
-        { id: 'V1', type: 'V', pnode: 2, nnode: 0, value: '12'  }
-      ]
-    //console.log(JSON.stringify(example1));
     var circuit = createCircuit(example1);
     circuit.nodalAnalysis();
 
