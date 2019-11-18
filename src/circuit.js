@@ -116,7 +116,8 @@ Circuit.prototype.nodalAnalysis = function(){
         var equations = this.findNodeById(n_id).kcl();
 
         if (equations != undefined){
-            console.log(equations);
+            //console.log(equations);
+            equations_at_nodes.push(equations);
         }
     });
 
@@ -261,8 +262,8 @@ function createCircuit(components){
     const var_simple = 'test/netlist_ann2.txt'
     const curr_src = 'test/netlist_ann_csrc.txt'
 
-    example1 = nl.nlConsume(curr_src);
+    example1 = nl.nlConsume(var_simple);
     var circuit = createCircuit(example1);
-    circuit.nodalAnalysis();
+    console.log(circuit.nodalAnalysis());
 
 })();
