@@ -8,8 +8,10 @@ const Expression = algebra.Expression;
 function Node(id, v) {
     this.id = id,
     this.voltage = v,
-    this.passiveComponents = [] // array of connected passive components
-    this.currentSources = []
+    this.passiveComponents = [], // array of connected passive components
+    this.currentSources = [],
+    this.incomingBranches = [],
+    this.outgoingBranches = []
 };
 Node.prototype.allCurrentKnown = function(){
     // only current source(s) is/are connected to the node
@@ -90,6 +92,8 @@ function Circuit(n, vsrc) {
     this.numVsrc = vsrc // number of voltage sources in circuit
 };
 
+/* Return True if a node with id 'nid' has not been added
+   to the circuit object */
 Circuit.prototype.nodeExists = function(nid){
     var exists = false;
 
@@ -183,6 +187,7 @@ function resistorInSeriesWithCSrc(r, csrc){
 function createCircuit(components){
     // Initialize an empty Circuit object
     var circuit = new Circuit([], 0);
+    var nodeOfInterest;
 
     components.forEach((c) => {
         // adding nodes
@@ -190,6 +195,7 @@ function createCircuit(components){
         
         for (var i = 0; i < 2; i++){
             const nodeExists = circuit.nodeExists(nodeid);
+            // Adding nodes to Circuit object
             if (!nodeExists){
                 if (nodeid == 0){ // ground node
                     v = 0
@@ -218,7 +224,23 @@ function createCircuit(components){
                 }
                 node = new Node(nodeid, v);
                 circuit.nodes.push(node);
-            } 
+            }
+
+            nodeOfInterest = circuit.findNodeById(nodeid);
+            // node of interest is pnode - nodes specified as nnode is outgoing branches
+            if (i == 0){
+                var outgoingB = nodeOfInterest.outgoingBranches;
+                if (!outgoingB.includes(c.nnode)){
+                    outgoingB.push(c.nnode);
+                }
+            }
+            // node of interest is nnode - nodes specified as pnode is incoming branches 
+            else{
+                var incomingB = nodeOfInterest.incomingBranches;
+                if (!incomingB.includes(c.pnode)){
+                    incomingB.push(c.pnode);
+                }
+            }
             nodeid = c.nnode;
         }
 
@@ -259,24 +281,23 @@ module.exports = { createCircuit };
 
 
 
-// (function main(){
+ (function main(){
 //     const voltage_div = 'test/netlist_ann1.txt'
 //     const var_simple = 'test/netlist_ann2.txt'
 //     const curr_src = 'test/netlist_ann_csrc.txt'
 //
-//     const c = [
-//         { id: 'V1', type: 'V', pnode: 1, nnode: 0, value: '15'  },
-//         { id: 'R1', type: 'R', pnode: 1, nnode: 2, value: '12000'  },
-//         { id: 'R2', type: 'R', pnode: 2, nnode: 3, value: '2000'  },
-//         { id: 'R3', type: 'R', pnode: 2, nnode: 3, value: '8000'  },
-//         { id: 'R4', type: 'R', pnode: 3, nnode: 0, value: '1000'  },
-//         { id: 'R5', type: 'R', pnode: 4, nnode: 3, value: '7000'  },
-//         { id: 'R6', type: 'R', pnode: 2, nnode: 4, value: '6000'  },
-//         { id: 'I1', type: 'I', pnode: 4, nnode: 0, value: '0.0045'  },
-//     ];
-//
+    var c = [
+        { id: 'I1', type: 'I', pnode: 1, nnode: 0, value: '0.003'  },
+        { id: 'R1', type: 'R', pnode: 1, nnode: 0, value: '4000'  },
+        { id: 'R2', type: 'R', pnode: 1, nnode: 2, value: '5600'  },
+        { id: 'I2', type: 'I', pnode: 0, nnode: 2, value: '0.002'  }
+    ]
 //     // example1 = nl.nlConsume(var_simple);
-//     var circuit = createCircuit(c);
+    var circuit = createCircuit(c);
+     
 //     console.log(circuit.nodalAnalysis());
-//
-// })();
+    circuit.nodes.forEach((c) => {
+        console.log(`Node ${c.id} incoming branches: ${c.incomingBranches} outgoing branches: ${c.outgoingBranches}`);
+    });
+
+ })();
