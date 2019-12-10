@@ -1,5 +1,7 @@
-const ORIGIN_X = 100;
-const ORIGIN_Y = 450;
+let ORIGIN_X = 100;
+const START_X = 100;
+let ORIGIN_Y = 450;
+const START_Y = 450;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SVG_GRAPH_ID = 'svg-graph';
 
@@ -15,6 +17,8 @@ const LEFT = (ref, offset) => ref-offset;
 const RIGHT = (ref, offset) => ref+offset;
 const SCALE = (v, r) => v * r;
 const RATIO = (c1, c2) => c1 / c2;
+const MAX = (s1, s2) => s1 > s2 ? s1 : s2;
+const MIN = (s1, s2) => s1 < s2 ? s1 : s2;
 
 function Svgraph() {
   return document.getElementById(SVG_GRAPH_ID);
@@ -80,13 +84,17 @@ function plot(dp, x_cratio, y_cratio, color) {
   });
 }
 
-function xaxis(leny, lenx, lb, ub, parts, label, grid) {
+function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
   let partitions = [];
-  let i, x_coord;
+  let i, x_coord, xval;
   const margin = lenx / parts;
   const part_val = (ub-lb) / parts;
+
+  /*
+   * Rendering x-axis intervals and text for each interval
+   */
   for (i=0; i<=parts; i++) {
-    x_coord = RIGHT(ORIGIN_X, OFFSET(margin, i));
+    x_coord = RIGHT(START_X, OFFSET(margin, i));
     partitions.push(
       line(x_coord, x_coord, DOWN(ORIGIN_Y, 5),
         UP(ORIGIN_Y, 5), {
@@ -94,17 +102,17 @@ function xaxis(leny, lenx, lb, ub, parts, label, grid) {
         }
       )
     );
+    xval = ROUND(lb+SCALE_VAL(part_val, i));
     partitions.push(
       text(RIGHT(x_coord, 5), DOWN(ORIGIN_Y, 20),
-        ROUND(lb+SCALE_VAL(part_val, i)), {
-        'text-anchor': 'end'
-      })
+        xval, {'text-anchor': 'end'}
+      )
     );
 
-    if (grid && i !== 0) {
+    if (grid && xval !== 0) {
       partitions.push(
-        line(x_coord, x_coord, UP(ORIGIN_Y, 5),
-          UP(ORIGIN_Y, leny), {
+        line(x_coord, x_coord, UP(START_Y, 5),
+          UP(START_Y, leny), {
             'stroke': 'grey',
             'stroke-dasharray': '4,6'
           }
@@ -114,11 +122,11 @@ function xaxis(leny, lenx, lb, ub, parts, label, grid) {
   }
 
   return [
-    text(RIGHT(ORIGIN_X, HALF(lenx)),
-      DOWN(ORIGIN_Y, 50), label, {
+    text(RIGHT(START_X, HALF(lenx)),
+      DOWN(START_Y, 50), label, {
       'text-anchor': 'end'
     }),
-    line(ORIGIN_X, RIGHT(ORIGIN_X, lenx),
+    line(START_X, RIGHT(START_X, lenx),
       ORIGIN_Y, ORIGIN_Y, {
         'stroke': 'black'
       }
@@ -127,15 +135,15 @@ function xaxis(leny, lenx, lb, ub, parts, label, grid) {
   ];
 }
 
-function yaxis(leny, lenx, lb, ub, parts, label, grid) {
-  leny = ORIGIN_Y-leny < 0 ? ORIGIN_Y : leny;
+function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
+  leny = START_Y-leny < 0 ? START_Y : leny;
 
   let partitions = [];
-  let i, y_coord;
+  let i, y_coord, yval;
   const margin = leny / parts;
   const part_val = (ub-lb) / parts;
   for (i=0; i<=parts; i++) {
-    y_coord = ORIGIN_Y - OFFSET(margin, i);
+    y_coord = START_Y - OFFSET(margin, i);
     partitions.push(
       line(LEFT(ORIGIN_X,5), RIGHT(ORIGIN_X,5),
         y_coord, y_coord, {
@@ -143,16 +151,17 @@ function yaxis(leny, lenx, lb, ub, parts, label, grid) {
         }
       )
     );
+    yval = FIXED(lb+SCALE_VAL(part_val, i), 2);
     partitions.push(
       text(LEFT(ORIGIN_X,10), DOWN(y_coord,5),
-        FIXED(lb+SCALE_VAL(part_val, i), 2), {
+        yval, {
         'text-anchor': 'end'
       })
     );
 
-    if (grid && i !== 0) {
+    if (grid && yval !== '0.00') {
       partitions.push(
-        line(RIGHT(ORIGIN_X,5), RIGHT(ORIGIN_X,lenx),
+        line(RIGHT(START_X,5), RIGHT(START_X,lenx),
           y_coord, y_coord, {
             'stroke': 'grey',
             'stroke-dasharray': '4,6'
@@ -163,15 +172,15 @@ function yaxis(leny, lenx, lb, ub, parts, label, grid) {
   }
 
   return [
-    text(LEFT(ORIGIN_X, 60),
-      UP(ORIGIN_Y, DOWN(HALF(leny),40)),
+    text(LEFT(START_X, 60),
+      UP(START_Y, DOWN(HALF(leny),40)),
       label, {
         'style': 'text-orientation: sideways; writing-mode: vertical-lr;',
         'text-anchor': 'start'
       }
     ),
-    line(ORIGIN_X, ORIGIN_X, UP(ORIGIN_Y,leny),
-      ORIGIN_Y, {
+    line(ORIGIN_X, ORIGIN_X, UP(START_Y,leny),
+      START_Y, {
         'stroke': 'black'
       }
     ),
@@ -179,30 +188,34 @@ function yaxis(leny, lenx, lb, ub, parts, label, grid) {
   ]
 }
 
+function init_plot(lb, ub, plot_len, parts) {
+  const part_val = (ub-lb) / parts;
+  let i, val;
+  for (i=0; i<=parts; i++) {
+    val = FIXED(lb+SCALE_VAL(part_val, i), 2);
+    console.log(val);
+    if (val === '0.00' || val === '-0.00') {
+      return OFFSET(plot_len / parts, i);
+    }
+  }
+}
+
 function init() {
   const SAMPLE_RATE = 300;
   const lenx = 600, leny = 400;
   const y_grid = 10;
   const x_grid = 10;
-  let x_lb = 0, x_ub = 10, y_lb = 0, y_ub = 0;
+  let x_lb = -10, x_ub = 10, y_lb = 0, y_ub = 0;
 
-  /* plot */
   const parser = math.parser();
-  parser.evaluate('f(x) = sin(x) * cos(20x) + 1');
+  parser.evaluate('f(x) = x^2');
   let points = [];
   let i=0, xval, yval;
   const sample_amt = (x_ub-x_lb) / (x_grid*SAMPLE_RATE);
   for (xval=x_lb; xval<x_ub; xval+=sample_amt) {
-    // in case anything goes down to negative infinity
-    if (xval === 0) {
-      xval+=0.0001;
-    }
-
     yval = parser.evaluate(`f(${xval})`);
-    yval = yval < y_lb ? y_lb : yval;
-    if (yval > y_ub) {
-      y_ub = yval;
-    }
+    y_ub = MAX(yval, y_ub);
+    y_lb = MIN(yval, y_lb);
 
     points.push({
       x: xval,
@@ -211,19 +224,35 @@ function init() {
 
     i++;
   }
-  console.log(`${i} samples calculated`);
 
-  const p = g('plot', plot(points, RATIO(lenx, x_ub),
-    RATIO(leny, y_ub), 'blue'));
-  const x = g('x-axis', ...xaxis(
-    leny, lenx, x_lb,
-    x_ub, x_grid,
-    'X_AXIS_LABEL', true)
-  );
-  const y = g('y-axis', ...yaxis(
-    leny, lenx,
-    y_lb, y_ub,
-    y_grid, 'Y_AXIS_LABEL', true));
+  ORIGIN_X = RIGHT(START_X, init_plot(x_lb, x_ub, lenx, x_grid));
+  ORIGIN_Y = START_Y - init_plot(y_lb, y_ub, leny, y_grid);
+
+  /* plot */
+  const p = g('plot', plot(points, RATIO(lenx, x_ub-x_lb),
+    RATIO(leny, y_ub-y_lb), 'blue'));
+
+  /* x-axis */
+  const x = g('x-axis', ...xaxis({
+    leny,
+    lenx,
+    lb: x_lb,
+    ub: x_ub,
+    parts: x_grid,
+    label: 'X_AXIS_LABEL',
+    grid: true
+  }));
+
+  /* y-axis */
+  const y = g('y-axis', ...yaxis({
+    leny,
+    lenx,
+    lb: y_lb,
+    ub: y_ub,
+    parts: y_grid,
+    label: 'Y_AXIS_LABEL',
+    grid: true
+  }));
 
   Svgraph().appendChild(g('wrapper', p, x, y));
 }

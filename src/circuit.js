@@ -240,11 +240,11 @@ function createCircuit(components){
 
 
 (function main(){
-    const voltage_div = 'test/netlist_ann1.txt'
-    const var_simple = 'test/netlist_ann2.txt'
-    const curr_src = 'test/netlist_ann_csrc.txt'
+    const voltage_div = '../test/netlist_ann1.txt'
+    const var_simple = '../test/netlist_ann2.txt'
+    const curr_src = '../test/netlist_ann_csrc.txt'
 
-    example1 = nl.nlConsume(curr_src);
+    example1 = nl.nlConsume(voltage_div);
     example1 = [
         { id: 'I1', type: 'I', pnode: 1, nnode: 0, value: '0.003'  },
         { id: 'R1', type: 'R', pnode: 1, nnode: 0, value: '4000'  },
