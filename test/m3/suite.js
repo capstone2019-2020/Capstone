@@ -1,6 +1,8 @@
-const {Equation, Expression} = require('algebra.js');
+const algebra = require('algebra.js');
 const {validate} = require('jsonschema');
+
 const DEBUG = process.env.M3_LOG_LEVEL;
+const RANDOM_SEED = 10000;
 
 const debug_log = (...params) => {
   if (DEBUG) {
@@ -113,13 +115,95 @@ exports.verifyNetList = function (output, expected) {
   return valid;
 };
 
+
+const generate_variable_map = (eqn) => {
+  const rhs = eqn.rhs;
+  let result = {};
+  rhs.terms.forEach((term) => {
+    term.variables.forEach((v) => {
+      result[v] = Math.round(Math.random() * RANDOM_SEED);
+    })
+  });
+  // debug_log(`Variable map for eqn ${eqn.toString()}: `, JSON.stringify(result));
+  return result
+}
+
 /**
  * Used to verify the equations produced by circuit.js -> nodalAnalysis() function
+ *
+ * NOTE: Assumes that
  *
  * @param output
  * @param expected
  * @returns true if actual output matches expected
  */
 exports.verifyCircuit = function(output, expected) {
+  // debug_log(output, expected);
 
+  /**
+   * Step 1: Convert equations into algebra.js Equations
+   */
+  let actual_eqns = [];
+  let expected_eqns = [];
+
+  expected.forEach((node_eqns) => {
+    expected_eqns.push(node_eqns.map( x => algebra.parse(x)));
+  });
+
+  output.forEach((node_eqns) => {
+    actual_eqns.push(node_eqns.map( x => algebra.parse(x)));
+  });
+
+  /* Step 2: Loop through all the equations, verify that they match */
+  let i, j;
+  let anode, enode, node_eqn1, node_eqn2; // list of node equations
+  for (i = 0; i < expected_eqns.length; i++) {
+    anode = actual_eqns[i];
+    enode = expected_eqns[i];
+
+    /* Verify Equations for the node exists */
+    if (!anode) {
+      debug_log(`ERROR: Missing equations for Node ${i}`,
+        `Expected: ${JSON.stringify(expected)}`,
+        `Actual: ${JSON.stringify(output)}`);
+      return false;
+    }
+
+    /* Verify number of equations */
+    if (enode.length !== anode.length) {
+      debug_log(`ERROR: Expected ${enode.length} equations, received `,
+        `Expected: ${JSON.stringify(expected)}`,
+        `Actual: ${JSON.stringify(output)}`);
+      return false;
+    }
+
+    let result1 = {}
+    let result2 = {}
+    /* Verify equations match the expected */
+    for (j = 0; j < enode.length; j++) {
+      node_eqn1 = anode[j];
+      node_eqn2 = enode[j];
+
+      // 1. generate a map of values for variables in rhs
+      // 2. evaluate (use algebra.js evaluate method)
+      const variable_map = generate_variable_map(node_eqn2);
+      let val1 = parseFloat(node_eqn1.rhs.eval(variable_map));
+      let val2 = parseFloat(node_eqn2.rhs.eval(variable_map));
+
+      /* Assume that the last equation will always be of the form Ix - Iy + Iz... = 0 */
+      if (j !== enode.length-1) {
+        result1[node_eqn1.lhs.terms[0].variables[0]] = val1;
+        result2[node_eqn2.lhs.terms[0].variables[0]] = val2;
+      } else {
+        val1 = parseFloat(node_eqn1.lhs.eval(result1));
+        val2 = parseFloat(node_eqn2.lhs.eval(result2));
+      }
+
+      if ( val1 !== val2 ){
+        debug_log(`ERROR: Equations don't match\n { expected: ${expected[i][j]}, actual: ${output[i][j]} }`);
+        return false;
+      }
+    }
+    return true;
+  }
 };

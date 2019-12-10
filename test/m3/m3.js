@@ -47,10 +47,20 @@ describe('nlConsume()', function() {
 /**
  * circuit.js -> nodalAnalysis()
  */
-// describe('nodalAnalysis()', function () {
-//   const {createCircuit, nodalAnalysis} = require('../../src/circuit');
-//
-//   describe('func', function() {
-//
-//   });
-// });
+describe('nodalAnalysis()', function () {
+  const circuit = require('../../src/circuit');
+  console.log(circuit);
+
+  const test_nodalAnalysis = (expected) => {
+    const c = circuit.createCircuit(expected.c);
+    const eqns = c.nodalAnalysis();
+    assert.ok(suite.verifyCircuit(eqns, expected.eqns));
+  }
+
+  describe('func', function() {
+    it ('correctness 1 - BASIC: independent voltage src', () => test_nodalAnalysis(circuits[0]));
+    it ('correctness 2 - BASIC: independent current src', () => test_nodalAnalysis(circuits[1]));
+    it ('correctness 3 - BASIC: all independent srcs', () => test_nodalAnalysis(circuits[2]));
+    it ('correctness 4 - MED: all independent srcs', () => test_nodalAnalysis(circuits[3]));
+  });
+});
