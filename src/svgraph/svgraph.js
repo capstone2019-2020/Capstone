@@ -6,8 +6,18 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const SVG_GRAPH_ID = 'svg-graph';
 
 /* fake macros */
-const ROUND = (f) => parseFloat(Math.round(f*100)/100).toFixed(0);
-const FIXED = (f, d) => parseFloat(Math.round(f*100)/100).toFixed(d);
+const __ROUND = (f) => parseFloat(Math.round(f*100)/100);
+const ROUND = (f) => __ROUND(f).toFixed(0);
+const ROUND_UP = (f, n) => {
+  if (f === 0) return f;
+  let r;
+  if ((r = Math.abs(f) % n) === 0)
+    return f;
+
+  return f < 0 ? - (Math.abs(f) - r) : (f+n-r);
+};
+const FIXED = (f, d) => __ROUND(f).toFixed(d);
+const EXP = (f, d) => f.toExponential(d);
 const OFFSET = (margin, idx) => margin * idx;
 const SCALE_VAL = (part, i) => part * i;
 const HALF = (v) => v/2;
@@ -70,6 +80,7 @@ function plot(dp, x_cratio, y_cratio, color) {
   for (i=0; i<dp.length; i++) {
     x_coord = RIGHT(ORIGIN_X, SCALE(dp[i].x, x_cratio));
     y_coord = UP(ORIGIN_Y,SCALE(dp[i].y, y_cratio));
+
     points += `${x_coord},${y_coord}`;
     if (i+1 !== dp.length) {
       points += ' ';
@@ -151,7 +162,10 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
         }
       )
     );
-    yval = FIXED(lb+SCALE_VAL(part_val, i), 2);
+    yval = lb+SCALE_VAL(part_val, i);
+    let abs_yval = Math.abs(yval);
+    yval = abs_yval >= 1000 || (abs_yval <= 0.001 && abs_yval > 0) ?
+      EXP(yval, 1) : FIXED(yval, 2);
     partitions.push(
       text(LEFT(ORIGIN_X,10), DOWN(y_coord,5),
         yval, {
@@ -189,26 +203,80 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
 }
 
 function init_plot(lb, ub, plot_len, parts) {
-  const part_val = (ub-lb) / parts;
+  let new_lb = __ROUND(lb), new_ub = __ROUND(ub);
+  let abs_lb = Math.abs(new_lb), abs_ub = Math.abs(new_ub);
+
+  let u_parts = 0, l_parts = 0;
+  if (ub === 0) {
+    l_parts = parts;
+  } else if (lb === 0) {
+    u_parts = parts;
+  } else {
+    let t_ub = Math.abs(ub), t_lb = Math.abs(lb);
+    let sum = (t_ub + t_lb);
+    l_parts = Math.ceil(parts * (t_lb/sum));
+    u_parts = Math.ceil(parts * (t_ub/sum));
+  }
+
+  /*
+   * This is the most important part:
+   *
+   * Define a 'part' as a grid piece (gp), the space that is
+   * between grid pieces is the interval needed to capture all
+   * the points in the given plot (as determined by upper/lower
+   * bounds)
+   *
+   * For instance: the grid interval needed to capture the
+   * lower grid (y<0) is given by: new_lb/l_parts
+   * Similarly, for upper grid (y>0) is given by: new_ub/u_parts
+   *
+   * Then, because each grid interval must be equal (with
+   * exception to log-log graphs), we take the max interval b/w
+   * the lower and upper bound intervals and set that as the
+   * grid interval to be used.
+   */
+  let partition = Math.round(Math.abs(
+    l_parts !== 0 ? new_lb/l_parts : new_ub/u_parts));
+  u_parts = Math.ceil(abs_ub/partition);
+
+  /*
+   * Do some adjustments to the upper/lower bounds given the
+   * appropriate grid interval calculated in the step above.
+   * The principle here is to round up to the nearest multiple
+   * of the partition. This multiple has to be at least the
+   * size determined by l_parts*partition amount (since we
+   * don't want to miss any necessary grid space)
+   */
+  let lb_ru = ROUND_UP(abs_lb, partition*l_parts);
+  let ub_ru = ROUND_UP(abs_ub, partition*u_parts);
+  new_lb-=(lb_ru-Math.abs(new_lb));
+  new_ub+=(ub_ru-Math.abs(new_ub));
+
+  const part_val = (new_ub-new_lb) / (l_parts+u_parts);
+  parts = l_parts+u_parts;
+  if (parts === Infinity) return;
   let i, val;
-  for (i=0; i<=parts; i++) {
-    val = FIXED(lb+SCALE_VAL(part_val, i), 2);
-    console.log(val);
+  for (i = 0; i <= parts; i++) {
+    val = FIXED(new_lb + SCALE_VAL(part_val, i), 2);
     if (val === '0.00' || val === '-0.00') {
-      return OFFSET(plot_len / parts, i);
+      return {
+        lb: new_lb, ub: new_ub,
+        offset: OFFSET(plot_len / parts, i),
+        parts
+      }
     }
   }
 }
 
 function init() {
-  const SAMPLE_RATE = 300;
+  const SAMPLE_RATE = 50;
   const lenx = 600, leny = 400;
-  const y_grid = 10;
-  const x_grid = 10;
-  let x_lb = -10, x_ub = 10, y_lb = 0, y_ub = 0;
+  let y_grid = 10;
+  let x_grid = 10;
+  let x_lb = 0, x_ub = 10, y_lb = 0, y_ub = 0;
 
   const parser = math.parser();
-  parser.evaluate('f(x) = x^2');
+  parser.evaluate('f(x) = e^x*sin(x)*cos(x)');
   let points = [];
   let i=0, xval, yval;
   const sample_amt = (x_ub-x_lb) / (x_grid*SAMPLE_RATE);
@@ -224,9 +292,19 @@ function init() {
 
     i++;
   }
+  y_lb = y_lb > 0 ? 0 : y_lb;
+  y_ub = y_ub < 0 ? 0 : y_ub;
 
-  ORIGIN_X = RIGHT(START_X, init_plot(x_lb, x_ub, lenx, x_grid));
-  ORIGIN_Y = START_Y - init_plot(y_lb, y_ub, leny, y_grid);
+  let x_offset, y_offset;
+  ({
+    lb: x_lb, ub: x_ub, offset: x_offset, parts: x_grid
+  } = init_plot(x_lb, x_ub, lenx, x_grid));
+  ({
+    lb: y_lb, ub: y_ub, offset: y_offset, parts: y_grid
+  } = init_plot(y_lb, y_ub, leny, y_grid));
+
+  ORIGIN_X = RIGHT(START_X, x_offset);
+  ORIGIN_Y = START_Y - y_offset;
 
   /* plot */
   const p = g('plot', plot(points, RATIO(lenx, x_ub-x_lb),
@@ -239,7 +317,7 @@ function init() {
     lb: x_lb,
     ub: x_ub,
     parts: x_grid,
-    label: 'X_AXIS_LABEL',
+    label: '',
     grid: true
   }));
 
@@ -250,7 +328,7 @@ function init() {
     lb: y_lb,
     ub: y_ub,
     parts: y_grid,
-    label: 'Y_AXIS_LABEL',
+    label: '',
     grid: true
   }));
 
