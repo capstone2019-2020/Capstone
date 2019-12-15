@@ -6,18 +6,6 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const SVG_GRAPH_ID = 'svg-graph';
 
 /* fake macros */
-const __ROUND = (f) => parseFloat(Math.round(f*100)/100);
-const ROUND = (f) => __ROUND(f).toFixed(0);
-const ROUND_UP = (f, n) => {
-  if (f === 0) return f;
-  let r;
-  if ((r = Math.abs(f) % n) === 0)
-    return f;
-
-  return f < 0 ? - (Math.abs(f) - r) : (f+n-r);
-};
-const FIXED = (f, d) => __ROUND(f).toFixed(d);
-const EXP = (f, d) => f.toExponential(d);
 const OFFSET = (margin, idx) => margin * idx;
 const SCALE_VAL = (part, i) => part * i;
 const HALF = (v) => v/2;
@@ -29,6 +17,20 @@ const SCALE = (v, r) => v * r;
 const RATIO = (c1, c2) => c1 / c2;
 const MAX = (s1, s2) => s1 > s2 ? s1 : s2;
 const MIN = (s1, s2) => s1 < s2 ? s1 : s2;
+
+/* Math related "macros" */
+const __ROUND = (f) => parseFloat(Math.round(f*100)/100);
+const EXP = (f, d) => f.toExponential(d);
+const ROUND = (f) => __ROUND(f).toFixed(0);
+const FIXED = (f, d) => __ROUND(f).toFixed(d);
+const ROUND_UP = (f, n) => {
+  if (f === 0) return f;
+  let r;
+  if ((r = Math.abs(f) % n) === 0)
+    return f;
+
+  return f < 0 ? - (Math.abs(f) - r) : (f+n-r);
+};
 
 function Svgraph() {
   return document.getElementById(SVG_GRAPH_ID);
@@ -44,6 +46,10 @@ function g(id, ...children) {
   return g;
 }
 
+function __vec(x, y) {
+  return { x, y };
+}
+
 function __ns(elem, config={}) {
   Object.keys(config).forEach(k => {
     if (!elem.hasAttribute(k)) {
@@ -54,22 +60,25 @@ function __ns(elem, config={}) {
   return elem;
 }
 
-function line(x1, x2, y1, y2, config={}) {
+function line(vec_from, vec_to, config={}) {
   const l = document.createElementNS(SVG_NS, 'line');
 
   return __ns(l, {
     ...config,
-    x1, x2, y1, y2
+    x1: vec_from.x,
+    x2: vec_to.x,
+    y1: vec_from.y,
+    y2: vec_to.y,
   });
 }
 
-function text(x, y, words, config={}) {
+function text(vec, words, config={}) {
   const t = document.createElementNS(SVG_NS, 'text');
   t.innerHTML = words;
 
   return __ns(t, {
     ...config,
-    x, y
+    x: vec.x, y: vec.y
   });
 }
 
@@ -96,7 +105,7 @@ function plot(dp, x_cratio, y_cratio, color) {
 }
 
 function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
-  let partitions = [];
+  const partitions = [];
   let i, x_coord, xval;
   const margin = lenx / parts;
   const part_val = (ub-lb) / parts;
@@ -107,23 +116,26 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
   for (i=0; i<=parts; i++) {
     x_coord = RIGHT(START_X, OFFSET(margin, i));
     partitions.push(
-      line(x_coord, x_coord, DOWN(ORIGIN_Y, 5),
-        UP(ORIGIN_Y, 5), {
-          'stroke': 'black'
-        }
-      )
+      line(
+        __vec(x_coord, DOWN(ORIGIN_Y, 5)),
+        __vec(x_coord, UP(ORIGIN_Y, 5)),
+        { 'stroke': 'black'}
+        )
     );
     xval = ROUND(lb+SCALE_VAL(part_val, i));
     partitions.push(
-      text(RIGHT(x_coord, 5), DOWN(ORIGIN_Y, 20),
+      text(
+        __vec(RIGHT(x_coord, 5), DOWN(ORIGIN_Y, 20)),
         xval, {'text-anchor': 'end'}
       )
     );
 
     if (grid && xval !== 0) {
       partitions.push(
-        line(x_coord, x_coord, UP(START_Y, 5),
-          UP(START_Y, leny), {
+        line(
+          __vec(x_coord, UP(START_Y, 5)),
+          __vec(x_coord, UP(START_Y, leny)),
+          {
             'stroke': 'grey',
             'stroke-dasharray': '4,6'
           }
@@ -133,50 +145,58 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
   }
 
   return [
-    text(RIGHT(START_X, HALF(lenx)),
-      DOWN(START_Y, 50), label, {
-      'text-anchor': 'end'
-    }),
-    line(START_X, RIGHT(START_X, lenx),
-      ORIGIN_Y, ORIGIN_Y, {
-        'stroke': 'black'
-      }
+    text(__vec(
+        RIGHT(START_X, HALF(lenx)), DOWN(START_Y, 50)
+      ), label, {'text-anchor': 'end'}
+    ),
+    line(
+      __vec(START_X, ORIGIN_Y),
+      __vec(RIGHT(START_X, lenx), ORIGIN_Y),
+      {'stroke': 'black'}
     ),
     ...partitions
   ];
 }
 
 function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
+  /* Re-adjust leny */
   leny = START_Y-leny < 0 ? START_Y : leny;
 
   let partitions = [];
   let i, y_coord, yval;
   const margin = leny / parts;
   const part_val = (ub-lb) / parts;
+
+  /* Rendering y-axis intervals & text for each interval */
   for (i=0; i<=parts; i++) {
     y_coord = START_Y - OFFSET(margin, i);
     partitions.push(
-      line(LEFT(ORIGIN_X,5), RIGHT(ORIGIN_X,5),
-        y_coord, y_coord, {
-          'stroke': 'black'
-        }
+      line(
+        __vec(LEFT(ORIGIN_X,5), y_coord),
+        __vec(RIGHT(ORIGIN_X,5), y_coord),
+        {'stroke': 'black'}
       )
     );
-    yval = lb+SCALE_VAL(part_val, i);
+
+    yval = lb + SCALE_VAL(part_val, i);
     let abs_yval = Math.abs(yval);
-    yval = abs_yval >= 1000 || (abs_yval <= 0.001 && abs_yval > 0) ?
-      EXP(yval, 1) : FIXED(yval, 2);
+    yval = (abs_yval >= 1000) || (abs_yval <= 0.001 && abs_yval > 0)
+      ? EXP(yval, 1)
+      : FIXED(yval, 2);
+
     partitions.push(
-      text(LEFT(ORIGIN_X,10), DOWN(y_coord,5),
-        yval, {
-        'text-anchor': 'end'
-      })
+      text(
+        __vec(LEFT(ORIGIN_X,10), DOWN(y_coord,5)),
+        yval, {'text-anchor': 'end'}
+      )
     );
 
     if (grid && yval !== '0.00') {
       partitions.push(
-        line(RIGHT(START_X,5), RIGHT(START_X,lenx),
-          y_coord, y_coord, {
+        line(
+          __vec(RIGHT(START_X,5), y_coord),
+          __vec(RIGHT(START_X,lenx), y_coord),
+          {
             'stroke': 'grey',
             'stroke-dasharray': '4,6'
           }
@@ -186,17 +206,19 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
   }
 
   return [
-    text(LEFT(START_X, 60),
-      UP(START_Y, DOWN(HALF(leny),40)),
+    text(__vec(
+        LEFT(START_X, 60),
+        UP(START_Y, DOWN(HALF(leny),40))
+      ),
       label, {
         'style': 'text-orientation: sideways; writing-mode: vertical-lr;',
         'text-anchor': 'start'
       }
     ),
-    line(ORIGIN_X, ORIGIN_X, UP(START_Y,leny),
-      START_Y, {
-        'stroke': 'black'
-      }
+    line(
+      __vec(ORIGIN_X, UP(START_Y,leny)),
+      __vec(ORIGIN_X, START_Y),
+      {'stroke': 'black'}
     ),
     ...partitions
   ]
@@ -235,8 +257,10 @@ function init_plot(lb, ub, plot_len, parts) {
    * the lower and upper bound intervals and set that as the
    * grid interval to be used.
    */
-  let partition = Math.round(Math.abs(
-    l_parts !== 0 ? new_lb/l_parts : new_ub/u_parts));
+  let partition = Math.abs(l_parts !== 0
+    ? new_lb/l_parts
+    : new_ub/u_parts
+  );
   u_parts = Math.ceil(abs_ub/partition);
 
   /*
@@ -254,6 +278,7 @@ function init_plot(lb, ub, plot_len, parts) {
 
   const part_val = (new_ub-new_lb) / (l_parts+u_parts);
   parts = l_parts+u_parts;
+  console.log(partition, l_parts, u_parts);
   if (parts === Infinity) return;
   let i, val;
   for (i = 0; i <= parts; i++) {
@@ -271,12 +296,12 @@ function init_plot(lb, ub, plot_len, parts) {
 function init() {
   const SAMPLE_RATE = 50;
   const lenx = 600, leny = 400;
-  let y_grid = 10;
-  let x_grid = 10;
-  let x_lb = 0, x_ub = 10, y_lb = 0, y_ub = 0;
+  let y_grid = 20;
+  let x_grid = 20;
+  let x_lb = -10, x_ub = 10, y_lb = 0, y_ub = 0;
 
   const parser = math.parser();
-  parser.evaluate('f(x) = e^x*sin(x)*cos(x)');
+  parser.evaluate('f(x) = sin(x)');
   let points = [];
   let i=0, xval, yval;
   const sample_amt = (x_ub-x_lb) / (x_grid*SAMPLE_RATE);
