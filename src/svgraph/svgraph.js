@@ -4,6 +4,9 @@ let ORIGIN_Y = 450;
 const START_Y = 450;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const SVG_GRAPH_ID = 'svg-graph';
+const X_GUIDE_ID = 'x-guide';
+const Y_GUIDE_ID = 'y-guide';
+const lenx = 600, leny = 400;
 
 /* fake macros */
 const OFFSET = (margin, idx) => margin * idx;
@@ -32,8 +35,38 @@ const ROUND_UP = (f, n) => {
   return f < 0 ? - (Math.abs(f) - r) : (f+n-r);
 };
 
-function Svgraph() {
-  return document.getElementById(SVG_GRAPH_ID);
+const Svgraph = () => document.getElementById(SVG_GRAPH_ID);
+const __Guide = (guide_id) => document.getElementById(guide_id);
+const Xguide = (clientY) => {
+  if (!clientY)
+    return __Guide(X_GUIDE_ID);
+
+  return line(
+    __vec(START_X, clientY),
+    __vec(RIGHT(START_X, lenx), clientY),
+    {id: X_GUIDE_ID, 'stroke': 'purple'}
+  );
+};
+
+const Yguide = (clientX) => {
+  if (!clientX)
+    return __Guide(Y_GUIDE_ID);
+
+  return line(
+    __vec(clientX, START_Y),
+    __vec(clientX, UP(START_Y, leny)),
+    {id: Y_GUIDE_ID, 'stroke': 'purple'}
+  );
+};
+
+function svg(id, ...children) {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('id', id);
+
+  if (children) {
+    children.forEach(c => svg.appendChild(c));
+  }
+  return svg;
 }
 
 function g(id, ...children) {
@@ -50,18 +83,23 @@ function __vec(x, y) {
   return { x, y };
 }
 
-function __ns(elem, config={}) {
+function __ns(elem, config={}, ...children) {
   Object.keys(config).forEach(k => {
     if (!elem.hasAttribute(k)) {
       elem.setAttribute(k, config[k]);
     }
   });
 
+  if (children) {
+    children.forEach(c => elem.appendChild(c));
+  }
+
   return elem;
 }
 
 function line(vec_from, vec_to, config={}) {
   const l = document.createElementNS(SVG_NS, 'line');
+  l.style.zIndex = '1';
 
   return __ns(l, {
     ...config,
@@ -75,10 +113,21 @@ function line(vec_from, vec_to, config={}) {
 function text(vec, words, config={}) {
   const t = document.createElementNS(SVG_NS, 'text');
   t.innerHTML = words;
+  t.style.zIndex = '1';
 
   return __ns(t, {
     ...config,
     x: vec.x, y: vec.y
+  });
+}
+
+function polyline(points, config={}, cb) {
+  const p = document.createElementNS(SVG_NS, 'polyline');
+  p.addEventListener('mousemove', cb);
+
+  return __ns(p, {
+    points,
+    ...config
   });
 }
 
@@ -96,12 +145,17 @@ function plot(dp, x_cratio, y_cratio, color) {
     }
   }
 
-  const p = document.createElementNS(SVG_NS, 'polyline');
-  return __ns(p, {
-    'points': points,
-    'stroke': color,
-    'fill': 'none'
-  });
+  return [
+    polyline(points, {
+      'stroke': color,
+      'fill': 'none',
+    }),
+    polyline(points, {
+      'fill': 'none',
+      'stroke': 'transparent',
+      'stroke-width': 5
+    })
+  ];
 }
 
 function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
@@ -278,7 +332,6 @@ function init_plot(lb, ub, plot_len, parts) {
 
   const part_val = (new_ub-new_lb) / (l_parts+u_parts);
   parts = l_parts+u_parts;
-  console.log(partition, l_parts, u_parts);
   if (parts === Infinity) return;
   let i, val;
   for (i = 0; i <= parts; i++) {
@@ -294,31 +347,32 @@ function init_plot(lb, ub, plot_len, parts) {
 }
 
 function init() {
-  const SAMPLE_RATE = 50;
-  const lenx = 600, leny = 400;
-  let y_grid = 20;
-  let x_grid = 20;
-  let x_lb = -10, x_ub = 10, y_lb = 0, y_ub = 0;
+  const SAMPLE_RATE = 100;
+  let y_grid = 10;
+  let x_grid = 10;
+  let x_lb = -10, x_ub = 100, y_lb = 0, y_ub = 0;
 
   const parser = math.parser();
-  parser.evaluate('f(x) = sin(x)');
+  parser.evaluate('f(x) = log(x)*sin(x)');
   let points = [];
   let i=0, xval, yval;
   const sample_amt = (x_ub-x_lb) / (x_grid*SAMPLE_RATE);
   for (xval=x_lb; xval<x_ub; xval+=sample_amt) {
     yval = parser.evaluate(`f(${xval})`);
-    y_ub = MAX(yval, y_ub);
-    y_lb = MIN(yval, y_lb);
+    if (!isNaN(yval)) {
+      y_ub = MAX(yval, y_ub);
+      y_lb = MIN(yval, y_lb);
 
-    points.push({
-      x: xval,
-      y: yval
-    });
+      points.push({
+        x: xval,
+        y: yval
+      });
 
-    i++;
+      i++;
+    }
   }
-  y_lb = y_lb > 0 ? 0 : y_lb;
-  y_ub = y_ub < 0 ? 0 : y_ub;
+  y_lb = y_lb > 0 ? 0 : y_lb*1.2;
+  y_ub = y_ub < 0 ? 0 : y_ub*1.2;
 
   let x_offset, y_offset;
   ({
@@ -331,31 +385,48 @@ function init() {
   ORIGIN_X = RIGHT(START_X, x_offset);
   ORIGIN_Y = START_Y - y_offset;
 
+  let _svg = svg('wrapper');
+
   /* plot */
-  const p = g('plot', plot(points, RATIO(lenx, x_ub-x_lb),
-    RATIO(leny, y_ub-y_lb), 'blue'));
+  __ns(_svg,
+    undefined,
+    g('plot', ...plot(points, RATIO(lenx, x_ub-x_lb),
+      RATIO(leny, y_ub-y_lb), 'blue')),
+    g('x-axis', ...xaxis({
+      leny,
+      lenx,
+      lb: x_lb,
+      ub: x_ub,
+      parts: x_grid,
+      label: '',
+      grid: true
+    })),
+    g('y-axis', ...yaxis({
+      leny,
+      lenx,
+      lb: y_lb,
+      ub: y_ub,
+      parts: y_grid,
+      label: '',
+      grid: true
+    })),
+  );
 
-  /* x-axis */
-  const x = g('x-axis', ...xaxis({
-    leny,
-    lenx,
-    lb: x_lb,
-    ub: x_ub,
-    parts: x_grid,
-    label: '',
-    grid: true
-  }));
-
-  /* y-axis */
-  const y = g('y-axis', ...yaxis({
-    leny,
-    lenx,
-    lb: y_lb,
-    ub: y_ub,
-    parts: y_grid,
-    label: '',
-    grid: true
-  }));
-
-  Svgraph().appendChild(g('wrapper', p, x, y));
+  Svgraph().appendChild(_svg);
+  Svgraph().addEventListener('mousemove', event => {
+    let X = event.offsetX, Y = event.offsetY;
+    if (Y > START_Y || Y < START_Y-leny
+      || X > START_X+lenx || X < START_X) {
+      return;
+    }
+    let xguide, yguide;
+    if ((xguide = Xguide()) !== null) {
+      Svgraph().removeChild(xguide);
+    }
+    if ((yguide = Yguide()) !== null) {
+      Svgraph().removeChild(yguide);
+    }
+    Svgraph().appendChild(Xguide(Y));
+    Svgraph().appendChild(Yguide(X));
+  });
 }
