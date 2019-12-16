@@ -4,6 +4,7 @@ const nl = require('./netlist.js');
 const assert = require('assert');
 const algebra = require('algebra.js');
 const Expression = algebra.Expression;
+var circuit;
 
 function Node(id, v) {
     this.id = id,
@@ -54,7 +55,11 @@ Node.prototype.kcl = function(){
 
     for (var i = 0; i < this.passiveComponents.length; i++){
         pComp = this.passiveComponents[i];
-        
+
+        if (pComp instanceof Resistor){
+            pComp.ohmsLaw(circuit);
+        }
+
         if (pComp.currentNumeric != undefined){
             //console.log(`${pComp.currentNumeric} = ${pComp.current}`);
             equations.push(`${pComp.currentNumeric} = ${pComp.current}`);
@@ -206,28 +211,12 @@ function createCircuit(components){
                 if (nodeid == 0){ // ground node
                     v = 0
                 }
-                else if (c.type == 'V'){ // node voltage is known
-                    // V_pnode > V_nnode
-                    if (i == 0 && c.nnode == 0){
-                        v = c.value;
-                        var indexUnknownVnodes = circuit.unknownVnodes.findIndex(x => x.id == c.pnode);
-                        if (indexUnknownVnodes != -1){
-                            circuit.unknownVnodes.splice(indexUnknownVnodes, 1);
-                        }
-                    }
-                    // V_pnode < V_nnode
-                    else if (i == 1 && c.pnode == 0){
-                        v = c.value * -1;
-                        var indexUnknownVnodes = circuit.unknownVnodes.findIndex(x => x.id == c.nnode);
-                        if (indexUnknownVnodes != -1){
-                            circuit.unknownVnodes.splice(indexUnknownVnodes, 1);
-                        }
-                    }
-                }
+
                 else{
                     circuit.unknownVnodes.push(nodeid);
                     v = undefined; //node voltage is unknown
                 }
+                
                 node = new Node(nodeid, v);
                 circuit.nodes.push(node);
             }
@@ -251,9 +240,21 @@ function createCircuit(components){
         }
 
         if (c.type == 'V'){
+            var indexUnknownVnodes;
+
             circuit.numVsrc ++;
 
-            var indexUnknownVnodes;
+            // Set the voltage value
+            if (c.nnode == 0){
+                var pnode = circuit.findNodeById(c.pnode);
+                pnode.voltage = c.value;
+            }
+            else if (c.pnode == 0){
+                var nnode = circuit.findNodeById(c.nnode);
+                nnode.voltage = c.value * -1;
+            }
+
+            // Remove pnode and nnode of Voltage source from unknownVnodes array
             indexUnknownVnodes = circuit.unknownVnodes.indexOf(c.pnode);
             if (indexUnknownVnodes != -1){
                 circuit.unknownVnodes.splice(indexUnknownVnodes, 1);
@@ -272,7 +273,7 @@ function createCircuit(components){
         }
         else if (c.type == 'R'){
             r = new Resistor(c.value, c.pnode, c.nnode);
-            r.ohmsLaw(circuit);
+            //r.ohmsLaw(circuit);
             pnode = circuit.findNodeById(c.pnode);
             nnode = circuit.findNodeById(c.nnode);
             pnode.passiveComponents.push(r);
@@ -293,17 +294,21 @@ module.exports = { createCircuit };
 //     const curr_src = 'test/netlist_ann_csrc.txt'
 //
     var c = [
-        { id: 'I1', type: 'I', pnode: 1, nnode: 0, value: '0.003'  },
-        { id: 'R1', type: 'R', pnode: 1, nnode: 0, value: '4000'  },
-        { id: 'R2', type: 'R', pnode: 1, nnode: 2, value: '5600'  },
-        { id: 'I2', type: 'I', pnode: 0, nnode: 2, value: '0.002'  }
-    ]
+        { id: 'V1', type: 'V', pnode: 1, nnode: 0, value: '15'  },
+        { id: 'R1', type: 'R', pnode: 1, nnode: 2, value: '12000'  },
+        { id: 'R2', type: 'R', pnode: 2, nnode: 3, value: '2000'  },
+        { id: 'R3', type: 'R', pnode: 2, nnode: 3, value: '8000'  },
+        { id: 'R4', type: 'R', pnode: 3, nnode: 0, value: '1000'  },
+        { id: 'R5', type: 'R', pnode: 4, nnode: 3, value: '7000'  },
+        { id: 'R6', type: 'R', pnode: 2, nnode: 4, value: '6000'  },
+        { id: 'I1', type: 'I', pnode: 4, nnode: 0, value: '0.0045'  },
+      ]
 //     // example1 = nl.nlConsume(var_simple);
-    var circuit = createCircuit(c);
+    circuit = createCircuit(c);
      
-    /*console.log(circuit.nodalAnalysis());
-    circuit.nodes.forEach((c) => {
-        console.log(`Node ${c.id} incoming branches: ${c.incomingBranches} outgoing branches: ${c.outgoingBranches}`);
-    });*/
+    console.log(circuit.nodalAnalysis());
+    //circuit.nodes.forEach((c) => {
+    //    console.log(`Node ${c.id} incoming branches: ${c.incomingBranches} outgoing branches: ${c.outgoingBranches}`);
+    //});
 
  })();
