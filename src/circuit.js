@@ -8,8 +8,8 @@ const Expression = algebra.Expression;
 function Node(id, v) {
     this.id = id,
     this.voltage = v,
-    this.passiveComponents = [], // array of connected passive components
-    this.currentSources = [],
+    this.passiveComponents = [], // array of connected passive components (currently, only Resistor objects)
+    this.currentSources = [], // array of CurrentSource objects
     this.incomingBranches = [],
     this.outgoingBranches = []
 };
@@ -51,6 +51,7 @@ Node.prototype.kcl = function(){
     var equations = [];
 
     console.log(`KCL at node ${this.id.toString()}`);
+
     for (var i = 0; i < this.passiveComponents.length; i++){
         pComp = this.passiveComponents[i];
         
@@ -78,6 +79,11 @@ Node.prototype.kcl = function(){
             sum_string += `${sign} I${i} `;
         }
     }
+
+    this.currentSources.forEach((c) => {
+        sum_string += `+ (${c.value})`;
+    });
+
     //var last_plus_index = sum_string.lastIndexOf('+');
     //sum_string = sum_string.replace(1, last_plus_index);
     sum_string += ' = 0';
@@ -295,9 +301,9 @@ module.exports = { createCircuit };
 //     // example1 = nl.nlConsume(var_simple);
     var circuit = createCircuit(c);
      
-//     console.log(circuit.nodalAnalysis());
+    /*console.log(circuit.nodalAnalysis());
     circuit.nodes.forEach((c) => {
         console.log(`Node ${c.id} incoming branches: ${c.incomingBranches} outgoing branches: ${c.outgoingBranches}`);
-    });
+    });*/
 
  })();
