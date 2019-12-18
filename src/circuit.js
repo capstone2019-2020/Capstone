@@ -3,6 +3,7 @@
 const nl = require('./netlist.js');
 const assert = require('assert');
 const algebra = require('algebra.js');
+const math = require('mathjs');
 const Expression = algebra.Expression;
 var circuit;
 
@@ -97,6 +98,66 @@ Node.prototype.kcl = function(){
     return equations;
 };
 
+/* Calculate Driving Point Impedance 
+   DPI = The impedance seen at a node when when we zero all the other node voltages and all
+         current sources in the circuit */
+Node.prototype.computeDpi = function(){
+    var allConnectedBranches = this.incomingBranches.concat(this.outgoingBranches);
+    var branchToIgnore;
+    var inverseSum = 0; // store (1/R1 + 1/R2 + ... + 1/Rn)
+
+    // If current source is zeroed out -> open circuit -> that branch can be ignored
+    this.currentSources.forEach ((c) => {
+        if (c.pnode == this.id){
+            branchToIgnore = allConnectedBranches.indexOf(c.nnode);
+        }
+        else if (c.nnode == this.id){
+            branchToIgnore = allConnectedBranches.indexOf(c.pnode);
+        }
+
+        // Something is wrong if the other side node of current source is not in allConnectedBranches
+        assert(branchToIgnore != -1); 
+        allConnectedBranches.splice(branchToIgnore, 1);
+    });
+
+    this.passiveComponents.forEach ((r) => {
+        if ((r.pnode == this.id && allConnectedBranches.includes(r.nnode)) ||
+            (r.nnode == this.id && allConnectedBranches.includes(r.pnode))) {
+                inverseSum += math.inv(r.value);
+        }
+    });
+
+    return math.inv(inverseSum);
+};
+
+/* Helper function for dpiAnalysis()
+   short circuit current = The net current that flows into node n if node n is grounded and
+   the currents due to all the other node voltages and current
+   sources are added together */
+Node.prototype.computeShortCircuitCurrent = function(){
+    iShortCircuit = "";
+
+    // Ignore passive components connected to ground
+    this.passiveComponents.forEach ((r, i) => {
+        if (r.pnode != 0 && r.nnode != 0) {
+            if (i != 0){
+                iShortCircuit += " + ";
+            }
+
+            iShortCircuit += r.current;
+        }
+    });
+
+    this.currentSources.forEach ((c) => {
+        if (iShortCircuit.length > 0){ 
+            iShortCircuit += " + ";
+        }
+        iShortCircuit += c.value.toString();
+    });
+
+    return iShortCircuit;
+};
+
 function Circuit(n, vsrc) {
     this.nodes = n // array of node objects
     this.unknownVnodes = [] // array of node ids that have unknown voltage values
@@ -120,6 +181,16 @@ Circuit.prototype.nodeExists = function(nid){
 
 Circuit.prototype.findNodeById = function(nid){
     return this.nodes.find(n => n.id === nid);
+};
+
+/* Calculate Driving Point Impedance and short circuit current at the node 
+   n is the ID of the node at which DPI analysis will be done */
+Circuit.prototype.dpiAnalysis = function(n){
+    var node = this.findNodeById(n);
+    var dpi = node.computeDpi();
+    var isc = node.computeShortCircuitCurrent();
+
+    return [dpi, isc];
 };
 
 Circuit.prototype.nodalAnalysis = function(){
@@ -289,11 +360,11 @@ module.exports = { createCircuit };
 
 
  (function main(){
-//     const voltage_div = 'test/netlist_ann1.txt'
+     const voltage_div = 'test/netlist_ann1.txt'
 //     const var_simple = 'test/netlist_ann2.txt'
 //     const curr_src = 'test/netlist_ann_csrc.txt'
 //
-    var c = [
+    /*var c = [
         { id: 'V1', type: 'V', pnode: 1, nnode: 0, value: '15'  },
         { id: 'R1', type: 'R', pnode: 1, nnode: 2, value: '12000'  },
         { id: 'R2', type: 'R', pnode: 2, nnode: 3, value: '2000'  },
@@ -302,13 +373,13 @@ module.exports = { createCircuit };
         { id: 'R5', type: 'R', pnode: 4, nnode: 3, value: '7000'  },
         { id: 'R6', type: 'R', pnode: 2, nnode: 4, value: '6000'  },
         { id: 'I1', type: 'I', pnode: 4, nnode: 0, value: '0.0045'  },
-      ]
-//     // example1 = nl.nlConsume(var_simple);
-    circuit = createCircuit(c);
+      ]*/
+
+    example1 = nl.nlConsume(voltage_div);
+    circuit = createCircuit(example1);
      
     console.log(circuit.nodalAnalysis());
-    //circuit.nodes.forEach((c) => {
-    //    console.log(`Node ${c.id} incoming branches: ${c.incomingBranches} outgoing branches: ${c.outgoingBranches}`);
-    //});
+    console.log(circuit.dpiAnalysis(2));
+    
 
  })();
