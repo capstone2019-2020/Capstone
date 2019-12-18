@@ -102,10 +102,10 @@ Node.prototype.kcl = function(){
    DPI = The impedance seen at a node when when we zero all the other node voltages and all
          current sources in the circuit */
 Node.prototype.computeDpi = function(){
-    var allConnectedBranches = this.incomingBranches.concat(this.outgoingBranches);
-    var branchToIgnore;
     var inverseSum = 0; // store (1/R1 + 1/R2 + ... + 1/Rn)
-
+    /*var allConnectedBranches = this.incomingBranches.concat(this.outgoingBranches);
+    var branchToIgnore;
+    
     // If current source is zeroed out -> open circuit -> that branch can be ignored
     this.currentSources.forEach ((c) => {
         if (c.pnode == this.id){
@@ -121,12 +121,17 @@ Node.prototype.computeDpi = function(){
     });
 
     this.passiveComponents.forEach ((r) => {
-        if ((r.pnode == this.id && allConnectedBranches.includes(r.nnode)) ||
-            (r.nnode == this.id && allConnectedBranches.includes(r.pnode))) {
+        if ((r.pnode == this.id && allConnectedBranches.includes(r.nnode) != -1) ||
+            (r.nnode == this.id && allConnectedBranches.includes(r.pnode) != -1)) {
                 inverseSum += math.inv(r.value);
         }
     });
-
+    */
+   this.passiveComponents.forEach ((r) => {
+    if (r.currentNumeric == undefined){
+            inverseSum += math.inv(r.value);
+    }
+    });
     return math.inv(inverseSum);
 };
 
@@ -144,7 +149,13 @@ Node.prototype.computeShortCircuitCurrent = function(){
                 iShortCircuit += " + ";
             }
 
-            iShortCircuit += r.current;
+            if (r.currentNumeric != undefined){
+                iShortCircuit += r.currentNumeric.toString();
+            }
+            else{
+                iShortCircuit += r.current;
+            }
+
         }
     });
 
@@ -152,6 +163,7 @@ Node.prototype.computeShortCircuitCurrent = function(){
         if (iShortCircuit.length > 0){ 
             iShortCircuit += " + ";
         }
+        
         iShortCircuit += c.value.toString();
     });
 
