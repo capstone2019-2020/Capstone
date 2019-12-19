@@ -350,10 +350,10 @@ function init() {
   const SAMPLE_RATE = 100;
   let y_grid = 10;
   let x_grid = 10;
-  let x_lb = -10, x_ub = 100, y_lb = 0, y_ub = 0;
+  let x_lb = -10, x_ub = 10, y_lb = 0, y_ub = 0;
 
   const parser = math.parser();
-  parser.evaluate('f(x) = log(x)*sin(x)');
+  parser.evaluate('f(x) = abs(x)*sin(x)');
   let points = [];
   let i=0, xval, yval;
   const sample_amt = (x_ub-x_lb) / (x_grid*SAMPLE_RATE);

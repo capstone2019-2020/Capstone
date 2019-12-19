@@ -367,12 +367,8 @@ function createCircuit(components){
     return circuit;
 }
 
-module.exports = { createCircuit };
-
-
-
  (function main(){
-     const voltage_div = 'test/netlist_ann1.txt'
+     const voltage_div = '../test/netlist_ann1.txt'
 //     const var_simple = 'test/netlist_ann2.txt'
 //     const curr_src = 'test/netlist_ann_csrc.txt'
 //
@@ -395,3 +391,10 @@ module.exports = { createCircuit };
     
 
  })();
+
+ exports.createCircuit = createCircuit;
+
+ exports.consumeFrontend = arr => {
+     return createCircuit(nl.nlConsumeArr(arr))
+       .dpiAnalysis(2);
+ };

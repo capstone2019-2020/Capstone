@@ -43,15 +43,8 @@ function assertComponents(components) {
   }
 }
 
-/*
- * Input: file path containing netlist,
- * @return <Components>
- */
-exports.nlConsume = filepath => {
-  const components = [];
-  const d = fs.readFileSync(filepath, {encoding: 'utf8'});
-
-  const arr = d.split('\n');
+function toNetlist(arr) {
+  let components = [];
 
   let a, i, line, val, multiplier;
   for (i = 0; i < arr.length; i++) {
@@ -98,4 +91,19 @@ exports.nlConsume = filepath => {
 
   assertComponents(components);
   return components;
+}
+
+/*
+ * Input: file path containing netlist,
+ * @return <Components>
+ */
+exports.nlConsume = filepath => {
+  const d = fs.readFileSync(filepath, {encoding: 'utf8'});
+  return toNetlist(d.split('\n'));
 };
+
+/*
+ * Input: array of components in a netlist,
+ * @return <Components>
+ */
+exports.nlConsumeArr = netlist_arr => toNetlist(netlist_arr);

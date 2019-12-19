@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');	// pull info from HTML POST (express4)
 const m1 = require("./m1.js");
+const circuitjs = require('./circuit.js');
 const algebra = require('algebra.js');
 const app = express();
 const path = require('path');
@@ -46,6 +47,12 @@ app.post("/input-form", (req, res) => {
     res.set({
 
     });
+    return res.status(200).send(eqns);
+});
+
+app.post("/netlist", (req, res) => {
+    let netlist = req.body.netlist;
+    let eqns = circuitjs.consumeFrontend(netlist);
     return res.status(200).send(eqns);
 });
 
