@@ -1,12 +1,11 @@
-let ORIGIN_X = 100;
-const START_X = 100;
-let ORIGIN_Y = 450;
-const START_Y = 450;
 const SVG_NS = 'http://www.w3.org/2000/svg';
+
+let ORIGIN_X = 100, ORIGIN_Y = 450; /* These change depending on graph */
+const START_X = 100, START_Y = 450;
+const LENGTH_X = 600, LENGTH_Y = 400;
 const SVG_GRAPH_ID = 'svg-graph';
 const X_GUIDE_ID = 'x-guide';
 const Y_GUIDE_ID = 'y-guide';
-const lenx = 600, leny = 400;
 
 /* fake macros */
 const OFFSET = (margin, idx) => margin * idx;
@@ -36,27 +35,23 @@ const ROUND_UP = (f, n) => {
 };
 
 const Svgraph = () => document.getElementById(SVG_GRAPH_ID);
-const __Guide = (guide_id) => document.getElementById(guide_id);
-const Xguide = (clientY) => {
-  if (!clientY)
-    return __Guide(X_GUIDE_ID);
 
-  return line(
-    __vec(START_X, clientY),
-    __vec(RIGHT(START_X, lenx), clientY),
-    {id: X_GUIDE_ID, 'stroke': 'purple'}
-  );
-};
+const __Guide = (guideId, vec1, vec2) => {
+  const guide = document.getElementById(guideId);
+  if (!vec1 || !vec2) return guide;
 
-const Yguide = (clientX) => {
-  if (!clientX)
-    return __Guide(Y_GUIDE_ID);
-
-  return line(
-    __vec(clientX, START_Y),
-    __vec(clientX, UP(START_Y, leny)),
-    {id: Y_GUIDE_ID, 'stroke': 'purple'}
-  );
+  if (!guide) {
+    Svgraph().appendChild(
+      line(vec1, vec2, {
+        id: guideId, 'stroke': 'purple'
+      })
+    );
+  } else {
+    __ns(guide, {
+      x1: vec1.x, y1: vec1.y,
+      x2: vec2.x, y2: vec2.y
+    });
+  }
 };
 
 function svg(id, ...children) {
@@ -85,9 +80,9 @@ function __vec(x, y) {
 
 function __ns(elem, config={}, ...children) {
   Object.keys(config).forEach(k => {
-    if (!elem.hasAttribute(k)) {
+    // if (!elem.hasAttribute(k)) {
       elem.setAttribute(k, config[k]);
-    }
+    // }
   });
 
   if (children) {
@@ -103,10 +98,8 @@ function line(vec_from, vec_to, config={}) {
 
   return __ns(l, {
     ...config,
-    x1: vec_from.x,
-    x2: vec_to.x,
-    y1: vec_from.y,
-    y2: vec_to.y,
+    x1: vec_from.x, y1: vec_from.y,
+    x2: vec_to.x  , y2: vec_to.y
   });
 }
 
@@ -213,7 +206,7 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
 }
 
 function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
-  /* Re-adjust leny */
+  /* Re-adjust LENGTH_Y */
   leny = START_Y-leny < 0 ? START_Y : leny;
 
   let partitions = [];
@@ -377,10 +370,10 @@ function init() {
   let x_offset, y_offset;
   ({
     lb: x_lb, ub: x_ub, offset: x_offset, parts: x_grid
-  } = init_plot(x_lb, x_ub, lenx, x_grid));
+  } = init_plot(x_lb, x_ub, LENGTH_X, x_grid));
   ({
     lb: y_lb, ub: y_ub, offset: y_offset, parts: y_grid
-  } = init_plot(y_lb, y_ub, leny, y_grid));
+  } = init_plot(y_lb, y_ub, LENGTH_Y, y_grid));
 
   ORIGIN_X = RIGHT(START_X, x_offset);
   ORIGIN_Y = START_Y - y_offset;
@@ -390,11 +383,11 @@ function init() {
   /* plot */
   __ns(_svg,
     undefined,
-    g('plot', ...plot(points, RATIO(lenx, x_ub-x_lb),
-      RATIO(leny, y_ub-y_lb), 'blue')),
+    g('plot', ...plot(points, RATIO(LENGTH_X, x_ub-x_lb),
+      RATIO(LENGTH_Y, y_ub-y_lb), 'blue')),
     g('x-axis', ...xaxis({
-      leny,
-      lenx,
+      leny: LENGTH_Y,
+      lenx: LENGTH_X,
       lb: x_lb,
       ub: x_ub,
       parts: x_grid,
@@ -402,8 +395,8 @@ function init() {
       grid: true
     })),
     g('y-axis', ...yaxis({
-      leny,
-      lenx,
+      leny: LENGTH_Y,
+      lenx: LENGTH_X,
       lb: y_lb,
       ub: y_ub,
       parts: y_grid,
@@ -415,18 +408,16 @@ function init() {
   Svgraph().appendChild(_svg);
   Svgraph().addEventListener('mousemove', event => {
     let X = event.offsetX, Y = event.offsetY;
-    if (Y > START_Y || Y < START_Y-leny
-      || X > START_X+lenx || X < START_X) {
+    if (Y > START_Y || Y < START_Y-LENGTH_Y
+      || X > START_X+LENGTH_X || X < START_X) {
       return;
     }
-    let xguide, yguide;
-    if ((xguide = Xguide()) !== null) {
-      Svgraph().removeChild(xguide);
-    }
-    if ((yguide = Yguide()) !== null) {
-      Svgraph().removeChild(yguide);
-    }
-    Svgraph().appendChild(Xguide(Y));
-    Svgraph().appendChild(Yguide(X));
+
+    __Guide(X_GUIDE_ID,
+      __vec(START_X, Y), __vec(RIGHT(START_X, LENGTH_X), Y)
+    );
+    __Guide(Y_GUIDE_ID,
+      __vec(X, START_Y), __vec(X, UP(START_Y, LENGTH_Y))
+    );
   });
 }
