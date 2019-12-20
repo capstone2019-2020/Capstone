@@ -3,9 +3,11 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 let ORIGIN_X = 100, ORIGIN_Y = 450; /* These change depending on graph */
 const START_X = 100, START_Y = 450;
 const LENGTH_X = 600, LENGTH_Y = 400;
-const SVG_GRAPH_ID = 'svg-graph';
-const X_GUIDE_ID = 'x-guide';
-const Y_GUIDE_ID = 'y-guide';
+const ID_GRAPH_SVG = 'svg-graph';
+const ID_GUIDE_X = 'x-guide';
+const ID_GUIDE_Y = 'y-guide';
+
+let IS_SHOW_GUIDE = true;
 
 /* fake macros */
 const OFFSET = (margin, idx) => margin * idx;
@@ -19,6 +21,10 @@ const SCALE = (v, r) => v * r;
 const RATIO = (c1, c2) => c1 / c2;
 const MAX = (s1, s2) => s1 > s2 ? s1 : s2;
 const MIN = (s1, s2) => s1 < s2 ? s1 : s2;
+
+const __X = (x, xlb, xub) => (x-START_X)/RATIO(LENGTH_X, xub-xlb)+xlb;
+const __Y = (y, ylb, yub) => (START_Y-y)/RATIO(LENGTH_Y, yub-ylb)+ylb;
+const SAMPLE_IDX = (x) => {};
 
 /* Math related "macros" */
 const __ROUND = (f) => parseFloat(Math.round(f*100)/100);
@@ -34,7 +40,7 @@ const ROUND_UP = (f, n) => {
   return f < 0 ? - (Math.abs(f) - r) : (f+n-r);
 };
 
-const Svgraph = () => document.getElementById(SVG_GRAPH_ID);
+const Svgraph = () => document.getElementById(ID_GRAPH_SVG);
 
 const __Guide = (guideId, vec1, vec2) => {
   const guide = document.getElementById(guideId);
@@ -43,7 +49,8 @@ const __Guide = (guideId, vec1, vec2) => {
   if (!guide) {
     Svgraph().appendChild(
       line(vec1, vec2, {
-        id: guideId, 'stroke': 'purple'
+        id: guideId, 'stroke': 'purple',
+        'stroke-opacity': 0.3
       })
     );
   } else {
@@ -341,20 +348,20 @@ function init_plot(lb, ub, plot_len, parts) {
 
 function init() {
   const SAMPLE_RATE = 100;
-  let y_grid = 10;
-  let x_grid = 10;
-  let x_lb = -10, x_ub = 10, y_lb = 0, y_ub = 0;
+  let ygrid = 10;
+  let xgrid = 10;
+  let xlb = -10, xub = 5, ylb = 0, yub = 0;
 
   const parser = math.parser();
   parser.evaluate('f(x) = abs(x)*sin(x)');
   let points = [];
   let i=0, xval, yval;
-  const sample_amt = (x_ub-x_lb) / (x_grid*SAMPLE_RATE);
-  for (xval=x_lb; xval<x_ub; xval+=sample_amt) {
+  const sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
+  for (xval=xlb; xval<xub; xval+=sample_amt) {
     yval = parser.evaluate(`f(${xval})`);
     if (!isNaN(yval)) {
-      y_ub = MAX(yval, y_ub);
-      y_lb = MIN(yval, y_lb);
+      yub = MAX(yval, yub);
+      ylb = MIN(yval, ylb);
 
       points.push({
         x: xval,
@@ -364,16 +371,16 @@ function init() {
       i++;
     }
   }
-  y_lb = y_lb > 0 ? 0 : y_lb*1.2;
-  y_ub = y_ub < 0 ? 0 : y_ub*1.2;
+  ylb = ylb > 0 ? 0 : ylb*1.2;
+  yub = yub < 0 ? 0 : yub*1.2;
 
   let x_offset, y_offset;
   ({
-    lb: x_lb, ub: x_ub, offset: x_offset, parts: x_grid
-  } = init_plot(x_lb, x_ub, LENGTH_X, x_grid));
+    lb: xlb, ub: xub, offset: x_offset, parts: xgrid
+  } = init_plot(xlb, xub, LENGTH_X, xgrid));
   ({
-    lb: y_lb, ub: y_ub, offset: y_offset, parts: y_grid
-  } = init_plot(y_lb, y_ub, LENGTH_Y, y_grid));
+    lb: ylb, ub: yub, offset: y_offset, parts: ygrid
+  } = init_plot(ylb, yub, LENGTH_Y, ygrid));
 
   ORIGIN_X = RIGHT(START_X, x_offset);
   ORIGIN_Y = START_Y - y_offset;
@@ -383,25 +390,25 @@ function init() {
   /* plot */
   __ns(_svg,
     undefined,
-    g('plot', ...plot(points, RATIO(LENGTH_X, x_ub-x_lb),
-      RATIO(LENGTH_Y, y_ub-y_lb), 'blue')),
+    g('plot', ...plot(points, RATIO(LENGTH_X, xub-xlb),
+      RATIO(LENGTH_Y, yub-ylb), 'blue')),
     g('x-axis', ...xaxis({
       leny: LENGTH_Y,
       lenx: LENGTH_X,
-      lb: x_lb,
-      ub: x_ub,
-      parts: x_grid,
+      lb: xlb,
+      ub: xub,
+      parts: xgrid,
       label: '',
-      grid: true
+      grid: false
     })),
     g('y-axis', ...yaxis({
       leny: LENGTH_Y,
       lenx: LENGTH_X,
-      lb: y_lb,
-      ub: y_ub,
-      parts: y_grid,
+      lb: ylb,
+      ub: yub,
+      parts: ygrid,
       label: '',
-      grid: true
+      grid: false
     })),
   );
 
@@ -413,10 +420,15 @@ function init() {
       return;
     }
 
-    __Guide(X_GUIDE_ID,
+    let _x = __X(X, xlb, xub)-xlb;
+    let _xf = Math.floor(_x);
+    let idx = Math.floor((_x-_xf)/sample_amt + _xf*SAMPLE_RATE);
+    console.log(idx);
+    console.log(_x, points[idx].x, points[idx].y);
+    __Guide(ID_GUIDE_X,
       __vec(START_X, Y), __vec(RIGHT(START_X, LENGTH_X), Y)
     );
-    __Guide(Y_GUIDE_ID,
+    __Guide(ID_GUIDE_Y,
       __vec(X, START_Y), __vec(X, UP(START_Y, LENGTH_Y))
     );
   });

@@ -106,4 +106,4 @@ exports.nlConsume = filepath => {
  * Input: array of components in a netlist,
  * @return <Components>
  */
-exports.nlConsumeArr = netlist_arr => toNetlist(netlist_arr);
+exports.nlConsumeArr = netlistArr => toNetlist(netlistArr);
