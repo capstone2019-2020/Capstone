@@ -347,30 +347,27 @@ function init_plot(lb, ub, plot_len, parts) {
 }
 
 function init() {
-  const SAMPLE_RATE = 100;
+  const SAMPLE_RATE = 20;
   let ygrid = 10;
   let xgrid = 10;
-  let xlb = -10, xub = 5, ylb = 0, yub = 0;
+  let xlb = -10, xub = 10, ylb = 0, yub = 0;
 
   const parser = math.parser();
   parser.evaluate('f(x) = abs(x)*sin(x)');
   let points = [];
   let i=0, xval, yval;
   const sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
-  for (xval=xlb; xval<xub; xval+=sample_amt) {
+  for (xval=xlb; xval<=xub; xval+=sample_amt) {
     yval = parser.evaluate(`f(${xval})`);
     if (!isNaN(yval)) {
       yub = MAX(yval, yub);
       ylb = MIN(yval, ylb);
 
-      points.push({
-        x: xval,
-        y: yval
-      });
-
+      points.push(__vec(xval, yval));
       i++;
     }
   }
+
   ylb = ylb > 0 ? 0 : ylb*1.2;
   yub = yub < 0 ? 0 : yub*1.2;
 
@@ -420,16 +417,17 @@ function init() {
       return;
     }
 
-    let _x = __X(X, xlb, xub)-xlb;
-    let _xf = Math.floor(_x);
-    let idx = Math.floor((_x-_xf)/sample_amt + _xf*SAMPLE_RATE);
-    console.log(idx);
-    console.log(_x, points[idx].x, points[idx].y);
-    __Guide(ID_GUIDE_X,
-      __vec(START_X, Y), __vec(RIGHT(START_X, LENGTH_X), Y)
-    );
-    __Guide(ID_GUIDE_Y,
-      __vec(X, START_Y), __vec(X, UP(START_Y, LENGTH_Y))
-    );
+    let idx = RATIO(__X(X, xlb, xub)-xlb, sample_amt);
+    if (FIXED(idx%1, 2) === '0.00') {
+      idx = Math.floor(idx);
+      let vec = points[idx];
+
+      __Guide(ID_GUIDE_X,
+        __vec(START_X, Y), __vec(RIGHT(START_X, LENGTH_X), Y)
+      );
+      __Guide(ID_GUIDE_Y,
+        __vec(X, START_Y), __vec(X, UP(START_Y, LENGTH_Y))
+      );
+    }
   });
 }
