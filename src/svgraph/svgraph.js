@@ -210,6 +210,7 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
           __vec(x_coord, UP(START_Y, leny)),
           {
             'stroke': 'grey',
+            'stroke-opacity': '0.3',
             'stroke-dasharray': '4,6'
           }
         )
@@ -271,6 +272,7 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
           __vec(RIGHT(START_X,lenx), y_coord),
           {
             'stroke': 'grey',
+            'stroke-opacity': '0.5',
             'stroke-dasharray': '4,6'
           }
         )
