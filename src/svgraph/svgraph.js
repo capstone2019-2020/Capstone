@@ -3,6 +3,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 let ORIGIN_X = 100, ORIGIN_Y = 450; /* These change depending on graph */
 const START_X = 100, START_Y = 470;
 const LENGTH_X = 600, LENGTH_Y = 400;
+const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
 const ID_GRAPH_SVG = 'svg-graph';
 const ID_GUIDE_X = 'x-guide';
 const ID_GUIDE_Y = 'y-guide';
@@ -22,9 +23,14 @@ const SCALE = (v, r) => v * r;
 const RATIO = (c1, c2) => c1 / c2;
 const MAX = (s1, s2) => s1 > s2 ? s1 : s2;
 const MIN = (s1, s2) => s1 < s2 ? s1 : s2;
+const ELEM = (id) => document.getElementById(id);
+const CSS = (obj) => Object.entries(obj)
+  .reduce((p, [k, v]) => `${p}${k}: ${v}; `, '').trim();
 
 const __X = (x, xlb, xub) => (x-START_X)/RATIO(LENGTH_X, xub-xlb)+xlb;
 const __Y = (y, ylb, yub) => (START_Y-y)/RATIO(LENGTH_Y, yub-ylb)+ylb;
+const __gX = (x, ratio) => RIGHT(ORIGIN_X, SCALE(x, ratio));
+const __gY = (y, ratio) => UP(ORIGIN_Y, SCALE(y, ratio));
 
 /* Math related "macros" */
 const __ROUND = (f) => parseFloat(Math.round(f*100)/100);
@@ -66,6 +72,57 @@ const __Legend = (xval, yval) => {
     .innerHTML = `x_value: ${xval}`;
   document.getElementById(ID_LEGEND_Y)
     .innerHTML = `y_value: ${yval}`;
+};
+
+const __Tracer = (tracerId, xval, yval, xratio, yratio) => {
+  const tracer = ELEM(`${tracerId}-rect`);
+  const tracerTxt = ELEM(`${tracerId}-text`);
+  const tracerCirc = ELEM(`${tracerId}-circle`);
+  const gx = __gX(xval, xratio);
+  const gy = __gY(yval, yratio);
+  const coords = `(${FIXED(xval, 2)}, ${FIXED(yval, 2)})`;
+
+  if (!tracer || !tracerTxt) {
+    /*
+     * For some strange reason, we can only append
+     * children to <svg> elements, so that's what
+     * is happening here.
+     */
+    Svgraph().appendChild(
+      __ns(svg(tracerId), undefined,
+        rect(__vec(gx, gy),
+          WIDTH_TRACE, HEIGHT_TRACE, {
+            id: `${tracerId}-rect`,
+            stroke: 'grey',
+            fill: 'white',
+            'stroke-opacity': '0.3'
+          }),
+        text(__vec(
+          RIGHT(gx, 5), DOWN(gy, 7)),
+          coords, {
+            id: `${tracerId}-text`,
+            textLength: WIDTH_TRACE-5,
+            style: CSS({
+              'font-size': '9px',
+              'font-weight': 'bold',
+              padding: '5px',
+            })
+          }),
+        circle(__vec(gx, gy), 3, {
+          id: `${tracerId}-circle`,
+          opacity: '0.5',
+          fill: 'red'
+        })
+      )
+    );
+  } else {
+    __ns(tracer, {x: gx, y: gy});
+    __ns(tracerTxt, {
+      x: RIGHT(gx, 2), y: DOWN(gy, 10)
+    });
+    __ns(tracerCirc, {cx: gx, cy: gy});
+    tracerTxt.innerHTML = coords;
+  }
 };
 
 function svg(id, ...children) {
@@ -126,6 +183,15 @@ function text(vec, words, config={}) {
   });
 }
 
+function circle(vec, r, config={}) {
+  const c = document.createElementNS(SVG_NS, 'circle');
+
+  return __ns(c, {
+    ...config,
+    cx: vec.x, cy: vec.y, r
+  });
+}
+
 function rect(vec, width, height, config={}) {
   const r = document.createElementNS(SVG_NS, 'rect');
 
@@ -154,8 +220,8 @@ function plot(dp, x_cratio, y_cratio, color) {
   for (i=0; i<dp.length; i++) {
     dp_e = dp[i];
     if (!isNaN(dp_e.y)) {
-      x_coord = RIGHT(ORIGIN_X, SCALE(dp_e.x, x_cratio));
-      y_coord = UP(ORIGIN_Y, SCALE(dp_e.y, y_cratio));
+      x_coord = __gX(dp_e.x, x_cratio);
+      y_coord = __gY(dp_e.y, y_cratio);
 
       points += `${x_coord},${y_coord}`;
       if (i + 1 !== dp.length) {
@@ -390,13 +456,13 @@ function init_plot(lb, ub, plot_len, parts) {
 }
 
 function init() {
-  let xlb = -5, xub = 100, ylb = 0, yub = 0;
+  let xlb = -100, xub = 100, ylb = 0, yub = 0;
   let ygrid = 10;
   let xgrid = 20;
   const SAMPLE_RATE = 100;
 
   const parser = math.parser();
-  parser.evaluate('f(x) = log(x)*sin(x)');
+  parser.evaluate('f(x) = abs(x)*sin(x)');
   let points = [];
   let i=0, xval, yval;
   const sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
@@ -462,7 +528,15 @@ function init() {
       || X > START_X+LENGTH_X || X < START_X) {
       return;
     }
+    // TODO: support more plots
 
+    /*
+     * Formula for getting 'points' array index from cursor
+     * coordinates. Basic idea is to find the X-AXIS value,
+     * then translate that into the number of iterations in
+     * the generation loop (see above) it took for 'xval' to
+     * be the current X-AXIS value -> __X(X, xlb, xub).
+     */
     let idx = RATIO(__X(X, xlb, xub)-xlb, sample_amt);
     if (FIXED(idx%1, 2) === '0.00') {
       idx = Math.floor(idx);
@@ -474,7 +548,11 @@ function init() {
       __Guide(ID_GUIDE_Y,
         __vec(X, START_Y), __vec(X, UP(START_Y, LENGTH_Y))
       );
-      __Legend(FIXED(vec.x, 2), FIXED(vec.y, 2));
+      __Tracer('plot1trace',
+        vec.x, vec.y,
+        RATIO(LENGTH_X, xub-xlb),
+        RATIO(LENGTH_Y, yub-ylb)
+      );
     }
   });
 }
