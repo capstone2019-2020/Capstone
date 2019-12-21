@@ -456,13 +456,13 @@ function init_plot(lb, ub, plot_len, parts) {
 }
 
 function init() {
-  let xlb = -100, xub = 100, ylb = 0, yub = 0;
+  let xlb = -20, xub = 20, ylb = 0, yub = 0;
   let ygrid = 10;
   let xgrid = 20;
   const SAMPLE_RATE = 100;
 
   const parser = math.parser();
-  parser.evaluate('f(x) = abs(x)*sin(x)');
+  parser.evaluate('f(x) = 2*sin(x)+abs(x)');
   let points = [];
   let i=0, xval, yval;
   const sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
@@ -518,6 +518,7 @@ function init() {
       label: '',
       grid: true
     })),
+    // TODO: make legend for each new plot
     g('legend', ...legend())
   );
 
