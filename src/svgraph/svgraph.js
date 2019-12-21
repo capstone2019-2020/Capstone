@@ -1,13 +1,14 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 let ORIGIN_X = 100, ORIGIN_Y = 450; /* These change depending on graph */
-const START_X = 100, START_Y = 450;
+const START_X = 100, START_Y = 470;
 const LENGTH_X = 600, LENGTH_Y = 400;
 const ID_GRAPH_SVG = 'svg-graph';
 const ID_GUIDE_X = 'x-guide';
 const ID_GUIDE_Y = 'y-guide';
-
-let IS_SHOW_GUIDE = true;
+const ID_LEGEND = 'legend';
+const ID_LEGEND_X = 'legendx';
+const ID_LEGEND_Y = 'legendy';
 
 /* fake macros */
 const OFFSET = (margin, idx) => margin * idx;
@@ -24,7 +25,6 @@ const MIN = (s1, s2) => s1 < s2 ? s1 : s2;
 
 const __X = (x, xlb, xub) => (x-START_X)/RATIO(LENGTH_X, xub-xlb)+xlb;
 const __Y = (y, ylb, yub) => (START_Y-y)/RATIO(LENGTH_Y, yub-ylb)+ylb;
-const SAMPLE_IDX = (x) => {};
 
 /* Math related "macros" */
 const __ROUND = (f) => parseFloat(Math.round(f*100)/100);
@@ -61,6 +61,13 @@ const __Guide = (guideId, vec1, vec2) => {
   }
 };
 
+const __Legend = (xval, yval) => {
+  document.getElementById(ID_LEGEND_X)
+    .innerHTML = `x_value: ${xval}`;
+  document.getElementById(ID_LEGEND_Y)
+    .innerHTML = `y_value: ${yval}`;
+};
+
 function svg(id, ...children) {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('id', id);
@@ -86,11 +93,9 @@ function __vec(x, y) {
 }
 
 function __ns(elem, config={}, ...children) {
-  Object.keys(config).forEach(k => {
-    // if (!elem.hasAttribute(k)) {
-      elem.setAttribute(k, config[k]);
-    // }
-  });
+  Object.keys(config).forEach(k =>
+      elem.setAttribute(k, config[k])
+  );
 
   if (children) {
     children.forEach(c => elem.appendChild(c));
@@ -121,6 +126,16 @@ function text(vec, words, config={}) {
   });
 }
 
+function rect(vec, width, height, config={}) {
+  const r = document.createElementNS(SVG_NS, 'rect');
+
+  return __ns(r, {
+    ...config,
+    x: vec.x, y: vec.y,
+    width, height
+  });
+}
+
 function polyline(points, config={}, cb) {
   const p = document.createElementNS(SVG_NS, 'polyline');
   p.addEventListener('mousemove', cb);
@@ -135,13 +150,17 @@ function plot(dp, x_cratio, y_cratio, color) {
   let points = '';
   let i;
   let x_coord, y_coord;
+  let dp_e;
   for (i=0; i<dp.length; i++) {
-    x_coord = RIGHT(ORIGIN_X, SCALE(dp[i].x, x_cratio));
-    y_coord = UP(ORIGIN_Y,SCALE(dp[i].y, y_cratio));
+    dp_e = dp[i];
+    if (!isNaN(dp_e.y)) {
+      x_coord = RIGHT(ORIGIN_X, SCALE(dp_e.x, x_cratio));
+      y_coord = UP(ORIGIN_Y, SCALE(dp_e.y, y_cratio));
 
-    points += `${x_coord},${y_coord}`;
-    if (i+1 !== dp.length) {
-      points += ' ';
+      points += `${x_coord},${y_coord}`;
+      if (i + 1 !== dp.length) {
+        points += ' ';
+      }
     }
   }
 
@@ -278,6 +297,28 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
   ]
 }
 
+function legend() {
+  return [
+    rect(__vec(START_X, 10), 150, 50, {
+      'id': ID_LEGEND,
+      'stroke': 'black',
+      'stroke-width': '1px',
+      'stroke-opacity': '0.5',
+      'fill': 'transparent'
+    }),
+    text(__vec(
+        RIGHT(START_X, 10), DOWN(10, 20)
+      ), 'x_value: -', {
+        id: ID_LEGEND_X
+      }),
+    text(__vec(
+      RIGHT(START_X, 10), DOWN(10, 40)
+    ), 'y_value: -', {
+      id: ID_LEGEND_Y
+    })
+  ];
+}
+
 function init_plot(lb, ub, plot_len, parts) {
   let new_lb = __ROUND(lb), new_ub = __ROUND(ub);
   let abs_lb = Math.abs(new_lb), abs_ub = Math.abs(new_ub);
@@ -347,13 +388,13 @@ function init_plot(lb, ub, plot_len, parts) {
 }
 
 function init() {
-  const SAMPLE_RATE = 20;
+  let xlb = -5, xub = 100, ylb = 0, yub = 0;
   let ygrid = 10;
-  let xgrid = 10;
-  let xlb = -10, xub = 10, ylb = 0, yub = 0;
+  let xgrid = 20;
+  const SAMPLE_RATE = 100;
 
   const parser = math.parser();
-  parser.evaluate('f(x) = abs(x)*sin(x)');
+  parser.evaluate('f(x) = log(x)*sin(x)');
   let points = [];
   let i=0, xval, yval;
   const sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
@@ -365,6 +406,8 @@ function init() {
 
       points.push(__vec(xval, yval));
       i++;
+    } else {
+      points.push(__vec(xval, NaN));
     }
   }
 
@@ -396,7 +439,7 @@ function init() {
       ub: xub,
       parts: xgrid,
       label: '',
-      grid: false
+      grid: true
     })),
     g('y-axis', ...yaxis({
       leny: LENGTH_Y,
@@ -405,8 +448,9 @@ function init() {
       ub: yub,
       parts: ygrid,
       label: '',
-      grid: false
+      grid: true
     })),
+    g('legend', ...legend())
   );
 
   Svgraph().appendChild(_svg);
@@ -428,6 +472,7 @@ function init() {
       __Guide(ID_GUIDE_Y,
         __vec(X, START_Y), __vec(X, UP(START_Y, LENGTH_Y))
       );
+      __Legend(FIXED(vec.x, 2), FIXED(vec.y, 2));
     }
   });
 }
