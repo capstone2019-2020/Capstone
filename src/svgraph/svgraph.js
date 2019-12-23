@@ -11,7 +11,7 @@ const ID_LEGEND = 'legend';
 const ID_LEGEND_X = 'legendx';
 const ID_LEGEND_Y = 'legendy';
 
-/* fake macros */
+/* 'fake' macros */
 const OFFSET = (margin, idx) => margin * idx;
 const SCALE_VAL = (part, i) => part * i;
 const HALF = (v) => v/2;
@@ -26,6 +26,8 @@ const MIN = (s1, s2) => s1 < s2 ? s1 : s2;
 const ELEM = (id) => document.getElementById(id);
 const CSS = (obj) => Object.entries(obj)
   .reduce((p, [k, v]) => `${p}${k}: ${v}; `, '').trim();
+const RAND = (min, max) => Math.floor(Math.random() * (max - min) ) + min;
+const RAND_RGB = () => `rgb(${RAND(0, 255)},${RAND(0, 255)}, ${RAND(0, 255)})`;
 
 const __X = (x, xlb, xub) => (x-START_X)/RATIO(LENGTH_X, xub-xlb)+xlb;
 const __Y = (y, ylb, yub) => (START_Y-y)/RATIO(LENGTH_Y, yub-ylb)+ylb;
@@ -67,22 +69,16 @@ const __Guide = (guideId, vec1, vec2) => {
   }
 };
 
-const __Legend = (xval, yval) => {
-  document.getElementById(ID_LEGEND_X)
-    .innerHTML = `x_value: ${xval}`;
-  document.getElementById(ID_LEGEND_Y)
-    .innerHTML = `y_value: ${yval}`;
-};
-
 const __Tracer = (tracerId, xval, yval, xratio, yratio) => {
-  const tracer = ELEM(`${tracerId}-rect`);
+  const tracer = ELEM(tracerId);
+  const tracerRect = ELEM(`${tracerId}-rect`);
   const tracerTxt = ELEM(`${tracerId}-text`);
   const tracerCirc = ELEM(`${tracerId}-circle`);
   const gx = __gX(xval, xratio);
   const gy = __gY(yval, yratio);
   const coords = `(${FIXED(xval, 2)}, ${FIXED(yval, 2)})`;
 
-  if (!tracer || !tracerTxt) {
+  if (!tracer && !isNaN(yval)) {
     /*
      * For some strange reason, we can only append
      * children to <svg> elements, so that's what
@@ -115,13 +111,18 @@ const __Tracer = (tracerId, xval, yval, xratio, yratio) => {
         })
       )
     );
-  } else {
-    __ns(tracer, {x: gx, y: gy});
+  } else if (tracer && !isNaN(yval)) {
+    __ns(tracerRect, {x: gx, y: gy});
     __ns(tracerTxt, {
       x: RIGHT(gx, 2), y: DOWN(gy, 10)
     });
     __ns(tracerCirc, {cx: gx, cy: gy});
     tracerTxt.innerHTML = coords;
+  } else if (tracer) {
+    tracer.removeChild(tracerRect);
+    tracer.removeChild(tracerTxt);
+    tracer.removeChild(tracerCirc);
+    Svgraph().removeChild(tracer);
   }
 };
 
@@ -365,25 +366,46 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
   ]
 }
 
-function legend() {
+function legend(fpoints) {
+  let width = 10, height = 50;
+  let rownum = 2;
+  let fontsize = 14; // pixels
+
+  let i, j, _i;
+  let _fpoint, max_width = 0;
+  let txt_elems = [];
+  for (i=0; i<fpoints.length; i+=rownum) {
+    _i = i+rownum;
+    /* Construct legend using row-major order */
+    for (j=i; j<_i; j++) {
+      _fpoint = fpoints[j];
+      if (_fpoint.f.length > max_width) {
+        max_width = _fpoint.f.length;
+      }
+      txt_elems.push(text(__vec(
+        RIGHT(START_X, width), DOWN(10, 20+20*(j-i))
+      ), _fpoint.f, {
+        stroke: _fpoint.color,
+        style: CSS({
+          'font-size': fontsize,
+          'font-weight': 100
+        })
+      }));
+    }
+
+    /* Expand the row */
+    width+=(fontsize*(max_width/2)+20);
+  }
+
   return [
-    rect(__vec(START_X, 10), 150, 50, {
+    rect(__vec(START_X, 10), width, height, {
       'id': ID_LEGEND,
       'stroke': 'black',
       'stroke-width': '1px',
       'stroke-opacity': '0.5',
       'fill': 'transparent'
     }),
-    text(__vec(
-        RIGHT(START_X, 10), DOWN(10, 20)
-      ), 'x_value: -', {
-        id: ID_LEGEND_X
-      }),
-    text(__vec(
-      RIGHT(START_X, 10), DOWN(10, 40)
-    ), 'y_value: -', {
-      id: ID_LEGEND_Y
-    })
+    ...txt_elems
   ];
 }
 
@@ -461,26 +483,35 @@ function init() {
   let xgrid = 20;
   const SAMPLE_RATE = 100;
 
+  const funcs = [
+    'f(x) = sin(x)*x',
+    'f(x) = x',
+    'f(x) = cos(x)',
+    'f(x) = log(x)'
+  ];
+
   const parser = math.parser();
-  parser.evaluate('f(x) = 2*sin(x)+abs(x)');
-  let points = [];
-  let i=0, xval, yval;
   const sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
-  for (xval=xlb; xval<=xub; xval+=sample_amt) {
-    yval = parser.evaluate(`f(${xval})`);
-    if (!isNaN(yval)) {
-      yub = MAX(yval, yub);
-      ylb = MIN(yval, ylb);
+  let fpoints = funcs.map(f => {
+    parser.evaluate(f);
+    let points = [];
+    let xval, yval;
+    for (xval=xlb; xval<=xub; xval+=sample_amt) {
+      yval = parser.evaluate(`f(${xval})`);
+      if (!isNaN(yval)) {
+        yub = MAX(yval, yub);
+        ylb = MIN(yval, ylb);
 
-      points.push(__vec(xval, yval));
-      i++;
-    } else {
-      points.push(__vec(xval, NaN));
+        points.push(__vec(xval, yval));
+      } else {
+        points.push(__vec(xval, NaN));
+      }
     }
-  }
+    return {f, points, color: RAND_RGB()};
+  });
 
-  ylb = ylb > 0 ? 0 : ylb*1.2;
-  yub = yub < 0 ? 0 : yub*1.2;
+  ylb = ylb > 0 ? 0 : ylb*1.1;
+  yub = yub < 0 ? 0 : yub*1.1;
 
   let x_offset, y_offset;
   ({
@@ -498,8 +529,10 @@ function init() {
   /* plot */
   __ns(_svg,
     undefined,
-    g('plot', ...plot(points, RATIO(LENGTH_X, xub-xlb),
-      RATIO(LENGTH_Y, yub-ylb), 'blue')),
+    ...fpoints.map(({points, color}) => g(
+      'plot', ...plot(points, RATIO(LENGTH_X, xub-xlb),
+        RATIO(LENGTH_Y, yub-ylb), color)
+      )),
     g('x-axis', ...xaxis({
       leny: LENGTH_Y,
       lenx: LENGTH_X,
@@ -519,7 +552,7 @@ function init() {
       grid: true
     })),
     // TODO: make legend for each new plot
-    g('legend', ...legend())
+    g('legend', ...legend(fpoints))
   );
 
   Svgraph().appendChild(_svg);
@@ -529,7 +562,6 @@ function init() {
       || X > START_X+LENGTH_X || X < START_X) {
       return;
     }
-    // TODO: support more plots
 
     /*
      * Formula for getting 'points' array index from cursor
@@ -541,7 +573,6 @@ function init() {
     let idx = RATIO(__X(X, xlb, xub)-xlb, sample_amt);
     if (FIXED(idx%1, 2) === '0.00') {
       idx = Math.floor(idx);
-      let vec = points[idx];
 
       __Guide(ID_GUIDE_X,
         __vec(START_X, Y), __vec(RIGHT(START_X, LENGTH_X), Y)
@@ -549,11 +580,21 @@ function init() {
       __Guide(ID_GUIDE_Y,
         __vec(X, START_Y), __vec(X, UP(START_Y, LENGTH_Y))
       );
-      __Tracer('plot1trace',
-        vec.x, vec.y,
-        RATIO(LENGTH_X, xub-xlb),
-        RATIO(LENGTH_Y, yub-ylb)
-      );
+
+      /*
+       * For each plot, draw out their own locations. This
+       * creates a new tracer for each new plot that is
+       * present on the graph and refreshes based on a fixed
+       * ID convention.
+       */
+      fpoints.forEach(({points}, i) => {
+        let vec = points[idx];
+        __Tracer(`tracer-${i}`,
+          vec.x, vec.y,
+          RATIO(LENGTH_X, xub-xlb),
+          RATIO(LENGTH_Y, yub-ylb)
+        );
+      });
     }
   });
 }
