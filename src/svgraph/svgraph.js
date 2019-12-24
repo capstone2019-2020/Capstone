@@ -8,8 +8,6 @@ const ID_GRAPH_SVG = 'svg-graph';
 const ID_GUIDE_X = 'x-guide';
 const ID_GUIDE_Y = 'y-guide';
 const ID_LEGEND = 'legend';
-const ID_LEGEND_X = 'legendx';
-const ID_LEGEND_Y = 'legendy';
 
 /* 'fake' macros */
 const OFFSET = (margin, idx) => margin * idx;
@@ -27,7 +25,24 @@ const ELEM = (id) => document.getElementById(id);
 const CSS = (obj) => Object.entries(obj)
   .reduce((p, [k, v]) => `${p}${k}: ${v}; `, '').trim();
 const RAND = (min, max) => Math.floor(Math.random() * (max - min) ) + min;
-const RAND_RGB = () => `rgb(${RAND(0, 255)},${RAND(0, 255)}, ${RAND(0, 255)})`;
+const RGB = (r, g, b) => `rgb(${r},${g},${b})`;
+
+const COLORS = [
+  RGB(0,128,255)  /* blue */,   RGB(255,0,128)  /* magenta */,
+  RGB(255,0,0)    /* red */,    RGB(0,128,0)    /* dark green */,
+  RGB(128,0,255)  /* violet */, RGB(64,128,128) /* teal */,
+  RGB(255,128,64) /* orange */, RGB(128,128,0)  /* dark yellow */
+];
+
+const RAND_COLOR = () => RGB(RAND(0, 255), RAND(0, 255), RAND(0, 255));
+const COLOR = (() => {
+  let i = 0;
+  return () => {
+    let _i = i;
+    i = i+1 >= COLORS.length ? 0 : i+1;
+    return COLORS[_i];
+  }
+})();
 
 const __X = (x, xlb, xub) => (x-START_X)/RATIO(LENGTH_X, xub-xlb)+xlb;
 const __Y = (y, ylb, yub) => (START_Y-y)/RATIO(LENGTH_Y, yub-ylb)+ylb;
@@ -259,7 +274,7 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
       line(
         __vec(x_coord, DOWN(ORIGIN_Y, 5)),
         __vec(x_coord, UP(ORIGIN_Y, 5)),
-        { 'stroke': 'black'}
+        {stroke: 'black'}
         )
     );
     xval = ROUND(lb+SCALE_VAL(part_val, i));
@@ -274,9 +289,8 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
       partitions.push(
         line(
           __vec(x_coord, UP(START_Y, 5)),
-          __vec(x_coord, UP(START_Y, leny)),
-          {
-            'stroke': 'grey',
+          __vec(x_coord, UP(START_Y, leny)), {
+            stroke: 'grey',
             'stroke-opacity': '0.3',
             'stroke-dasharray': '4,6'
           }
@@ -371,12 +385,13 @@ function legend(fpoints) {
   let rownum = 2;
   let fontsize = 14; // pixels
 
+  let txt_elems = [], color_elems = [];
+
   let i, j, _i;
-  let _fpoint, max_width = 0;
-  let txt_elems = [];
+  let _fpoint, max_width = 0, inc_width;
   for (i=0; i<fpoints.length; i+=rownum) {
-    _i = i+rownum;
     /* Construct legend using row-major order */
+    _i = MIN(i+rownum, fpoints.length);
     for (j=i; j<_i; j++) {
       _fpoint = fpoints[j];
       if (_fpoint.f.length > max_width) {
@@ -385,16 +400,31 @@ function legend(fpoints) {
       txt_elems.push(text(__vec(
         RIGHT(START_X, width), DOWN(10, 20+20*(j-i))
       ), _fpoint.f, {
-        stroke: _fpoint.color,
         style: CSS({
+          'color': _fpoint.color,
           'font-size': fontsize,
           'font-weight': 100
         })
       }));
     }
 
+    /* Color pallet */
+    inc_width = fontsize*(max_width*0.45);
+    for (j=i; j<_i; j++) {
+      _fpoint = fpoints[j];
+      color_elems.push(rect(__vec(
+          RIGHT(START_X, width+inc_width),
+          DOWN(10, 10+20*(j-i))
+        ), 30, fontsize, {
+          fill: _fpoint.color,
+          stroke: 'black'
+        })
+      );
+    }
+
     /* Expand the row */
-    width+=(fontsize*(max_width/2)+20);
+    width+=(inc_width+60);
+    max_width = 0;
   }
 
   return [
@@ -405,7 +435,8 @@ function legend(fpoints) {
       'stroke-opacity': '0.5',
       'fill': 'transparent'
     }),
-    ...txt_elems
+    ...txt_elems,
+    ...color_elems
   ];
 }
 
@@ -487,7 +518,8 @@ function init() {
     'f(x) = sin(x)*x',
     'f(x) = x',
     'f(x) = cos(x)',
-    'f(x) = log(x)'
+    'f(x) = log(x)',
+    'f(x) = x^0.5'
   ];
 
   const parser = math.parser();
@@ -507,7 +539,7 @@ function init() {
         points.push(__vec(xval, NaN));
       }
     }
-    return {f, points, color: RAND_RGB()};
+    return {f, points, color: COLOR()};
   });
 
   ylb = ylb > 0 ? 0 : ylb*1.1;
@@ -551,7 +583,6 @@ function init() {
       label: '',
       grid: true
     })),
-    // TODO: make legend for each new plot
     g('legend', ...legend(fpoints))
   );
 
