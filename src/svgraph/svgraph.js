@@ -21,7 +21,9 @@ const SCALE = (v, r) => v * r;
 const RATIO = (c1, c2) => c1 / c2;
 const MAX = (s1, s2) => s1 > s2 ? s1 : s2;
 const MIN = (s1, s2) => s1 < s2 ? s1 : s2;
+const DELTA = (s1, s2) => Math.abs(s1-s2);
 const ELEM = (id) => document.getElementById(id);
+const APPROX = (num, ref, tol) => (num >= ref-tol) && (num <= ref+tol);
 const CSS = (obj) => Object.entries(obj)
   .reduce((p, [k, v]) => `${p}${k}: ${v}; `, '').trim();
 const RAND = (min, max) => Math.floor(Math.random() * (max - min) ) + min;
@@ -37,7 +39,12 @@ const COLORS = [
 const RAND_COLOR = () => RGB(RAND(0, 255), RAND(0, 255), RAND(0, 255));
 const COLOR = (() => {
   let i = 0;
-  return () => {
+  /* Loop back to first color if runs out */
+  return reset_i => {
+    if (reset_i) {
+      i = 0;
+      return;
+    }
     let _i = i;
     i = i+1 >= COLORS.length ? 0 : i+1;
     return COLORS[_i];
@@ -509,86 +516,114 @@ function init_plot(lb, ub, plot_len, parts) {
 }
 
 function init() {
+  const SAMPLE_RATE = 100, SAMPLE_INTERVAL = 100; /* ms */
   let xlb = -20, xub = 20, ylb = 0, yub = 0;
   let ygrid = 10;
   let xgrid = 20;
-  const SAMPLE_RATE = 100;
+  let sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
+  let fpoints;
 
   const funcs = [
     'f(x) = sin(x)*x',
     'f(x) = x',
     'f(x) = cos(x)',
     'f(x) = log(x)',
-    'f(x) = x^0.5'
+    'f(x) = x^0.5',
+    'f(x) = sin(x)*abs(x)+1'
   ];
 
-  const parser = math.parser();
-  const sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
-  let fpoints = funcs.map(f => {
-    parser.evaluate(f);
-    let points = [];
-    let xval, yval;
-    for (xval=xlb; xval<=xub; xval+=sample_amt) {
-      yval = parser.evaluate(`f(${xval})`);
-      if (!isNaN(yval)) {
-        yub = MAX(yval, yub);
-        ylb = MIN(yval, ylb);
-
-        points.push(__vec(xval, yval));
-      } else {
-        points.push(__vec(xval, NaN));
+  const render = config => {
+    if (config) {
+      let wrapper = ELEM('wrapper');
+      if (wrapper) {
+        Svgraph().removeChild(ELEM('wrapper'));
       }
+      COLOR(true);
+      ygrid = Math.floor(ygrid*config.ym);
+      xgrid = Math.floor(xgrid*config.xm);
+      xlb *= config.xm; xub *= config.xm;
+      ylb *= config.ym; yub *= config.ym;
     }
-    return {f, points, color: COLOR()};
-  });
 
-  ylb = ylb > 0 ? 0 : ylb*1.1;
-  yub = yub < 0 ? 0 : yub*1.1;
+    const parser = math.parser();
+    sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
+    fpoints = funcs.map(f => {
+      parser.evaluate(f);
+      let points = [];
+      let xval, yval;
+      for (xval=xlb; xval<=xub; xval+=sample_amt) {
+        yval = parser.evaluate(`f(${xval})`);
+        if (!isNaN(yval)) {
+          yub = MAX(yval, yub);
+          ylb = MIN(yval, ylb);
 
-  let x_offset, y_offset;
-  ({
-    lb: xlb, ub: xub, offset: x_offset, parts: xgrid
-  } = init_plot(xlb, xub, LENGTH_X, xgrid));
-  ({
-    lb: ylb, ub: yub, offset: y_offset, parts: ygrid
-  } = init_plot(ylb, yub, LENGTH_Y, ygrid));
+          points.push(__vec(xval, yval));
+        } else {
+          points.push(__vec(xval, NaN));
+        }
+      }
+      return {f, points, color: COLOR()};
+    });
 
-  ORIGIN_X = RIGHT(START_X, x_offset);
-  ORIGIN_Y = START_Y - y_offset;
+    if (!config) {
+      ylb = ylb > 0 ? 0 : ylb * 1.1;
+      yub = yub < 0 ? 0 : yub * 1.1;
+    }
 
-  let _svg = svg('wrapper');
+    let x_offset, y_offset;
+    ({
+      lb: xlb, ub: xub, offset: x_offset, parts: xgrid
+    } = init_plot(xlb, xub, LENGTH_X, xgrid));
+    ({
+      lb: ylb, ub: yub, offset: y_offset, parts: ygrid
+    } = init_plot(ylb, yub, LENGTH_Y, ygrid));
 
-  /* plot */
-  __ns(_svg,
-    undefined,
-    ...fpoints.map(({points, color}) => g(
-      'plot', ...plot(points, RATIO(LENGTH_X, xub-xlb),
-        RATIO(LENGTH_Y, yub-ylb), color)
+    ORIGIN_X = RIGHT(START_X, x_offset);
+    ORIGIN_Y = START_Y - y_offset;
+
+    let _svg = svg('wrapper');
+
+    /* plot */
+    __ns(_svg,
+      undefined,
+      ...fpoints.map(({points, color}) => g(
+        'plot', ...plot(points, RATIO(LENGTH_X, xub-xlb),
+          RATIO(LENGTH_Y, yub-ylb), color)
       )),
-    g('x-axis', ...xaxis({
-      leny: LENGTH_Y,
-      lenx: LENGTH_X,
-      lb: xlb,
-      ub: xub,
-      parts: xgrid,
-      label: '',
-      grid: true
-    })),
-    g('y-axis', ...yaxis({
-      leny: LENGTH_Y,
-      lenx: LENGTH_X,
-      lb: ylb,
-      ub: yub,
-      parts: ygrid,
-      label: '',
-      grid: true
-    })),
-    g('legend', ...legend(fpoints))
-  );
+      g('x-axis', ...xaxis({
+        leny: LENGTH_Y,
+        lenx: LENGTH_X,
+        lb: xlb,
+        ub: xub,
+        parts: xgrid,
+        label: '',
+        grid: true
+      })),
+      g('y-axis', ...yaxis({
+        leny: LENGTH_Y,
+        lenx: LENGTH_X,
+        lb: ylb,
+        ub: yub,
+        parts: ygrid,
+        label: '',
+        grid: true
+      })),
+      g('legend', ...legend(fpoints))
+    );
 
-  Svgraph().appendChild(_svg);
+    Svgraph().appendChild(_svg);
+  };
+
+  render();
+
+  /*
+   * This event is triggered upon every mouse move action
+   * within the SVG element. Used to handle all dynamic
+   * graph renders. See implementation below for details.
+   */
+  let X, Y;
   Svgraph().addEventListener('mousemove', event => {
-    let X = event.offsetX, Y = event.offsetY;
+    X = event.offsetX; Y = event.offsetY;
     if (Y > START_Y || Y < START_Y-LENGTH_Y
       || X > START_X+LENGTH_X || X < START_X) {
       return;
@@ -605,11 +640,11 @@ function init() {
     if (FIXED(idx%1, 2) === '0.00') {
       idx = Math.floor(idx);
 
-      __Guide(ID_GUIDE_X,
-        __vec(START_X, Y), __vec(RIGHT(START_X, LENGTH_X), Y)
+      __Guide(ID_GUIDE_X, __vec(START_X, Y),
+        __vec(RIGHT(START_X, LENGTH_X), Y)
       );
-      __Guide(ID_GUIDE_Y,
-        __vec(X, START_Y), __vec(X, UP(START_Y, LENGTH_Y))
+      __Guide(ID_GUIDE_Y, __vec(X, START_Y),
+        __vec(X, UP(START_Y, LENGTH_Y))
       );
 
       /*
@@ -627,5 +662,68 @@ function init() {
         );
       });
     }
+  });
+
+  let intervalId = 0;
+  Svgraph().addEventListener('mousedown', event => {
+    X = event.offsetX; Y = event.offsetY;
+    if (Y > START_Y || Y < START_Y-LENGTH_Y
+      || X > START_X+LENGTH_X || X < START_X) {
+      return;
+    }
+    const cb_setup = (xory) => {
+      return (X, Y, oldX, oldY) => {
+        let x_offset=1, y_offset=1;
+        if (xory) { /* X-axis */
+          if (DELTA(ORIGIN_X, X) > DELTA(ORIGIN_X, oldX)) {
+            x_offset-=(DELTA(oldX, X)/LENGTH_X);
+          } else {
+            x_offset+=DELTA(oldX, X)/LENGTH_X;
+          }
+        } else { /* Y-axis */
+          if (DELTA(ORIGIN_Y, Y) > DELTA(ORIGIN_Y, oldY)) {
+            y_offset-=(DELTA(oldY, Y)/LENGTH_Y);
+          } else {
+            y_offset+=DELTA(oldY, Y)/LENGTH_Y;
+          }
+        }
+
+        return {xm: x_offset, ym: y_offset};
+      }
+    };
+
+    let cb = undefined;
+    if (APPROX(X, ORIGIN_X, 5)) { /* Y-axis */
+      cb = cb_setup(false);
+    } else if (APPROX(Y, ORIGIN_Y, 5)) { /* X-axis */
+      cb = cb_setup(true);
+    }
+
+    if (cb) {
+      let _X = X, _Y = Y;
+      if (!intervalId) {
+        intervalId = setInterval(() => {
+          let c = cb(X, Y, _X, _Y);
+          _X = X; _Y = Y;
+          if (c.xm !== 1 || c.ym !== 1) {
+            render(c);
+          }
+        }, SAMPLE_INTERVAL);
+      }
+    }
+  });
+
+  Svgraph().addEventListener('mouseup', event => {
+    if (intervalId) {
+      clearInterval(intervalId);
+      intervalId = 0;
+    }
+
+    X = event.offsetX; Y = event.offsetY;
+    if (Y > START_Y || Y < START_Y-LENGTH_Y
+      || X > START_X+LENGTH_X || X < START_X) {
+      return;
+    }
+    console.log('UP', X, Y);
   });
 }
