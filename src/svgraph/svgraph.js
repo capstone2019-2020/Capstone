@@ -3,6 +3,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 let ORIGIN_X = 100, ORIGIN_Y = 450; /* These change depending on graph */
 const START_X = 100, START_Y = 470;
 const LENGTH_X = 600, LENGTH_Y = 400;
+const MIN_XGRID = 6, MIN_YGRID = 6;
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
 const ID_GRAPH_SVG = 'svg-graph';
 const ID_GUIDE_X = 'x-guide';
@@ -284,7 +285,8 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
         {stroke: 'black'}
         )
     );
-    xval = ROUND(lb+SCALE_VAL(part_val, i));
+    xval = lb+SCALE_VAL(part_val, i);
+    xval = Math.abs(xval) < 1 ? FIXED(xval, 1) : ROUND(xval);
     partitions.push(
       text(
         __vec(RIGHT(x_coord, 5), DOWN(ORIGIN_Y, 20)),
@@ -462,6 +464,7 @@ function init_plot(lb, ub, plot_len, parts) {
     l_parts = Math.ceil(parts * (t_lb/sum));
     u_parts = Math.ceil(parts * (t_ub/sum));
   }
+  console.log(`grid: ${parts}, l_parts: ${l_parts}, u_parts: ${u_parts}`);
 
   /*
    * This is the most important part:
@@ -524,12 +527,12 @@ function init() {
   let fpoints;
 
   const funcs = [
-    'f(x) = sin(x)*x',
+    // 'f(x) = sin(x)*x',
     'f(x) = x',
-    'f(x) = cos(x)',
+    // 'f(x) = cos(x)',
     'f(x) = log(x)',
-    'f(x) = x^0.5',
-    'f(x) = sin(x)*abs(x)+1'
+    // 'f(x) = x^0.5',
+    // 'f(x) = sin(x)*abs(x)+1'
   ];
 
   const render = config => {
@@ -539,10 +542,10 @@ function init() {
         Svgraph().removeChild(ELEM('wrapper'));
       }
       COLOR(true);
-      ygrid = Math.floor(ygrid*config.ym);
-      xgrid = Math.floor(xgrid*config.xm);
-      xlb *= config.xm; xub *= config.xm;
-      ylb *= config.ym; yub *= config.ym;
+      xgrid = MAX(xgrid+config.xm*2, MIN_XGRID);
+      ygrid = MAX(ygrid+config.ym*2, MIN_YGRID);
+      xlb -= config.xm; xub += config.xm;
+      ylb -= config.ym; yub += config.ym;
     }
 
     const parser = math.parser();
@@ -614,6 +617,7 @@ function init() {
     Svgraph().appendChild(_svg);
   };
 
+  /* =========== Render for the first time =========== */
   render();
 
   /*
@@ -637,7 +641,7 @@ function init() {
      * be the current X-AXIS value -> __X(X, xlb, xub).
      */
     let idx = RATIO(__X(X, xlb, xub)-xlb, sample_amt);
-    if (FIXED(idx%1, 2) === '0.00') {
+    if (FIXED(idx%1, 1) === '0.0') {
       idx = Math.floor(idx);
 
       __Guide(ID_GUIDE_X, __vec(START_X, Y),
@@ -673,18 +677,21 @@ function init() {
     }
     const cb_setup = (xory) => {
       return (X, Y, oldX, oldY) => {
-        let x_offset=1, y_offset=1;
+        if (X === oldX && Y === oldY)
+          return {xm: 0, ym: 0};
+
+        let x_offset=0, y_offset=0;
         if (xory) { /* X-axis */
-          if (DELTA(ORIGIN_X, X) > DELTA(ORIGIN_X, oldX)) {
-            x_offset-=(DELTA(oldX, X)/LENGTH_X);
-          } else {
-            x_offset+=DELTA(oldX, X)/LENGTH_X;
+          x_offset = 2;
+          if (Math.abs(__X(oldX, xlb, xub)) <=
+            Math.abs(__X(X, xlb, xub))) {
+            x_offset*=-1;
           }
         } else { /* Y-axis */
-          if (DELTA(ORIGIN_Y, Y) > DELTA(ORIGIN_Y, oldY)) {
-            y_offset-=(DELTA(oldY, Y)/LENGTH_Y);
-          } else {
-            y_offset+=DELTA(oldY, Y)/LENGTH_Y;
+          y_offset = 2;
+          if (Math.abs(__Y(oldY, ylb, yub)) <=
+            Math.abs(__Y(Y, ylb, yub))) {
+            y_offset*=-1;
           }
         }
 
@@ -703,9 +710,15 @@ function init() {
       let _X = X, _Y = Y;
       if (!intervalId) {
         intervalId = setInterval(() => {
+          if (Y > START_Y || Y < START_Y-LENGTH_Y
+            || X > START_X+LENGTH_X || X < START_X) {
+            clearInterval(intervalId);
+            return;
+          }
+
           let c = cb(X, Y, _X, _Y);
           _X = X; _Y = Y;
-          if (c.xm !== 1 || c.ym !== 1) {
+          if (c.xm !== 0 || c.ym !== 0) {
             render(c);
           }
         }, SAMPLE_INTERVAL);
@@ -713,17 +726,10 @@ function init() {
     }
   });
 
-  Svgraph().addEventListener('mouseup', event => {
+  Svgraph().addEventListener('mouseup', () => {
     if (intervalId) {
       clearInterval(intervalId);
       intervalId = 0;
     }
-
-    X = event.offsetX; Y = event.offsetY;
-    if (Y > START_Y || Y < START_Y-LENGTH_Y
-      || X > START_X+LENGTH_X || X < START_X) {
-      return;
-    }
-    console.log('UP', X, Y);
   });
 }
