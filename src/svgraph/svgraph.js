@@ -3,7 +3,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 let ORIGIN_X = 100, ORIGIN_Y = 450; /* These change depending on graph */
 const START_X = 100, START_Y = 470;
 const LENGTH_X = 600, LENGTH_Y = 400;
-const MIN_XGRID = 6, MIN_YGRID = 6;
+const MIN_XGRID = 6, MIN_YGRID = 6, MIN_X = 1;
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
 const ID_GRAPH_SVG = 'svg-graph';
 const ID_GUIDE_X = 'x-guide';
@@ -504,9 +504,13 @@ function init_plot(lb, ub, plot_len, parts) {
 
   const part_val = (new_ub-new_lb) / (l_parts+u_parts);
   parts = l_parts+u_parts;
-  if (parts === Infinity) return;
+  if (parts === Infinity) {
+    throw new Error('No matched parts');
+  }
+
   let i, val;
   for (i = 0; i <= parts; i++) {
+    console.log('looping');
     val = FIXED(new_lb + SCALE_VAL(part_val, i), 2);
     if (val === '0.00' || val === '-0.00') {
       return {
@@ -519,7 +523,7 @@ function init_plot(lb, ub, plot_len, parts) {
 }
 
 function init() {
-  const SAMPLE_RATE = 100, SAMPLE_INTERVAL = 100; /* ms */
+  const SAMPLE_RATE = 20, SAMPLE_INTERVAL = 50; /* ms */
   let xlb = -20, xub = 20, ylb = 0, yub = 0;
   let ygrid = 10;
   let xgrid = 20;
@@ -527,24 +531,21 @@ function init() {
   let fpoints;
 
   const funcs = [
-    // 'f(x) = sin(x)*x',
+    'f(x) = sin(x)*x',
     'f(x) = x',
-    // 'f(x) = cos(x)',
+    'f(x) = cos(x)',
     'f(x) = log(x)',
-    // 'f(x) = x^0.5',
-    // 'f(x) = sin(x)*abs(x)+1'
+    'f(x) = x^0.5',
+    'f(x) = sin(x)*abs(x)+1'
   ];
 
   const render = config => {
     if (config) {
-      let wrapper = ELEM('wrapper');
-      if (wrapper) {
-        Svgraph().removeChild(ELEM('wrapper'));
-      }
       COLOR(true);
-      xgrid = MAX(xgrid+config.xm*2, MIN_XGRID);
-      ygrid = MAX(ygrid+config.ym*2, MIN_YGRID);
-      xlb -= config.xm; xub += config.xm;
+      xgrid = MAX(xgrid+config.xm, MIN_XGRID);
+      ygrid = MAX(ygrid+config.ym, MIN_YGRID);
+      xlb = MIN(xlb-config.xm, -MIN_X);
+      xub = MAX(xub+config.xm, MIN_X);
       ylb -= config.ym; yub += config.ym;
     }
 
@@ -574,12 +575,21 @@ function init() {
     }
 
     let x_offset, y_offset;
-    ({
-      lb: xlb, ub: xub, offset: x_offset, parts: xgrid
-    } = init_plot(xlb, xub, LENGTH_X, xgrid));
-    ({
-      lb: ylb, ub: yub, offset: y_offset, parts: ygrid
-    } = init_plot(ylb, yub, LENGTH_Y, ygrid));
+    try {
+      ({
+        lb: xlb, ub: xub, offset: x_offset, parts: xgrid
+      } = init_plot(xlb, xub, LENGTH_X, xgrid));
+      ({
+        lb: ylb, ub: yub, offset: y_offset, parts: ygrid
+      } = init_plot(ylb, yub, LENGTH_Y, ygrid));
+
+      let wrapper = ELEM('wrapper');
+      if (wrapper) {
+        Svgraph().removeChild(ELEM('wrapper'));
+      }
+    } catch (err) {
+      return;
+    }
 
     ORIGIN_X = RIGHT(START_X, x_offset);
     ORIGIN_Y = START_Y - y_offset;
@@ -614,6 +624,7 @@ function init() {
       g('legend', ...legend(fpoints))
     );
 
+    console.log('here2');
     Svgraph().appendChild(_svg);
   };
 
@@ -642,6 +653,7 @@ function init() {
      */
     let idx = RATIO(__X(X, xlb, xub)-xlb, sample_amt);
     if (FIXED(idx%1, 1) === '0.0') {
+      console.log('here3');
       idx = Math.floor(idx);
 
       __Guide(ID_GUIDE_X, __vec(START_X, Y),
@@ -668,6 +680,9 @@ function init() {
     }
   });
 
+  // TODO: as grid # increases, automatically adjust grid
+  //  scaling (add more small ticks) so it looks like there
+  //  are more intervals there
   let intervalId = 0;
   Svgraph().addEventListener('mousedown', event => {
     X = event.offsetX; Y = event.offsetY;
@@ -719,6 +734,7 @@ function init() {
           let c = cb(X, Y, _X, _Y);
           _X = X; _Y = Y;
           if (c.xm !== 0 || c.ym !== 0) {
+            console.log('rendering');
             render(c);
           }
         }, SAMPLE_INTERVAL);
