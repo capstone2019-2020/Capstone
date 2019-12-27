@@ -53,9 +53,10 @@ describe('nodalAnalysis()', function () {
 
   const test_nodalAnalysis = (expected) => {
     const c = circuit.createCircuit(expected.c);
+    circuit.setCircuit(c);
     const eqns = c.nodalAnalysis();
     assert.ok(suite.verifyCircuit(eqns, expected.eqns));
-  }
+  };
 
   describe('func', function() {
     it ('correctness 1 - BASIC: independent voltage src', () => test_nodalAnalysis(circuits[0]));

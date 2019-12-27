@@ -176,7 +176,7 @@ exports.circuits = [
       { id: 'R4', type: 'R', pnode: 3, nnode: 0, value: '1000'  },
       { id: 'R5', type: 'R', pnode: 4, nnode: 3, value: '7000'  },
       { id: 'R6', type: 'R', pnode: 2, nnode: 4, value: '6000'  },
-      { id: 'I1', type: 'I', pnode: 4, nnode: 0, value: '0.0045'  },
+      { id: 'I1', type: 'I', pnode: 4, nnode: 0, value: '0.0045'  }
     ],
     eqns: [
       [ /* Node 2 */
@@ -184,7 +184,7 @@ exports.circuits = [
         'I4 = (n2 - n3) / 2000',
         'I5 = (n2 - n3) / 8000',
         'I2 = (n2 - n4) / 6000',
-        'I1 - I4 - 15 - I2 = 0'
+        'I1 - I4 - I5 - I2 = 0'
       ],
       [ /* Node 3 */
         'I4 = (n2 - n3)/2000',
