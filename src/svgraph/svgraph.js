@@ -5,6 +5,7 @@ const START_X = 100, START_Y = 470;
 const LENGTH_X = 600, LENGTH_Y = 400;
 const MIN_XGRID = 6, MIN_YGRID = 6, MIN_X = 1, MIN_Y = 1;
 const MAX_XGRID = 15, MAX_YGRID = 15;
+const SAMPLE_RATE = 20, SAMPLE_INTERVAL = 100; /* ms */
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
 const ID_GRAPH_SVG = 'svg-graph';
 const ID_GUIDE_X = 'x-guide';
@@ -432,8 +433,7 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
 }
 
 function legend(fpoints) {
-  let width = 10, height = 50;
-  let rownum = 2;
+  let width = 10, height = 50, rownum = 2;
   let fontsize = 14; // pixels
 
   let txt_elems = [], color_elems = [];
@@ -575,8 +575,139 @@ function init_plot(lb, ub, plot_len, parts, is_init=false) {
   }
 }
 
+function render(config, funcs, xlb, xub, ylb, yub,
+                xgrid, ygrid) {
+  let sample_amt, fpoints = [];
+
+  if (config) {
+    DEBUG(`========START CONFIG==========`);
+    DEBUG(`BEFORE: ylb: ${ylb}, yub: ${yub}`);
+    COLOR(true);
+    xgrid = MIN(MAX(xgrid+config.xm, MIN_XGRID), MAX_XGRID);
+    ygrid = MIN(MAX(ygrid+config.ym, MIN_YGRID), MAX_YGRID);
+    xlb = MIN(xlb-config.xm, -MIN_X);
+    xub = MAX(xub+config.xm, MIN_X);
+    ylb = MIN(ylb-config.ym, -MIN_Y);
+    yub = MAX(yub+config.ym, MIN_Y);
+    DEBUG(`AFTER: ylb: ${ylb}, yub: ${yub}`);
+    DEBUG(`========END CONFIG==========`);
+  }
+
+  const parser = math.parser();
+  sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
+  fpoints = funcs.map(f => {
+    parser.evaluate(f);
+    let points = [];
+    let xval, yval;
+    for (xval=xlb; xval<=xub; xval+=sample_amt) {
+      yval = parser.evaluate(`f(${xval})`);
+      if (!isNaN(yval) || INFINITY(yval)) {
+        yub = MAX(yval, yub);
+        ylb = MIN(yval, ylb);
+
+        points.push(__vec(xval, yval));
+      } else {
+        points.push(__vec(xval, NaN));
+      }
+    }
+    return {f, points, color: COLOR()};
+  });
+
+  /*
+   * Bounding y-axis:
+   * Write it this way so it's less confusing
+   */
+  if (ylb < 0) {
+    ylb = !DEFINED(config) ? ylb*1.1 : ylb;
+  } else {
+    ylb = 0;
+  }
+  if (yub > 0) {
+    yub = !DEFINED(config) ? yub*1.1 : yub;
+  } else {
+    yub = 0;
+  }
+
+  let x_offset, y_offset;
+  try {
+    ({
+      lb: xlb,
+      ub: xub,
+      offset: x_offset,
+      parts: xgrid
+    } = init_plot(xlb, xub, LENGTH_X, xgrid,
+      !DEFINED(config)));
+    ({
+      lb: ylb,
+      ub: yub,
+      offset: y_offset,
+      parts: ygrid
+    } = init_plot(ylb, yub, LENGTH_Y, ygrid,
+      !DEFINED(config)));
+
+    let wrapper = ELEM('wrapper');
+    if (wrapper) {
+      Svgraph().removeChild(ELEM('wrapper'));
+    }
+  } catch (err) {
+    return;
+  }
+
+  ORIGIN_X = RIGHT(START_X, x_offset);
+  ORIGIN_Y = START_Y - y_offset;
+
+  let _svg = svg('wrapper');
+
+  /* plot */
+  __ns(_svg,
+    undefined,
+    ...fpoints.map(({points, color}) => g(
+      'plot', ...plot(points, RATIO(LENGTH_X, xub-xlb),
+        RATIO(LENGTH_Y, yub-ylb), color)
+    )),
+    g('x-axis', ...xaxis({
+      leny: LENGTH_Y,
+      lenx: LENGTH_X,
+      lb: xlb,
+      ub: xub,
+      parts: xgrid,
+      label: '',
+      grid: true
+    })),
+    g('y-axis', ...yaxis({
+      leny: LENGTH_Y,
+      lenx: LENGTH_X,
+      lb: ylb,
+      ub: yub,
+      parts: ygrid,
+      label: '',
+      grid: true
+    })),
+    g('legend', ...legend(fpoints))
+  );
+
+  Svgraph().appendChild(_svg);
+
+  return {
+    xlb, xub, ylb, yub,
+    xgrid, ygrid,
+    sample_amt, fpoints
+  };
+}
+
 function init() {
-  const SAMPLE_RATE = 20, SAMPLE_INTERVAL = 100; /* ms */
+  /*
+   * These variables are the core rendering components:
+   * [x/y]lb    : Lower-bound value for x/y-axis (actual)
+   * [x/y]ub    : Upper-bound value for x/y-axis (actual)
+   * [x/y]grid  : Approx. # of grid intervals for x-axis
+   * sample_amt : Actual x-value interval b/w each sample.
+   *              e.g. f(x) = x taken at sample_amt=0.2
+   *                   with xlb=-1, xub=1 would be sampled at:
+   *                   x=[-1,-0.8,-0.6,-0.4,-0.2, ..., 1]
+   * fpoints    : Main data structure - each elem contains 'y'
+    *             values for each sample for each function
+   */
   let xlb = -20, xub = 20, ylb = 0, yub = 0;
   let ygrid = 10;
   let xgrid = 15;
@@ -593,119 +724,13 @@ function init() {
     'f(x) = sin(x)*abs(x)+1'
   ];
 
-  const render = config => {
-    if (config) {
-      DEBUG(`========START CONFIG==========`);
-      DEBUG(`BEFORE: ylb: ${ylb}, yub: ${yub}`);
-      COLOR(true);
-      xgrid = MIN(MAX(xgrid+config.xm, MIN_XGRID), MAX_XGRID);
-      ygrid = MIN(MAX(ygrid+config.ym, MIN_YGRID), MAX_YGRID);
-      xlb = MIN(xlb-config.xm, -MIN_X);
-      xub = MAX(xub+config.xm, MIN_X);
-      ylb = MIN(ylb-config.ym, -MIN_Y);
-      yub = MAX(yub+config.ym, MIN_Y);
-      DEBUG(`AFTER: ylb: ${ylb}, yub: ${yub}`);
-      DEBUG(`========END CONFIG==========`);
-    }
-
-    const parser = math.parser();
-    sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
-    fpoints = funcs.map(f => {
-      parser.evaluate(f);
-      let points = [];
-      let xval, yval;
-      for (xval=xlb; xval<=xub; xval+=sample_amt) {
-        yval = parser.evaluate(`f(${xval})`);
-        if (!isNaN(yval) || INFINITY(yval)) {
-          yub = MAX(yval, yub);
-          ylb = MIN(yval, ylb);
-
-          points.push(__vec(xval, yval));
-        } else {
-          points.push(__vec(xval, NaN));
-        }
-      }
-      return {f, points, color: COLOR()};
-    });
-
-    /*
-     * Bounding y-axis:
-     * Write it this way so it's less confusing
-     */
-    if (ylb < 0) {
-      ylb = !DEFINED(config) ? ylb*1.1 : ylb;
-    } else {
-      ylb = 0;
-    }
-    if (yub > 0) {
-      yub = !DEFINED(config) ? yub*1.1 : yub;
-    } else {
-      yub = 0;
-    }
-
-    let x_offset, y_offset;
-    try {
-      ({
-        lb: xlb,
-        ub: xub,
-        offset: x_offset,
-        parts: xgrid
-      } = init_plot(xlb, xub, LENGTH_X, xgrid,
-        !DEFINED(config)));
-      ({
-        lb: ylb,
-        ub: yub,
-        offset: y_offset,
-        parts: ygrid
-      } = init_plot(ylb, yub, LENGTH_Y, ygrid,
-        !DEFINED(config)));
-
-      let wrapper = ELEM('wrapper');
-      if (wrapper) {
-        Svgraph().removeChild(ELEM('wrapper'));
-      }
-    } catch (err) {
-      return;
-    }
-
-    ORIGIN_X = RIGHT(START_X, x_offset);
-    ORIGIN_Y = START_Y - y_offset;
-
-    let _svg = svg('wrapper');
-
-    /* plot */
-    __ns(_svg,
-      undefined,
-      ...fpoints.map(({points, color}) => g(
-        'plot', ...plot(points, RATIO(LENGTH_X, xub-xlb),
-          RATIO(LENGTH_Y, yub-ylb), color)
-      )),
-      g('x-axis', ...xaxis({
-        leny: LENGTH_Y,
-        lenx: LENGTH_X,
-        lb: xlb,
-        ub: xub,
-        parts: xgrid,
-        label: '',
-        grid: true
-      })),
-      g('y-axis', ...yaxis({
-        leny: LENGTH_Y,
-        lenx: LENGTH_X,
-        lb: ylb,
-        ub: yub,
-        parts: ygrid,
-        label: '',
-        grid: true
-      })),
-      g('legend', ...legend(fpoints))
-    );
-
-    Svgraph().appendChild(_svg);
-  };
-
-  /* =========== Render for the first time =========== */
-  render();
+  /* =========== first time render =========== */
+  ({
+    xlb, xub, ylb, yub,
+    xgrid, ygrid,
+    sample_amt, fpoints
+  } = render(undefined, funcs, xlb, xub, ylb, yub,
+    xgrid, ygrid));
 
   /*
    * This event is triggered upon every mouse move action
@@ -773,7 +798,7 @@ function init() {
           return {xm: 0, ym: 0};
 
         DEBUG('=======CB_SETUP=======');
-        DEBUG(`X: ${X}, Y: ${Y}, oldX: ${oldX}, oldY: ${oldY}`);
+        DEBUG(`(${X},${Y}) | OLD:(${oldX},${oldY})`);
         let x_offset=0, y_offset=0;
         if (xory) { /* X-axis */
           if (DELTA(X, oldX) > 5) {
@@ -792,7 +817,7 @@ function init() {
             }
           }
         }
-        DEBUG(`xoffset: ${x_offset}, yoffset: ${y_offset}`);
+        DEBUG(`OFFSET: (${x_offset},${y_offset})`);
         DEBUG('=======END CB_SETUP=======');
         return {xm: x_offset, ym: y_offset};
       }
@@ -818,7 +843,12 @@ function init() {
           let c = cb(X, Y, _X, _Y);
           _X = X; _Y = Y;
           if (c.xm !== 0 || c.ym !== 0) {
-            render(c);
+            ({
+              xlb, xub, ylb, yub,
+              xgrid, ygrid,
+              sample_amt, fpoints
+            } = render(c, funcs, xlb, xub, ylb, yub,
+              xgrid, ygrid));
           }
         }, SAMPLE_INTERVAL);
       }
