@@ -3,7 +3,8 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 let ORIGIN_X = 100, ORIGIN_Y = 450; /* These change depending on graph */
 const START_X = 100, START_Y = 470;
 const LENGTH_X = 600, LENGTH_Y = 400;
-const MIN_XGRID = 6, MIN_YGRID = 6, MIN_X = 1;
+const MIN_XGRID = 6, MIN_YGRID = 6, MIN_X = 1, MIN_Y = 1;
+const MAX_XGRID = 15, MAX_YGRID = 15;
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
 const ID_GRAPH_SVG = 'svg-graph';
 const ID_GUIDE_X = 'x-guide';
@@ -12,7 +13,6 @@ const ID_LEGEND = 'legend';
 
 /* 'fake' macros */
 const OFFSET = (margin, idx) => margin * idx;
-const SCALE_VAL = (part, i) => part * i;
 const HALF = (v) => v/2;
 const UP = (ref, offset) => ref-offset;
 const DOWN = (ref, offset) => ref+offset;
@@ -29,6 +29,21 @@ const CSS = (obj) => Object.entries(obj)
   .reduce((p, [k, v]) => `${p}${k}: ${v}; `, '').trim();
 const RAND = (min, max) => Math.floor(Math.random() * (max - min) ) + min;
 const RGB = (r, g, b) => `rgb(${r},${g},${b})`;
+const IS_DEFINED = (v) => (typeof v !== 'undefined') || (v !== null);
+
+/* loggers */
+const LOG_LEVEL = 1;
+const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
+
+const __LOG = (l, msg, ...p) => {
+  if (LOG_LEVELS[l] <= LOG_LEVEL) {
+    console.log(msg, p);
+  }
+};
+const DEBUG = (msg, ...p) => __LOG('debug', msg, ...p);
+const INFO = (msg, ...p) => __LOG('info', msg, ...p);
+const WARN = (msg, ...p) => __LOG('warn', msg, ...p);
+const ERROR = (msg, ...p) => __LOG('error', msg, ...p);
 
 const COLORS = [
   RGB(0,128,255)  /* blue */,   RGB(255,0,128)  /* magenta */,
@@ -285,7 +300,7 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
         {stroke: 'black'}
         )
     );
-    xval = lb+SCALE_VAL(part_val, i);
+    xval = lb+SCALE(part_val, i);
     xval = Math.abs(xval) < 1 ? FIXED(xval, 1) : ROUND(xval);
     partitions.push(
       text(
@@ -318,6 +333,16 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
       __vec(RIGHT(START_X, lenx), ORIGIN_Y),
       {'stroke': 'black'}
     ),
+    /*
+     * Add rectangle and make transparent to help with
+     * cursor pointer hover effect.
+     */
+    rect(__vec(
+      START_X, UP(ORIGIN_Y,5)),
+      lenx, 10, {
+        fill: 'transparent',
+        style: CSS({cursor: 'pointer'})
+      }),
     ...partitions
   ];
 }
@@ -342,7 +367,7 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
       )
     );
 
-    yval = lb + SCALE_VAL(part_val, i);
+    yval = lb + SCALE(part_val, i);
     let abs_yval = Math.abs(yval);
     yval = (abs_yval >= 1000) || (abs_yval <= 0.001 && abs_yval > 0)
       ? EXP(yval, 1)
@@ -376,15 +401,30 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
         UP(START_Y, DOWN(HALF(leny),40))
       ),
       label, {
-        'style': 'text-orientation: sideways; writing-mode: vertical-lr;',
+        style: CSS({
+          'text-orientation': 'sideways',
+          'writing-mode': 'vertical-lr'
+        }),
         'text-anchor': 'start'
       }
     ),
     line(
       __vec(ORIGIN_X, UP(START_Y,leny)),
-      __vec(ORIGIN_X, START_Y),
-      {'stroke': 'black'}
+      __vec(ORIGIN_X, START_Y), {
+        id: 'y-axis-line',
+        stroke: 'black',
+      }
     ),
+    /*
+     * Add rectangle and make transparent to help with
+     * cursor pointer hover effect.
+     */
+    rect(__vec(
+      LEFT(ORIGIN_X, 5), UP(START_Y,leny)),
+      10, leny, {
+        fill: 'transparent',
+        style: CSS({cursor: 'pointer'})
+      }),
     ...partitions
   ]
 }
@@ -449,8 +489,9 @@ function legend(fpoints) {
   ];
 }
 
-function init_plot(lb, ub, plot_len, parts) {
-  let new_lb = __ROUND(lb), new_ub = __ROUND(ub);
+function init_plot(lb, ub, plot_len, parts, is_init=false) {
+  lb = __ROUND(lb); ub = __ROUND(ub);
+  let new_lb = lb, new_ub = ub;
   let abs_lb = Math.abs(new_lb), abs_ub = Math.abs(new_ub);
 
   let u_parts = 0, l_parts = 0;
@@ -460,12 +501,14 @@ function init_plot(lb, ub, plot_len, parts) {
     u_parts = parts;
   } else {
     let t_ub = Math.abs(ub), t_lb = Math.abs(lb);
-    let sum = (t_ub + t_lb);
-    l_parts = Math.ceil(parts * (t_lb/sum));
-    u_parts = Math.ceil(parts * (t_ub/sum));
+    u_parts = Math.ceil(parts*(t_ub/(t_ub+t_lb)));
+    l_parts = parts-u_parts;
   }
-  console.log(`grid: ${parts}, l_parts: ${l_parts}, u_parts: ${u_parts}`);
 
+  INFO(`====BEFORE=====`);
+  INFO(`parts: ${parts} -> (l=${l_parts}, u=${u_parts})`);
+  INFO(`lb: ${lb}, ub: ${ub}`);
+  
   /*
    * This is the most important part:
    *
@@ -484,8 +527,8 @@ function init_plot(lb, ub, plot_len, parts) {
    * grid interval to be used.
    */
   let partition = Math.abs(l_parts !== 0
-    ? new_lb/l_parts
-    : new_ub/u_parts
+    ? abs_lb/l_parts
+    : abs_lb/u_parts
   );
   u_parts = Math.ceil(abs_ub/partition);
 
@@ -497,25 +540,33 @@ function init_plot(lb, ub, plot_len, parts) {
    * size determined by l_parts*partition amount (since we
    * don't want to miss any necessary grid space)
    */
-  let lb_ru = ROUND_UP(abs_lb, partition*l_parts);
-  let ub_ru = ROUND_UP(abs_ub, partition*u_parts);
-  new_lb-=(lb_ru-Math.abs(new_lb));
-  new_ub+=(ub_ru-Math.abs(new_ub));
+  if (is_init) {
+    let lb_ru = ROUND_UP(abs_lb, partition*l_parts);
+    let ub_ru = ROUND_UP(abs_ub, partition*u_parts);
+    new_lb -= (lb_ru - Math.abs(new_lb));
+    new_ub += (ub_ru - Math.abs(new_ub));
+  }
 
-  const part_val = (new_ub-new_lb) / (l_parts+u_parts);
   parts = l_parts+u_parts;
+  const part_val = (new_ub-new_lb)/parts;
+
+  INFO(`partition: ${partition}`);
+  INFO(`lparts: ${l_parts}, uparts: ${u_parts}`);
+  INFO('=======AFTER========');
+  
   if (parts === Infinity) {
+    ERROR('error: parts is infinity');
     throw new Error('No matched parts');
   }
 
   let i, val;
   for (i = 0; i <= parts; i++) {
-    console.log('looping');
-    val = FIXED(new_lb + SCALE_VAL(part_val, i), 2);
+    val = FIXED(new_lb+SCALE(part_val, i), 2);
+    DEBUG(`VALUE: ${val}`);
     if (val === '0.00' || val === '-0.00') {
       return {
         lb: new_lb, ub: new_ub,
-        offset: OFFSET(plot_len / parts, i),
+        offset: OFFSET(plot_len/parts, i),
         parts
       }
     }
@@ -523,16 +574,18 @@ function init_plot(lb, ub, plot_len, parts) {
 }
 
 function init() {
-  const SAMPLE_RATE = 20, SAMPLE_INTERVAL = 50; /* ms */
+  const SAMPLE_RATE = 20, SAMPLE_INTERVAL = 100; /* ms */
   let xlb = -20, xub = 20, ylb = 0, yub = 0;
   let ygrid = 10;
-  let xgrid = 20;
+  let xgrid = 15;
   let sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
   let fpoints;
+
 
   const funcs = [
     'f(x) = sin(x)*x',
     'f(x) = x',
+    'f(x) = -x',
     'f(x) = cos(x)',
     'f(x) = log(x)',
     'f(x) = x^0.5',
@@ -541,12 +594,17 @@ function init() {
 
   const render = config => {
     if (config) {
+      DEBUG(`========START CONFIG==========`);
+      DEBUG(`BEFORE: ylb: ${ylb}, yub: ${yub}`);
       COLOR(true);
-      xgrid = MAX(xgrid+config.xm, MIN_XGRID);
-      ygrid = MAX(ygrid+config.ym, MIN_YGRID);
+      xgrid = MIN(MAX(xgrid+config.xm, MIN_XGRID), MAX_XGRID);
+      ygrid = MIN(MAX(ygrid+config.ym, MIN_YGRID), MAX_YGRID);
       xlb = MIN(xlb-config.xm, -MIN_X);
       xub = MAX(xub+config.xm, MIN_X);
-      ylb -= config.ym; yub += config.ym;
+      ylb = MIN(ylb-config.ym, -MIN_Y);
+      yub = MAX(yub+config.ym, MIN_Y);
+      DEBUG(`AFTER: ylb: ${ylb}, yub: ${yub}`);
+      DEBUG(`========END CONFIG==========`);
     }
 
     const parser = math.parser();
@@ -569,19 +627,25 @@ function init() {
       return {f, points, color: COLOR()};
     });
 
-    if (!config) {
-      ylb = ylb > 0 ? 0 : ylb * 1.1;
-      yub = yub < 0 ? 0 : yub * 1.1;
-    }
+    ylb = ylb > 0 ? 0 : (IS_DEFINED(config) ? ylb * 1.1 : ylb);
+    yub = yub < 0 ? 0 : (IS_DEFINED(config) ? yub * 1.1 : yub);
 
     let x_offset, y_offset;
     try {
       ({
-        lb: xlb, ub: xub, offset: x_offset, parts: xgrid
-      } = init_plot(xlb, xub, LENGTH_X, xgrid));
+        lb: xlb,
+        ub: xub,
+        offset: x_offset,
+        parts: xgrid
+      } = init_plot(xlb, xub, LENGTH_X, xgrid,
+        !IS_DEFINED(config)));
       ({
-        lb: ylb, ub: yub, offset: y_offset, parts: ygrid
-      } = init_plot(ylb, yub, LENGTH_Y, ygrid));
+        lb: ylb,
+        ub: yub,
+        offset: y_offset,
+        parts: ygrid
+      } = init_plot(ylb, yub, LENGTH_Y, ygrid,
+        !IS_DEFINED(config)));
 
       let wrapper = ELEM('wrapper');
       if (wrapper) {
@@ -624,7 +688,6 @@ function init() {
       g('legend', ...legend(fpoints))
     );
 
-    console.log('here2');
     Svgraph().appendChild(_svg);
   };
 
@@ -653,7 +716,6 @@ function init() {
      */
     let idx = RATIO(__X(X, xlb, xub)-xlb, sample_amt);
     if (FIXED(idx%1, 1) === '0.0') {
-      console.log('here3');
       idx = Math.floor(idx);
 
       __Guide(ID_GUIDE_X, __vec(START_X, Y),
@@ -683,6 +745,8 @@ function init() {
   // TODO: as grid # increases, automatically adjust grid
   //  scaling (add more small ticks) so it looks like there
   //  are more intervals there
+
+  // TODO: move x/y-axis
   let intervalId = 0;
   Svgraph().addEventListener('mousedown', event => {
     X = event.offsetX; Y = event.offsetY;
@@ -695,21 +759,28 @@ function init() {
         if (X === oldX && Y === oldY)
           return {xm: 0, ym: 0};
 
+        DEBUG('=======CB_SETUP=======');
+        DEBUG(`X: ${X}, Y: ${Y}, oldX: ${oldX}, oldY: ${oldY}`);
         let x_offset=0, y_offset=0;
         if (xory) { /* X-axis */
-          x_offset = 2;
-          if (Math.abs(__X(oldX, xlb, xub)) <=
-            Math.abs(__X(X, xlb, xub))) {
-            x_offset*=-1;
+          if (DELTA(X, oldX) > 5) {
+            x_offset = 2;
+            if (Math.abs(__X(oldX, xlb, xub)) <
+              Math.abs(__X(X, xlb, xub))) {
+              x_offset *= -1;
+            }
           }
         } else { /* Y-axis */
-          y_offset = 2;
-          if (Math.abs(__Y(oldY, ylb, yub)) <=
-            Math.abs(__Y(Y, ylb, yub))) {
-            y_offset*=-1;
+          if (DELTA(Y, oldY) > 5) {
+            y_offset = 2;
+            if (Math.abs(__Y(oldY, ylb, yub)) <
+              Math.abs(__Y(Y, ylb, yub))) {
+              y_offset *= -1;
+            }
           }
         }
-
+        DEBUG(`xoffset: ${x_offset}, yoffset: ${y_offset}`);
+        DEBUG('=======END CB_SETUP=======')
         return {xm: x_offset, ym: y_offset};
       }
     };
@@ -734,7 +805,6 @@ function init() {
           let c = cb(X, Y, _X, _Y);
           _X = X; _Y = Y;
           if (c.xm !== 0 || c.ym !== 0) {
-            console.log('rendering');
             render(c);
           }
         }, SAMPLE_INTERVAL);
