@@ -11,6 +11,9 @@ const ID_GUIDE_X = 'x-guide';
 const ID_GUIDE_Y = 'y-guide';
 const ID_LEGEND = 'legend';
 
+const LOG_LEVEL = 1;
+const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
+
 /* 'fake' macros */
 const OFFSET = (margin, idx) => margin * idx;
 const HALF = (v) => v/2;
@@ -29,15 +32,13 @@ const CSS = (obj) => Object.entries(obj)
   .reduce((p, [k, v]) => `${p}${k}: ${v}; `, '').trim();
 const RAND = (min, max) => Math.floor(Math.random() * (max - min) ) + min;
 const RGB = (r, g, b) => `rgb(${r},${g},${b})`;
-const IS_DEFINED = (v) => (typeof v !== 'undefined') || (v !== null);
+const DEFINED = (v) => (typeof v !== 'undefined') || (v !== null);
+const INFINITY = (v) => Math.abs(v) === Infinity;
 
 /* loggers */
-const LOG_LEVEL = 1;
-const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
-
 const __LOG = (l, msg, ...p) => {
   if (LOG_LEVELS[l] <= LOG_LEVEL) {
-    console.log(msg, p);
+    console.log(msg, ...p);
   }
 };
 const DEBUG = (msg, ...p) => __LOG('debug', msg, ...p);
@@ -67,6 +68,7 @@ const COLOR = (() => {
   }
 })();
 
+/* SVG grid related macros */
 const __X = (x, xlb, xub) => (x-START_X)/RATIO(LENGTH_X, xub-xlb)+xlb;
 const __Y = (y, ylb, yub) => (START_Y-y)/RATIO(LENGTH_Y, yub-ylb)+ylb;
 const __gX = (x, ratio) => RIGHT(ORIGIN_X, SCALE(x, ratio));
@@ -490,6 +492,7 @@ function legend(fpoints) {
 }
 
 function init_plot(lb, ub, plot_len, parts, is_init=false) {
+  INFO(`lb: ${lb}, ub: ${ub}`);
   lb = __ROUND(lb); ub = __ROUND(ub);
   let new_lb = lb, new_ub = ub;
   let abs_lb = Math.abs(new_lb), abs_ub = Math.abs(new_ub);
@@ -527,8 +530,8 @@ function init_plot(lb, ub, plot_len, parts, is_init=false) {
    * grid interval to be used.
    */
   let partition = Math.abs(l_parts !== 0
-    ? abs_lb/l_parts
-    : abs_lb/u_parts
+    ? new_lb/l_parts
+    : new_ub/u_parts
   );
   u_parts = Math.ceil(abs_ub/partition);
 
@@ -548,7 +551,6 @@ function init_plot(lb, ub, plot_len, parts, is_init=false) {
   }
 
   parts = l_parts+u_parts;
-  const part_val = (new_ub-new_lb)/parts;
 
   INFO(`partition: ${partition}`);
   INFO(`lparts: ${l_parts}, uparts: ${u_parts}`);
@@ -561,7 +563,7 @@ function init_plot(lb, ub, plot_len, parts, is_init=false) {
 
   let i, val;
   for (i = 0; i <= parts; i++) {
-    val = FIXED(new_lb+SCALE(part_val, i), 2);
+    val = FIXED(new_lb+SCALE(partition, i), 2);
     DEBUG(`VALUE: ${val}`);
     if (val === '0.00' || val === '-0.00') {
       return {
@@ -579,8 +581,7 @@ function init() {
   let ygrid = 10;
   let xgrid = 15;
   let sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
-  let fpoints;
-
+  let fpoints = [];
 
   const funcs = [
     'f(x) = sin(x)*x',
@@ -615,7 +616,7 @@ function init() {
       let xval, yval;
       for (xval=xlb; xval<=xub; xval+=sample_amt) {
         yval = parser.evaluate(`f(${xval})`);
-        if (!isNaN(yval)) {
+        if (!isNaN(yval) || INFINITY(yval)) {
           yub = MAX(yval, yub);
           ylb = MIN(yval, ylb);
 
@@ -627,8 +628,20 @@ function init() {
       return {f, points, color: COLOR()};
     });
 
-    ylb = ylb > 0 ? 0 : (IS_DEFINED(config) ? ylb * 1.1 : ylb);
-    yub = yub < 0 ? 0 : (IS_DEFINED(config) ? yub * 1.1 : yub);
+    /*
+     * Bounding y-axis:
+     * Write it this way so it's less confusing
+     */
+    if (ylb < 0) {
+      ylb = !DEFINED(config) ? ylb*1.1 : ylb;
+    } else {
+      ylb = 0;
+    }
+    if (yub > 0) {
+      yub = !DEFINED(config) ? yub*1.1 : yub;
+    } else {
+      yub = 0;
+    }
 
     let x_offset, y_offset;
     try {
@@ -638,14 +651,14 @@ function init() {
         offset: x_offset,
         parts: xgrid
       } = init_plot(xlb, xub, LENGTH_X, xgrid,
-        !IS_DEFINED(config)));
+        !DEFINED(config)));
       ({
         lb: ylb,
         ub: yub,
         offset: y_offset,
         parts: ygrid
       } = init_plot(ylb, yub, LENGTH_Y, ygrid,
-        !IS_DEFINED(config)));
+        !DEFINED(config)));
 
       let wrapper = ELEM('wrapper');
       if (wrapper) {
@@ -780,7 +793,7 @@ function init() {
           }
         }
         DEBUG(`xoffset: ${x_offset}, yoffset: ${y_offset}`);
-        DEBUG('=======END CB_SETUP=======')
+        DEBUG('=======END CB_SETUP=======');
         return {xm: x_offset, ym: y_offset};
       }
     };
