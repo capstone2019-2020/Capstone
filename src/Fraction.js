@@ -5,8 +5,10 @@ var Fraction = function (n, d) {
   if (d === 0) {
     throw new EvalError("Dividing by Zero");
   } else {
-    this.numer = new Expression(n);
-    this.denom = new Expression(d);
+    // this.numer = new Expression(n);
+    // this.denom = new Expression(d);
+    this.numer = n;
+    this.denom = d;
   }
 };
 
