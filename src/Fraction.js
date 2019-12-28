@@ -1,3 +1,5 @@
+const { Expression } = require('./RWalgebra.js');
+
 var Fraction = function (n, d) {
   // Error if the denominator is zero
   if (d === 0) {
@@ -25,3 +27,20 @@ Fraction.prototype.toString = function () {
     return numer + "/" + denom;
   }
 };
+
+// (function main() {
+//   var n = [
+//     '3',
+//     'A + B + x1'  ];
+//   var d = [
+//     'D - C - x2',
+//     'E - B - x2',];
+
+//   for (let i = 0; i < n.length; i++) {
+//     test = new Fraction(n[i], d[i]);
+//     console.log(test);
+//     // console.log(test.toString);
+//   }
+// })();
+
+module.exports = { Fraction };
