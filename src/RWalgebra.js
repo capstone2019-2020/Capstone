@@ -1,4 +1,5 @@
 const { Variable, Term } = require('./TermVariable.js');
+const { Fraction } = require('./Fraction.js');
 const { TOKEN_TYPES, tokenize } = require ('./token.js');
 
 const ADD = '+';
@@ -59,8 +60,8 @@ Expression.prototype.parse = (tokens) => {
    */
 
   let _constants = [], _real = [];
-  let _variables = [], _coeff = 1; // Temporary variables required to create new Term objects
-  let _var;
+  let _variables = [], _denom = [], _coeff = 1; // Temporary variables required to create new Term objects
+  let _val, op = MULT;
 
   /* Loop through all remaining tokens and create appropriate data structures */
   tokens.forEach( t => {
@@ -71,46 +72,60 @@ Expression.prototype.parse = (tokens) => {
 
       if (token_val === SUB || token_val === ADD) {
         // no variables - need to add to constants only
-        if (!_variables.length)
+        if (!_variables.length && !_denom.length)
           _constants.push(_coeff);
 
         // term contains variables
         else {
-          _var = createTermWithVariables(_variables);
-          _var.coefficient = _coeff;
-          _real.push(_var);
+          _val = createTermWithVariables(_variables);
+          _val.coefficient = _coeff;
+          if (_denom.length) // there's a variable denominator
+            _val.fraction = new Fraction(1, new Expression(_denom[0]));
+
+          _real.push(_val);
           _variables = [];
+          _denom = [];
         }
 
         // reset coefficient
         _coeff = token_val === SUB ? -1 : 1;
+        op = MULT;
         return;
       }
       else if (token_val === MULT) {
+        op = MULT;
+        return;
+      } else if (token_val === DIV) {
+        op = DIV;
         return;
       }
     }
 
     /* Token = Floating point # */
     if (t.type === TOKEN_TYPES.LITERAL) {
-      _var = parseFloat(t.value);
-      _coeff = _coeff * _var;
+      _val = parseFloat(t.value);
+      _coeff = op === MULT ? _coeff * _val : _coeff / _val;
     }
 
     /* Token = variable  */
     else if (t.type === TOKEN_TYPES.VAR) {
-      _variables.push(new Variable(t.value));
+      if (op === DIV) {
+        _denom.push(t.value)
+      } else
+        _variables.push(new Variable(t.value));
     }
   });
 
   /* Cleanup for the final term */
-  if (!_variables.length) {
+  if (!_variables.length && !_denom.length) {
     _constants.push(_coeff);
   }
   else {
-    _var = createTermWithVariables(_variables);
-    _var.coefficient = _coeff;
-    _real.push(_var);
+    _val = createTermWithVariables(_variables);
+    _val.coefficient = _coeff;
+    if (_denom.length) // there's a variable denominator
+      _val.fraction = new Fraction(1, new Expression(_denom[0]));
+    _real.push(_val);
     _variables = [];
   }
 
