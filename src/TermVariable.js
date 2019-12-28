@@ -1,4 +1,5 @@
 const { Fraction } = require('./Fraction.js');
+const {} = require()
 
 // Variable Data structure
 var Variable = function (variable) {
@@ -39,9 +40,12 @@ Variable.prototype.toString = function () {
 
 var Term = function (variable) {
   if (variable instanceof Variable) {
-    this.variables = [variable];
+    this.variables = [new Variable(variable)];
     this.coefficient = 1;
     this.fraction = new Fraction (1, 1);
+  }
+  else if (typeof(variable) === "string") {
+    
   } else {
     throw new TypeError("Invalid Argument for Term");
   }
@@ -74,6 +78,7 @@ Term.prototype.toString = function () {
 
   return str;
 };
+
 
 // (function main() {
 //   var testVariable = [
