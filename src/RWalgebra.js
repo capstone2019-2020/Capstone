@@ -40,11 +40,11 @@ Expression.prototype.parse = (tokens) => {
 };
 
 
-(function main() {
-  const exp = 'x2 - 3*y - (4*z / 12 - 17) + y - 4.5j + (4*x_3 - 2)/(5-12*some_var) + sin(x_3) - az(js)';
+function main() {
+  const exp = 'x2 - 3*y - (4*z / 12 - 17) + y - 4.5j + (4*x_3 - 2)/(5-12*some_var) + sin(x_3)';
   const tokens = tokenizer.tokenize(exp);
   console.log(JSON.stringify(tokens));
-})();
+};
 
 module.exports = { Expression };
 
@@ -56,3 +56,5 @@ module.exports = { Expression };
 //     retString += (tempTerm.coefficient[0].valueOf() < 0 ? " - " : " + ") + tempTerm.toString();
 //   }
 // };
+
+main();

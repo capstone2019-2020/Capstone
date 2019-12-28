@@ -6,7 +6,7 @@ const IMAG_NUM = 'j';
 /* Supported functions, operators, and special characters */
 const SUPPORTED_FUNCS = ['sin', 'cos', 'tan', 'log'];
 const SUPPORTED_OPS = ['+', '-', '/', '*', '^'];
-const SUPPORTED_VAR_CHARS = ['_'] // special chars that are allowed in variable names
+const SUPPORTED_VAR_CHARS = ['_']; // special chars that are allowed in variable names
 
 /* Token Types */
 const TOKEN_TYPES = {
