@@ -1,6 +1,7 @@
 const { Variable, Term } = require('./TermVariable.js');
 const { Fraction } = require('./Fraction.js');
 const { TOKEN_TYPES, tokenize } = require ('./token.js');
+const { shuntingYard } = require('./parseHelper.js');
 
 const ADD = '+';
 const SUB = '-';
@@ -13,37 +14,29 @@ const SUPPORTED_OPS = [ADD, SUB, MULT, DIV, POW];
 const SUPPORTED_VAR_CHARS = ['_']; // special chars that are allowed in variable names
 
 
-const Expression = function (exp_str) {
+const Expression = function (exp) {
   this.imag = [];   /* List of Terms */
   this.real = [];   /* List of Terms */
   this.constant = null; /* List of integers/floats */
 
-  if ( typeof exp_str === 'string' ) {
-    // Approach:
-    // Step 1: Write tokenize function to separate string into tokens
-    // Step 2: Write parser function to take tokens and put them into data structure
-    const tokens = tokenize(exp_str);
+  if ( typeof exp === 'string' ) {
+    const tokens = tokenize(exp);
     const parsed_data = this.parse(tokens);
     this.real = parsed_data.real;
     this.constant = parsed_data.constant;
   }
-  else if ( typeof exp_str === 'number')
+  else if ( typeof exp === 'number')
   {
-    this.constant = parseFloat(exp_str);
+    this.constant = parseFloat(exp);
+  }
+  else if (Array.isArray(exp) && exp[0] instanceof Term) {
+    this.real = filterOutConstantTerms(exp);
+    this.constant = computeConstant(exp);
   }
   else {
     throw new ArgumentsError('Invalid argument type for Expression object');
   }
 };
-
-const createTermWithVariables = (variables) => {
-  let term = new Term(variables[0]);
-  let i;
-  for (i = 1; i < variables.length; i++) {
-    term.variables.push(variables[i]);
-  }
-  return term;
-}
 
 /**
  * String parser that initializes the Expression data structure
@@ -51,85 +44,178 @@ const createTermWithVariables = (variables) => {
  *
  * @param tokens
  */
-Expression.prototype.parse = (tokens) => {
-  /**
-   * TODO
-   * * Need to account for Imaginary Numbers
-   * * Add PARENTHESES support -- hard
-   */
+Expression.prototype.parse = (tokens => {
+  /* Perform Shunting-Yard algorithm to convert tokens from in-fix to post-fix notation */
+  const postFix = shuntingYard(tokens);
+  console.log(postFix);
 
-  let _constants = [], _real = [];
-  let _variables = [], _denom = [], _coeff = 1; // Temporary variables required to create new Term objects
-  let _val, op = MULT;
-
-  /* Loop through all remaining tokens and create appropriate data structures */
-  tokens.forEach( t => {
-
-    /* Check the type of the operator and set the appropriate flags */
+  /* Loop through all - the end result should be a single array of terms in the operand_stack*/
+  let operand_stack = [];
+  let op1, op2;
+  let term;
+  postFix.forEach( t => {
     if (t.type === TOKEN_TYPES.OP) {
-      let token_val = t.value;
-
-      if (token_val === SUB || token_val === ADD) {
-        // no variables - need to add to constants only
-        if (!_variables.length && !_denom.length)
-          _constants.push(_coeff);
-
-        // term contains variables
-        else {
-          _val = createTermWithVariables(_variables);
-          _val.coefficient = _coeff;
-          if (_denom.length) // there's a variable denominator
-            _val.fraction = new Fraction(1, new Expression(_denom[0]));
-
-          _real.push(_val);
-          _variables = [];
-          _denom = [];
-        }
-
-        // reset coefficient
-        _coeff = token_val === SUB ? -1 : 1;
-        op = MULT;
-        return;
-      }
-      else if (token_val === MULT) {
-        op = MULT;
-        return;
-      } else if (token_val === DIV) {
-        op = DIV;
-        return;
-      }
+      op2 = operand_stack.pop();
+      op1 = operand_stack.pop();
+      let result = compute(op1, op2, t.value);
+      operand_stack.push(result);
     }
-
-    /* Token = Floating point # */
-    if (t.type === TOKEN_TYPES.LITERAL) {
-      _val = parseFloat(t.value);
-      _coeff = op === MULT ? _coeff * _val : _coeff / _val;
+    else if (t.type === TOKEN_TYPES.LITERAL) {
+      term = new Term('');
+      term.coefficient = parseFloat(t.value);
+      operand_stack.push(term);
     }
-
-    /* Token = variable  */
     else if (t.type === TOKEN_TYPES.VAR) {
-      if (op === DIV) {
-        _denom.push(t.value)
-      } else
-        _variables.push(new Variable(t.value));
+      operand_stack.push(new Term(new Variable(t.value)));
     }
   });
 
-  /* Cleanup for the final term */
-  if (!_variables.length && !_denom.length) {
-    _constants.push(_coeff);
+  /* Must compute the constant term and filter out the constant terms from the result */
+  return {constant : computeConstant(operand_stack[0]), real: filterOutConstantTerms(operand_stack[0])};
+});
+
+
+const computeConstant = (terms) => {
+  if (!Array.isArray(terms))
+    terms = [terms];
+  terms = terms.filter( t => !t.variables.length && typeof t.fraction.numer === 'number' && typeof t.fraction.denom === 'number');
+  return terms.length ? terms.reduce( (acc, curr) => acc + curr.coefficient / curr.fraction.denom, 0) : null;
+};
+
+const filterOutConstantTerms = (terms) => {
+  if (!Array.isArray(terms))
+    terms = [terms];
+  return terms.filter(t => t.variables.length || typeof t.fraction.denom !== 'number');
+};
+
+/**
+ * Returns a list of Term objects representing the computation of
+ * op1 operator op2
+ *
+ * @param op1   - OPERAND 1
+ * @param op2   - OPERAND 2
+ * @param operator
+ */
+const compute = (op1, op2, operator) => {
+  let result = [];
+  switch (operator) {
+    case (ADD):
+      result = addTerms(op1, op2);
+      break;
+    case (SUB):
+      result = subtractTerms(op1, op2); // op1 - op2
+      break;
+    case (MULT):
+      result = multiplyTerms(op1, op2);
+      break;
+    case (DIV):
+      result = divideTerms(op1, op2); // op1 / op2
+      break;
+    default: // do nothing
+      break;
   }
+  return result;
+};
+
+const addTerms = (op1, op2) => {
+  return [op1, op2].flat();
+};
+
+const subtractTerms = (op1, op2) => {
+  /* Case 1: subtracting a single term - just have to update the coefficient*/
+  if (!Array.isArray(op2)) {
+    op2.coefficient *= -1;
+  }
+  /* Case 2: subtracting multiple terms - have to update coefficients for each term*/
   else {
-    _val = createTermWithVariables(_variables);
-    _val.coefficient = _coeff;
-    if (_denom.length) // there's a variable denominator
-      _val.fraction = new Fraction(1, new Expression(_denom[0]));
-    _real.push(_val);
-    _variables = [];
+    op2.forEach( t => {
+      t.coefficient *= -1;
+    });
+  }
+  return [op1, op2].flat();
+};
+
+const multiplyTerms = (op1, op2) => {
+  /* Case 1: term * term - result = single term --> result stored in op1 */
+  if (op1 instanceof Term && op2 instanceof Term) {
+    op1.variables = op1.variables.concat(op2.variables);
+    op1.coefficient *= op2.coefficient;
+    // TODO handle denominator multiplication
+    return [op1];
   }
 
-  /* Return constant and list of terms */
-  return { constant: _constants.reduce( (acc, curr) => acc + curr, 0), real: _real };
+  /* Case 2: multiple terms * multiple terms */
+  else if (Array.isArray(op1) && Array.isArray(op2)) {
+    let result = [];
+    let temp_term;
+    op1.forEach( t1 => {
+      op2.forEach( t2 => {
+        temp_term = new Term('');
+        temp_term.variables = t1.variables.concat(t2.variables);
+        temp_term.coefficient = t1.coefficient * t2.coefficient;
+        // TODO handle denominator multiplication
+        result.push(temp_term);
+      });
+    });
+    return result;
+  }
+
+  /* Case 3: Multiple terms * single term */
+  else {
+    /* Standard: op1 = array, op2 = op1 = term*/
+    if (Array.isArray(op2)) {
+      let temp = op2;
+      op2 = op1;
+      op1 = temp;
+    }
+    op1.forEach( t => {
+      t.variables = t.variables.concat(op2.variables);
+      t.coefficient *= op2.coefficient;
+      // TODO handle denominator multiplication
+    });
+    return op1;
+  }
+};
+
+const divideTerms = (op1, op2) => {
+  /* Case 1: term / term */
+  if (op1 instanceof Term && op2 instanceof Term) {
+    /* if denom is a constant - just update the coefficient */
+    if (computeConstant([op2]) !== null) {
+      op1.coefficient = op1.coefficient / computeConstant([op2]);
+      return [op1];
+    }
+
+    op1.fraction.denom = new Expression([op2]);
+    return [op1];
+  }
+
+  /* Case 2: multiple terms / multiple terms */
+  else if (Array.isArray(op1) && Array.isArray(op2)) {
+    op1.forEach( t => {
+      t.fraction.denom = new Expression(op2);
+    });
+    return op1;
+  }
+
+  /* Case 3: multiple terms / term */
+  else if (Array.isArray(op1) && op2 instanceof Term) {
+    let _const = computeConstant([op2]); // term is a constant
+    op1.forEach( t => {
+      if (_const !== null) {
+        t.coefficient = t.coefficient /_const;
+      } else {
+        t.fraction.denom = new Expression([op2]);
+      }
+    });
+    return op1;
+  }
+
+  /* Case 4: term / multiple terms*/
+  else if (op1 instanceof Term && Array.isArray(op2)) {
+    op1.fraction.denom = new Expression(op2);
+    return [op1];
+  }
 };
 
 module.exports = { Expression };
