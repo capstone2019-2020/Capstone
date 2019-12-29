@@ -55,7 +55,6 @@ Expression.prototype.parse = (tokens) => {
   /**
    * TODO
    * * Need to account for Imaginary Numbers
-   * * Add DIV support
    * * Add PARENTHESES support -- hard
    */
 

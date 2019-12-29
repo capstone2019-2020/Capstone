@@ -3,10 +3,12 @@ const { Expression } = require('../RWalgebra.js');
 function main() {
   const exp = 'x2 - 3*y - (4*z / 12 - 17) + y - 4.5j + (4*x_3 - 2)/(5-12*some_var) + sin(x_3)';
   const simple = 'x3';
+  const no_vars = '5 + 7 * 9 - 10/10 +37 * 0.5';
   const add_test = 'x1 + 5 + 7 + x_7';
   const sub_test = 'x1 + 5 - 7 + x_7 - test + 8.7 - x8';
   const mult_test = 'x1 * x2 + 7.9 * 10 * 2 - x_3 * 7 + 5.91 - x7 + x8 * 9 * 10.7';
-  const div_test = 'x1/7 + x2/x3 + 9/7 + 7*x7/x4';
+  const div_test = 'x1/7 + x2/x3 + 9/7 + 7*x7/x4*8';
+  const bracket_test = '(x1 + x2) * (x3 - x4) + 1 / (x1 + x2 * x3) + (x1 + x2) /(x1 + x3)'
 
   const test_type = process.argv[2];
   console.log(test_type);
@@ -21,6 +23,10 @@ function main() {
     ex = new Expression(mult_test);
   else if (test_type === 'div')
     ex = new Expression(div_test);
+  else if (test_type === 'bracket')
+    ex = new Expression(bracket_test);
+  else if (test_type === 'no_vars')
+    ex = new Expression(no_vars);
 
   console.log(JSON.stringify(ex));
 };
