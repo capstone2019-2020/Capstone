@@ -268,8 +268,8 @@ function plot(dp, ORIGIN, x_cratio, y_cratio, color) {
   for (i=0; i<dp.length; i++) {
     dp_e = dp[i];
     if (!isNaN(dp_e.y)) {
-      x_coord = __gX(dp_e.x, x_cratio);
-      y_coord = __gY(dp_e.y, y_cratio, ORIGIN);
+      x_coord = MIN(__gX(dp_e.x, x_cratio), START_X+LENGTH_X);
+      y_coord = MIN(__gY(dp_e.y, y_cratio, ORIGIN), START_Y);
 
       points += `${x_coord},${y_coord}`;
       if (i + 1 !== dp.length) {
@@ -498,7 +498,8 @@ function legend(fpoints) {
   ];
 }
 
-function init_plot(lb, ub, plot_len, parts, is_init=false) {
+function init_plot(lb, ub, plot_len, parts,is_init=false,
+                   seed_offset=0) {
   INFO(`lb: ${lb}, ub: ${ub}`);
   lb = __ROUND(lb); ub = __ROUND(ub);
   let new_lb = lb, new_ub = ub;
@@ -568,14 +569,24 @@ function init_plot(lb, ub, plot_len, parts, is_init=false) {
     throw new Error('No matched parts');
   }
 
-  let i, val;
+  let i, val, offset;
+  let px_per_partition = plot_len/parts;
   for (i = 0; i <= parts; i++) {
     val = FIXED(new_lb+SCALE(partition, i), 2);
     DEBUG(`VALUE: ${val}`);
     if (val === '0.00' || val === '-0.00') {
+      offset = OFFSET(plot_len/parts, i);
+
+      if (seed_offset) {
+        let p = __ROUND(
+          RATIO(offset-seed_offset, px_per_partition)
+        );
+        new_ub+=(p*partition);
+        new_lb+=(p*partition);
+      }
       return {
         lb: new_lb, ub: new_ub,
-        offset: OFFSET(plot_len/parts, i),
+        offset: seed_offset || offset,
         parts
       }
     }
@@ -680,7 +691,7 @@ function render(config, funcs1, funcs2, xlb, xub,
       offset: y_offset2,
       parts: ygrid2
     } = init_plot(ylb2, yub2, LENGTH_Y, ygrid2,
-      !DEFINED(config)));
+      !DEFINED(config), y_offset1));
 
     let wrapper = ELEM('wrapper');
     if (wrapper) {
@@ -768,16 +779,16 @@ function init() {
   let sample_amt1, sample_amt2, fpoints1, fpoints2;
 
   const axis1_funcs = [
-    'f(x) = sin(x)*x',
+    // 'f(x) = sin(x)*x',
     'f(x) = x',
     // 'f(x) = -x'
   ];
 
   const axis2_funcs = [
     'f(x) = cos(x)',
-    // 'f(x) = log(x)',
+    'f(x) = log(x)',
     // 'f(x) = x^0.5',
-    'f(x) = sin(x)*abs(x)+1'
+    // 'f(x) = sin(x)*abs(x)+1'
   ];
 
   /* =========== first time render =========== */
@@ -914,6 +925,7 @@ function init() {
       if (Y > START_Y || Y < START_Y-LENGTH_Y
         || X > START_X+LENGTH_X || X < START_X) {
         clearInterval(intervalId);
+        intervalId = 0;
         return;
       }
 
