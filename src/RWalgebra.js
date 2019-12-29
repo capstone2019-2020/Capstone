@@ -38,6 +38,10 @@ const Expression = function (exp) {
   }
 };
 
+const flatten = (arr) => {
+  return arr.reduce((acc, val) => acc.concat(val), []);
+};
+
 /**
  * String parser that initializes the Expression data structure
  * Only called in the constructor when creating the Expression object
@@ -49,7 +53,7 @@ Expression.prototype.parse = (tokens => {
   const postFix = shuntingYard(tokens);
   console.log(postFix);
 
-  /* Loop through all - the end result should be a single array of terms in the operand_stack*/
+  /* Loop through all - the end result should be a single array of terms in the operand_stack */
   let operand_stack = [];
   let op1, op2;
   let term;
@@ -118,7 +122,7 @@ const compute = (op1, op2, operator) => {
 };
 
 const addTerms = (op1, op2) => {
-  return [op1, op2].flat();
+  return flatten([op1, op2]);
 };
 
 const subtractTerms = (op1, op2) => {
@@ -132,7 +136,7 @@ const subtractTerms = (op1, op2) => {
       t.coefficient *= -1;
     });
   }
-  return [op1, op2].flat();
+  return flatten([op1, op2]);
 };
 
 const multiplyTerms = (op1, op2) => {
