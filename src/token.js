@@ -1,5 +1,5 @@
 /**
- * Constants Required for tokenizing expresiion
+ * Constants Required for tokenizing expression
  */
 const IMAG_NUM = 'j';
 
@@ -77,7 +77,7 @@ const tokenize = (exp) => {
     }
     else if (isOperator(ch)){
       if (char_buff || num_buff)
-        tokens.push(new Token(getTermFromNBOrCB(num_buff, char_buff)));
+        tokens.push(getTermFromNBOrCB(num_buff, char_buff));
       tokens.push(new Token(TOKEN_TYPES.OP, ch));
 
       in_var = false;
@@ -101,7 +101,7 @@ const tokenize = (exp) => {
     }
     else if (isRightParenthesis(ch)) {
       if (char_buff || num_buff)
-        tokens.push(new Token(getTermFromNBOrCB(num_buff, char_buff)));
+        tokens.push(getTermFromNBOrCB(num_buff, char_buff));
       tokens.push(new Token(TOKEN_TYPES.RIGHTPAR, ch));
 
       in_var = false;
@@ -150,7 +150,7 @@ const getTermFromNBOrCB = (num_buff, char_buff) => {
   if (char_buff) {
     return new Token(TOKEN_TYPES.VAR, char_buff);
   } else if (num_buff) {
-    return new Token(getTermFromNB(num_buff));
+    return getTermFromNB(num_buff);
   }
 };
 
