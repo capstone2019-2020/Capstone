@@ -1,12 +1,16 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-let ORIGIN_X = 100, ORIGIN_Y = 450; /* These change depending on graph */
-const START_X = 100, START_Y = 470;
-const LENGTH_X = 600, LENGTH_Y = 400;
 const MIN_XGRID = 6, MIN_YGRID = 6, MIN_X = 1, MIN_Y = 1;
 const MAX_XGRID = 15, MAX_YGRID = 15;
 const SAMPLE_RATE = 20, SAMPLE_INTERVAL = 100; /* ms */
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
+const GRID_MODE = false;
+const START_X = 100, START_Y = 470;
+const LENGTH_X = 600, LENGTH_Y = 400;
+let ORIGIN_X = 100, ORIGIN_Y1 = 450, ORIGIN_Y2 = 450; /* These change depending on graph */
+let AXIS_XPOS_1 = START_X;
+let AXIS_XPOS_2 = START_X+LENGTH_X;
+
 const ID_GRAPH_SVG = 'svg-graph';
 const ID_GUIDE_X = 'x-guide';
 const ID_GUIDE_Y = 'y-guide';
@@ -73,7 +77,7 @@ const COLOR = (() => {
 const __X = (x, xlb, xub) => (x-START_X)/RATIO(LENGTH_X, xub-xlb)+xlb;
 const __Y = (y, ylb, yub) => (START_Y-y)/RATIO(LENGTH_Y, yub-ylb)+ylb;
 const __gX = (x, ratio) => RIGHT(ORIGIN_X, SCALE(x, ratio));
-const __gY = (y, ratio) => UP(ORIGIN_Y, SCALE(y, ratio));
+const __gY = (y, ratio, ORIGIN) => UP(ORIGIN, SCALE(y, ratio));
 
 /* Math related "macros" */
 const __ROUND = (f) => parseFloat(Math.round(f*100)/100);
@@ -110,13 +114,13 @@ const __Guide = (guideId, vec1, vec2) => {
   }
 };
 
-const __Tracer = (tracerId, xval, yval, xratio, yratio) => {
+const __Tracer = (tracerId, ORIGIN, xval, yval, xratio, yratio) => {
   const tracer = ELEM(tracerId);
   const tracerRect = ELEM(`${tracerId}-rect`);
   const tracerTxt = ELEM(`${tracerId}-text`);
   const tracerCirc = ELEM(`${tracerId}-circle`);
   const gx = __gX(xval, xratio);
-  const gy = __gY(yval, yratio);
+  const gy = __gY(yval, yratio, ORIGIN);
   const coords = `(${FIXED(xval, 2)}, ${FIXED(yval, 2)})`;
 
   if (!tracer && !isNaN(yval)) {
@@ -254,7 +258,7 @@ function polyline(points, config={}, cb) {
   });
 }
 
-function plot(dp, x_cratio, y_cratio, color) {
+function plot(dp, ORIGIN, x_cratio, y_cratio, color) {
   let points = '';
   let i;
   let x_coord, y_coord;
@@ -263,7 +267,7 @@ function plot(dp, x_cratio, y_cratio, color) {
     dp_e = dp[i];
     if (!isNaN(dp_e.y)) {
       x_coord = __gX(dp_e.x, x_cratio);
-      y_coord = __gY(dp_e.y, y_cratio);
+      y_coord = __gY(dp_e.y, y_cratio, ORIGIN);
 
       points += `${x_coord},${y_coord}`;
       if (i + 1 !== dp.length) {
@@ -298,8 +302,8 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
     x_coord = RIGHT(START_X, OFFSET(margin, i));
     partitions.push(
       line(
-        __vec(x_coord, DOWN(ORIGIN_Y, 5)),
-        __vec(x_coord, UP(ORIGIN_Y, 5)),
+        __vec(x_coord, DOWN(ORIGIN_Y1, 5)),
+        __vec(x_coord, UP(ORIGIN_Y1, 5)),
         {stroke: 'black'}
         )
     );
@@ -307,7 +311,7 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
     xval = Math.abs(xval) < 1 ? FIXED(xval, 1) : ROUND(xval);
     partitions.push(
       text(
-        __vec(RIGHT(x_coord, 5), DOWN(ORIGIN_Y, 20)),
+        __vec(RIGHT(x_coord, 5), DOWN(ORIGIN_Y1, 20)),
         xval, {'text-anchor': 'end'}
       )
     );
@@ -332,8 +336,8 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
       ), label, {'text-anchor': 'end'}
     ),
     line(
-      __vec(START_X, ORIGIN_Y),
-      __vec(RIGHT(START_X, lenx), ORIGIN_Y),
+      __vec(START_X, ORIGIN_Y1),
+      __vec(RIGHT(START_X, lenx), ORIGIN_Y1),
       {'stroke': 'black'}
     ),
     /*
@@ -341,7 +345,7 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
      * cursor pointer hover effect.
      */
     rect(__vec(
-      START_X, UP(ORIGIN_Y,5)),
+      START_X, UP(ORIGIN_Y1,5)),
       lenx, 10, {
         fill: 'transparent',
         style: CSS({cursor: 'pointer'})
@@ -350,7 +354,7 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
   ];
 }
 
-function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
+function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts, label, grid}) {
   /* Re-adjust LENGTH_Y */
   leny = START_Y-leny < 0 ? START_Y : leny;
 
@@ -364,8 +368,8 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
     y_coord = START_Y - OFFSET(margin, i);
     partitions.push(
       line(
-        __vec(LEFT(ORIGIN_X,5), y_coord),
-        __vec(RIGHT(ORIGIN_X,5), y_coord),
+        __vec(LEFT(AXIS_XPOS,5), y_coord),
+        __vec(RIGHT(AXIS_XPOS,5), y_coord),
         {'stroke': 'black'}
       )
     );
@@ -378,7 +382,7 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
 
     partitions.push(
       text(
-        __vec(LEFT(ORIGIN_X,10), DOWN(y_coord,5)),
+        __vec(LEFT(AXIS_XPOS,10), DOWN(y_coord,5)),
         yval, {'text-anchor': 'end'}
       )
     );
@@ -412,8 +416,8 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
       }
     ),
     line(
-      __vec(ORIGIN_X, UP(START_Y,leny)),
-      __vec(ORIGIN_X, START_Y), {
+      __vec(AXIS_XPOS, UP(START_Y,leny)),
+      __vec(AXIS_XPOS, START_Y), {
         id: 'y-axis-line',
         stroke: 'black',
       }
@@ -423,7 +427,7 @@ function yaxis({leny, lenx, lb, ub, parts, label, grid}) {
      * cursor pointer hover effect.
      */
     rect(__vec(
-      LEFT(ORIGIN_X, 5), UP(START_Y,leny)),
+      LEFT(AXIS_XPOS, 5), UP(START_Y,leny)),
       10, leny, {
         fill: 'transparent',
         style: CSS({cursor: 'pointer'})
@@ -575,23 +579,8 @@ function init_plot(lb, ub, plot_len, parts, is_init=false) {
   }
 }
 
-function render(config, funcs, xlb, xub, ylb, yub,
-                xgrid, ygrid) {
-  let sample_amt, fpoints = [];
-
-  if (config) {
-    DEBUG(`========START CONFIG==========`);
-    DEBUG(`BEFORE: ylb: ${ylb}, yub: ${yub}`);
-    COLOR(true);
-    xgrid = MIN(MAX(xgrid+config.xm, MIN_XGRID), MAX_XGRID);
-    ygrid = MIN(MAX(ygrid+config.ym, MIN_YGRID), MAX_YGRID);
-    xlb = MIN(xlb-config.xm, -MIN_X);
-    xub = MAX(xub+config.xm, MIN_X);
-    ylb = MIN(ylb-config.ym, -MIN_Y);
-    yub = MAX(yub+config.ym, MIN_Y);
-    DEBUG(`AFTER: ylb: ${ylb}, yub: ${yub}`);
-    DEBUG(`========END CONFIG==========`);
-  }
+function eval(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
+  let sample_amt, fpoints;
 
   const parser = math.parser();
   sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
@@ -618,17 +607,52 @@ function render(config, funcs, xlb, xub, ylb, yub,
    * Write it this way so it's less confusing
    */
   if (ylb < 0) {
-    ylb = !DEFINED(config) ? ylb*1.1 : ylb;
+    ylb = is_init ? ylb*1.1 : ylb;
   } else {
     ylb = 0;
   }
   if (yub > 0) {
-    yub = !DEFINED(config) ? yub*1.1 : yub;
+    yub = is_init ? yub*1.1 : yub;
   } else {
     yub = 0;
   }
 
-  let x_offset, y_offset;
+  return {fpoints, sample_amt,
+    xub, xlb, yub, ylb};
+}
+
+function render(config, funcs1, funcs2, xlb, xub,
+                ylb1, yub1, ylb2, yub2,
+                xgrid, ygrid1, ygrid2) {
+  let sample_amt1, sample_amt2, fpoints1, fpoints2;
+
+  if (config) {
+    DEBUG(`========START CONFIG==========`);
+    DEBUG(`BEFORE: ylb: ${ylb1}, yub: ${yub1}`);
+    COLOR(true);
+    xgrid = MIN(MAX(xgrid+config.xm, MIN_XGRID), MAX_XGRID);
+    ygrid1 = MIN(MAX(ygrid1+config.ym, MIN_YGRID), MAX_YGRID);
+    xlb = MIN(xlb-config.xm, -MIN_X);
+    xub = MAX(xub+config.xm, MIN_X);
+    ylb1 = MIN(ylb1-config.ym, -MIN_Y);
+    yub1 = MAX(yub1+config.ym, MIN_Y);
+    DEBUG(`AFTER: ylb: ${ylb1}, yub: ${yub1}`);
+    DEBUG(`========END CONFIG==========`);
+  }
+
+  ({
+    fpoints: fpoints1, sample_amt: sample_amt1,
+    xlb, xub, ylb: ylb1, yub: yub1
+  } = eval(funcs1, xgrid, xlb, xub, ylb1, yub1,
+    !DEFINED(config)));
+
+  ({
+    fpoints: fpoints2, sample_amt: sample_amt2,
+    xlb, xub, ylb: ylb2, yub: yub2
+  } = eval(funcs2, xgrid, xlb, xub, ylb2, yub2,
+    !DEFINED(config)));
+
+  let x_offset, y_offset1, y_offset2;
   try {
     ({
       lb: xlb,
@@ -638,11 +662,18 @@ function render(config, funcs, xlb, xub, ylb, yub,
     } = init_plot(xlb, xub, LENGTH_X, xgrid,
       !DEFINED(config)));
     ({
-      lb: ylb,
-      ub: yub,
-      offset: y_offset,
-      parts: ygrid
-    } = init_plot(ylb, yub, LENGTH_Y, ygrid,
+      lb: ylb1,
+      ub: yub1,
+      offset: y_offset1,
+      parts: ygrid1
+    } = init_plot(ylb1, yub1, LENGTH_Y, ygrid1,
+      !DEFINED(config)));
+    ({
+      lb: ylb2,
+      ub: yub2,
+      offset: y_offset2,
+      parts: ygrid2
+    } = init_plot(ylb2, yub2, LENGTH_Y, ygrid2,
       !DEFINED(config)));
 
     let wrapper = ELEM('wrapper');
@@ -654,16 +685,23 @@ function render(config, funcs, xlb, xub, ylb, yub,
   }
 
   ORIGIN_X = RIGHT(START_X, x_offset);
-  ORIGIN_Y = START_Y - y_offset;
+  ORIGIN_Y1 = UP(START_Y, y_offset1);
+  ORIGIN_Y2 = UP(START_Y, y_offset2);
 
   let _svg = svg('wrapper');
 
   /* plot */
   __ns(_svg,
     undefined,
-    ...fpoints.map(({points, color}) => g(
-      'plot', ...plot(points, RATIO(LENGTH_X, xub-xlb),
-        RATIO(LENGTH_Y, yub-ylb), color)
+    ...fpoints1.map(({points, color}) => g(
+      'plot', ...plot(points, ORIGIN_Y1,
+        RATIO(LENGTH_X, xub-xlb),
+        RATIO(LENGTH_Y, yub1-ylb1), color)
+    )),
+    ...fpoints2.map(({points, color}) => g(
+      'plot', ...plot(points, ORIGIN_Y2,
+        RATIO(LENGTH_X, xub-xlb),
+        RATIO(LENGTH_Y, yub2-ylb2), color)
     )),
     g('x-axis', ...xaxis({
       leny: LENGTH_Y,
@@ -672,26 +710,37 @@ function render(config, funcs, xlb, xub, ylb, yub,
       ub: xub,
       parts: xgrid,
       label: '',
-      grid: true
+      grid: GRID_MODE
     })),
-    g('y-axis', ...yaxis({
+    g('y-axis-1', ...yaxis({
       leny: LENGTH_Y,
       lenx: LENGTH_X,
-      lb: ylb,
-      ub: yub,
-      parts: ygrid,
+      AXIS_XPOS: AXIS_XPOS_1,
+      lb: ylb1,
+      ub: yub1,
+      parts: ygrid1,
       label: '',
-      grid: true
+      grid: GRID_MODE
     })),
-    g('legend', ...legend(fpoints))
+    g('y-axis-2', ...yaxis({
+      leny: LENGTH_Y,
+      lenx: LENGTH_X,
+      AXIS_XPOS: AXIS_XPOS_2,
+      lb: ylb2,
+      ub: yub2,
+      parts: ygrid2,
+      label: '',
+      grid: GRID_MODE
+    })),
+    g('legend', ...legend(fpoints1))
   );
 
   Svgraph().appendChild(_svg);
 
   return {
-    xlb, xub, ylb, yub,
-    xgrid, ygrid,
-    sample_amt, fpoints
+    xlb, xub, ylb1, yub1, ylb2, yub2,
+    xgrid, ygrid1, ygrid2,
+    sample_amt1, sample_amt2, fpoints1, fpoints2
   };
 }
 
@@ -706,31 +755,34 @@ function init() {
    *                   with xlb=-1, xub=1 would be sampled at:
    *                   x=[-1,-0.8,-0.6,-0.4,-0.2, ..., 1]
    * fpoints    : Main data structure - each elem contains 'y'
-    *             values for each sample for each function
+   *              values for each sample for each function
    */
-  let xlb = -20, xub = 20, ylb = 0, yub = 0;
-  let ygrid = 10;
+  let xlb=-20, xub=20, ylb1=0, yub1=0, ylb2=0, yub2=0;
+  let ygrid1=10, ygrid2=10;
   let xgrid = 15;
-  let sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
-  let fpoints = [];
+  let sample_amt1, sample_amt2, fpoints1, fpoints2;
 
-  const funcs = [
+  const axis1_funcs = [
     'f(x) = sin(x)*x',
-    'f(x) = x',
-    'f(x) = -x',
+    // 'f(x) = x',
+    // 'f(x) = -x'
+  ];
+
+  const axis2_funcs = [
     'f(x) = cos(x)',
     'f(x) = log(x)',
-    'f(x) = x^0.5',
-    'f(x) = sin(x)*abs(x)+1'
+    // 'f(x) = x^0.5',
+    // 'f(x) = sin(x)*abs(x)+1'
   ];
 
   /* =========== first time render =========== */
   ({
-    xlb, xub, ylb, yub,
-    xgrid, ygrid,
-    sample_amt, fpoints
-  } = render(undefined, funcs, xlb, xub, ylb, yub,
-    xgrid, ygrid));
+    xlb, xub, ylb1, yub1, ylb2, yub2,
+    xgrid, ygrid1, ygrid2,
+    sample_amt1, sample_amt2, fpoints1, fpoints2
+  } = render(undefined, axis1_funcs, axis2_funcs,
+    xlb, xub, ylb1, yub1, ylb2, yub2,
+    xgrid, ygrid1, ygrid2));
 
   /*
    * This event is triggered upon every mouse move action
@@ -752,39 +804,42 @@ function init() {
      * the generation loop (see above) it took for 'xval' to
      * be the current X-AXIS value -> __X(X, xlb, xub).
      */
-    let idx = RATIO(__X(X, xlb, xub)-xlb, sample_amt);
-    if (FIXED(idx%1, 1) === '0.0') {
-      idx = Math.floor(idx);
+    const tracer_guide = (id, fpoints, ORIGIN, ylb, yub,
+                          sample_amt) => {
+      let idx = RATIO(__X(X, xlb, xub)-xlb, sample_amt);
+      if (FIXED(idx%1, 1) === '0.0') {
+        idx = Math.floor(idx);
 
-      __Guide(ID_GUIDE_X, __vec(START_X, Y),
-        __vec(RIGHT(START_X, LENGTH_X), Y)
-      );
-      __Guide(ID_GUIDE_Y, __vec(X, START_Y),
-        __vec(X, UP(START_Y, LENGTH_Y))
-      );
-
-      /*
-       * For each plot, draw out their own locations. This
-       * creates a new tracer for each new plot that is
-       * present on the graph and refreshes based on a fixed
-       * ID convention.
-       */
-      fpoints.forEach(({points}, i) => {
-        let vec = points[idx];
-        __Tracer(`tracer-${i}`,
-          vec.x, vec.y,
-          RATIO(LENGTH_X, xub-xlb),
-          RATIO(LENGTH_Y, yub-ylb)
+        __Guide(ID_GUIDE_X, __vec(START_X, Y),
+          __vec(RIGHT(START_X, LENGTH_X), Y)
         );
-      });
-    }
+        __Guide(ID_GUIDE_Y, __vec(X, START_Y),
+          __vec(X, UP(START_Y, LENGTH_Y))
+        );
+
+        /*
+         * For each plot, draw out their own locations. This
+         * creates a new tracer for each new plot that is
+         * present on the graph and refreshes based on a fixed
+         * ID convention.
+         */
+        fpoints.forEach(({points}, i) => {
+          let vec = points[idx];
+          __Tracer(`tracer-${id}-${i}`, ORIGIN,
+            vec.x, vec.y,
+            RATIO(LENGTH_X, xub-xlb),
+            RATIO(LENGTH_Y, yub-ylb)
+          );
+        });
+      }
+    };
+
+    tracer_guide('ORIGIN_Y1', fpoints1, ORIGIN_Y1,
+      ylb1, yub1, sample_amt1);
+    tracer_guide('ORIGIN_Y2', fpoints2,
+      ORIGIN_Y2, ylb2, yub2, sample_amt2);
   });
 
-  // TODO: as grid # increases, automatically adjust grid
-  //  scaling (add more small ticks) so it looks like there
-  //  are more intervals there
-
-  // TODO: move x/y-axis
   let intervalId = 0;
   Svgraph().addEventListener('mousedown', event => {
     X = event.offsetX; Y = event.offsetY;
@@ -811,8 +866,8 @@ function init() {
         } else { /* Y-axis */
           if (DELTA(Y, oldY) > 5) {
             y_offset = 2;
-            if (Math.abs(__Y(oldY, ylb, yub)) <
-              Math.abs(__Y(Y, ylb, yub))) {
+            if (Math.abs(__Y(oldY, ylb1, yub1)) <
+              Math.abs(__Y(Y, ylb1, yub1))) {
               y_offset *= -1;
             }
           }
@@ -824,9 +879,9 @@ function init() {
     };
 
     let cb = undefined;
-    if (APPROX(X, ORIGIN_X, 5)) { /* Y-axis */
+    if (APPROX(X, AXIS_XPOS_1, 5)) { /* Y-axis */
       cb = cb_setup(false);
-    } else if (APPROX(Y, ORIGIN_Y, 5)) { /* X-axis */
+    } else if (APPROX(Y, ORIGIN_Y1, 5)) { /* X-axis */
       cb = cb_setup(true);
     }
 
@@ -844,11 +899,12 @@ function init() {
           _X = X; _Y = Y;
           if (c.xm !== 0 || c.ym !== 0) {
             ({
-              xlb, xub, ylb, yub,
-              xgrid, ygrid,
-              sample_amt, fpoints
-            } = render(c, funcs, xlb, xub, ylb, yub,
-              xgrid, ygrid));
+              xlb, xub, ylb1, yub1, ylb2, yub2,
+              xgrid, ygrid1, ygrid2,
+              sample_amt1, sample_amt2, fpoints1, fpoints2
+            } = render(c, axis1_funcs, axis2_funcs,
+              xlb, xub, ylb1, yub1, ylb2, yub2,
+              xgrid, ygrid1, ygrid2));
           }
         }, SAMPLE_INTERVAL);
       }
