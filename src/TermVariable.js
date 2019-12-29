@@ -1,4 +1,5 @@
 const { Fraction } = require('./Fraction.js');
+const math = require('mathjs');
 
 // Variable Data structure
 var Variable = function (variable) {
@@ -44,26 +45,23 @@ var Term = function (variable) {
     this.fraction = new Fraction (1, 1);
   }
   else if (typeof(variable) === "string") {
-    this.variables = [];
+    this.variables = [new Variable(variable)];
     this.coefficient = 1;
     this.fraction = new Fraction(1, 1);
   } else {
     throw new TypeError("Invalid Argument for Term");
   }
+  this.coefficient
 };
 
 Term.prototype.toString = function () {
   var str = "";
 
-  for (var i = 0; i < this.coefficients.length; i++) {
-      var coef = this.coefficients[i];
-
-      if (coef.abs() !== 1) {
-        str += " * " + coef.toString();
-      }
+  if (Number(this.coefficient) != 1) {
+    str = this.coefficient + "*" + str;
   }
 
-  if (this.fraction.numer.abs() != 1 || this.fraction.denom.abs() != 1) {
+  if (math.abs(Number(this.fraction.numer)) != 1 || math.abs(Number(this.fraction.denom)) != 1) {
     str += this.fraction.numer.toString() + " / " + this.fraction.denom.toString();
   }
 
@@ -80,20 +78,29 @@ Term.prototype.toString = function () {
   return str;
 };
 
+(function main() {
+  var testVariable = [
+      'x1',
+      'x2 ^ 2'
+  ];
 
-// (function main() {
-//   var testVariable = [
-//       'x1',
-//       'x2 ^ 2'
-//   ];
+  var testTerms = [
+    new Term(testVariable[0]),
+    new Term('4*x5')
+];
 
-//   testVariable.forEach((test) => {
-//     var v = new Variable(test);
-//     console.log(v);
-//     console.log(v.toString());
-//   }
-//   )
-// })();
+  testVariable.forEach((test) => {
+    var v = new Variable(test);
+    console.log(v);
+    console.log(v.toString());
+  }
+  )
+
+  testTerms.forEach((test2) => {
+    console.log(test2);
+    console.log(test2.toString());
+  })
+})();
 
 module.exports = {
   Variable: Variable, 
