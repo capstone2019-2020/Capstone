@@ -127,7 +127,7 @@ const tokenize = (exp) => {
 const isDigit = (ch) => { return /\d/.test(ch); };
 const isImag = (ch) => { return ch === IMAG_NUM; };
 const isDecimal = (ch) => { return ch === '.'; };
-const isLetter = (ch) => { return /[a-zA-z]/i.test(ch); };
+const isLetter = (ch) => { return /[a-zA-Z]/i.test(ch); };
 const isOperator = (ch) => { return SUPPORTED_OPS.includes(ch); };
 const isLeftParenthesis = (ch) => { return ch === '('; };
 const isRightParenthesis = (ch) => { return ch === ')'; };
