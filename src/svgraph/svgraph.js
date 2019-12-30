@@ -1,8 +1,8 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-const MIN_XGRID = 6, MIN_YGRID = 6, MIN_X = 1, MIN_Y = 1;
+const MIN_XGRID = 8, MIN_YGRID = 8, MIN_X = 1, MIN_Y = 1;
 const MAX_XGRID = 15, MAX_YGRID = 15;
-const SAMPLE_RATE = 50, SAMPLE_INTERVAL = 100; /* ms */
+const SAMPLE_RATE = 50, SAMPLE_INTERVAL = 150; /* ms */
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
 const GRID_MODE = false;
 const START_X = 100, START_Y = 470;
@@ -581,6 +581,7 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
         let p = __ROUND(
           RATIO(offset-seed_offset, px_per_partition)
         );
+        console.log(seed_offset, offset, p);
         new_ub+=(p*partition);
         new_lb+=(p*partition);
       }
@@ -786,9 +787,9 @@ function init() {
 
   const axis2_funcs = [
     'f(x) = cos(x)',
-    'f(x) = log(x)',
+    // 'f(x) = log(x)',
     // 'f(x) = x^0.5',
-    // 'f(x) = sin(x)*abs(x)+1'
+    'f(x) = sin(x)*abs(x)+1'
   ];
 
   /* =========== first time render =========== */
