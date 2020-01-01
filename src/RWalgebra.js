@@ -67,10 +67,10 @@ Expression.prototype.parse = (tokens => {
     else if (t.type === TOKEN_TYPES.LITERAL) {
       term = new Term('');
       term.coefficient = parseFloat(t.value);
-      operand_stack.push(term);
+      operand_stack.push([term]);
     }
     else if (t.type === TOKEN_TYPES.VAR) {
-      operand_stack.push(new Term(new Variable(t.value)));
+      operand_stack.push([new Term(new Variable(t.value))]);
     }
   });
 
@@ -79,16 +79,18 @@ Expression.prototype.parse = (tokens => {
 });
 
 
+/**
+ * Given a list of terms, computes the constant term by adding all terms that do not contain any variables
+ *
+ * @param terms List of terms
+ * @returns float if terms.length != 0, null otherwise
+ */
 const computeConstant = (terms) => {
-  if (!Array.isArray(terms))
-    terms = [terms];
   terms = terms.filter( t => !t.variables.length && typeof t.fraction.numer === 'number' && typeof t.fraction.denom === 'number');
   return terms.length ? terms.reduce( (acc, curr) => acc + curr.coefficient / curr.fraction.denom, 0) : null;
 };
 
 const filterOutConstantTerms = (terms) => {
-  if (!Array.isArray(terms))
-    terms = [terms];
   return terms.filter(t => t.variables.length || typeof t.fraction.denom !== 'number');
 };
 
@@ -96,9 +98,10 @@ const filterOutConstantTerms = (terms) => {
  * Returns a list of Term objects representing the computation of
  * op1 operator op2
  *
- * @param op1   - OPERAND 1
- * @param op2   - OPERAND 2
- * @param operator
+ * @param op1   - OPERAND 1, Type: List of Terms
+ * @param op2   - OPERAND 2, Type: List of Terms
+ * @param operator - String in [ + , - , * , / ]
+ * TODO Add support for pow()
  */
 const compute = (op1, op2, operator) => {
   let result = [];
@@ -121,35 +124,31 @@ const compute = (op1, op2, operator) => {
   return result;
 };
 
+
+/** Helper functions to perform ADD, SUB, MULT, DIVIDE functions **/
 const addTerms = (op1, op2) => {
-  return flatten([op1, op2]);
+  return op1.concat(op2);
 };
 
 const subtractTerms = (op1, op2) => {
-  /* Case 1: subtracting a single term - just have to update the coefficient*/
-  if (!Array.isArray(op2)) {
-    op2.coefficient *= -1;
-  }
-  /* Case 2: subtracting multiple terms - have to update coefficients for each term*/
-  else {
-    op2.forEach( t => {
-      t.coefficient *= -1;
-    });
-  }
-  return flatten([op1, op2]);
+
+  op2.forEach( t => {
+    t.coefficient *= -1;
+  });
+  return op1.concat(op2);
 };
 
 const multiplyTerms = (op1, op2) => {
   /* Case 1: term * term - result = single term --> result stored in op1 */
-  if (op1 instanceof Term && op2 instanceof Term) {
-    op1.variables = op1.variables.concat(op2.variables);
-    op1.coefficient *= op2.coefficient;
+  if (op1.length === 1 && op2.length === 1) {
+    op1[0].variables = op1[0].variables.concat(op2[0].variables);
+    op1[0].coefficient *= op2[0].coefficient;
     // TODO handle denominator multiplication
-    return [op1];
+    return op1;
   }
 
   /* Case 2: multiple terms * multiple terms */
-  else if (Array.isArray(op1) && Array.isArray(op2)) {
+  else if (op1.length > 1 && op2.length > 1) {
     let result = [];
     let temp_term;
     op1.forEach( t1 => {
@@ -167,14 +166,14 @@ const multiplyTerms = (op1, op2) => {
   /* Case 3: Multiple terms * single term */
   else {
     /* Standard: op1 = array, op2 = op1 = term*/
-    if (Array.isArray(op2)) {
+    if (op2.length > 1) {
       let temp = op2;
       op2 = op1;
       op1 = temp;
     }
     op1.forEach( t => {
-      t.variables = t.variables.concat(op2.variables);
-      t.coefficient *= op2.coefficient;
+      t.variables = t.variables.concat(op2[0].variables);
+      t.coefficient *= op2[0].coefficient;
       // TODO handle denominator multiplication
     });
     return op1;
@@ -183,42 +182,42 @@ const multiplyTerms = (op1, op2) => {
 
 const divideTerms = (op1, op2) => {
   /* Case 1: term / term */
-  if (op1 instanceof Term && op2 instanceof Term) {
+  if (op1.length === 1 && op2.length === 1) {
     /* if denom is a constant - just update the coefficient */
-    if (computeConstant([op2]) !== null) {
-      op1.coefficient = op1.coefficient / computeConstant([op2]);
-      return [op1];
+    if (computeConstant(op2) !== null) {
+      op1[0].coefficient = op1[0].coefficient / computeConstant(op2);
+      return op1;
     }
 
-    op1.fraction.denom = new Expression([op2]);
-    return [op1];
-  }
-
-  /* Case 2: multiple terms / multiple terms */
-  else if (Array.isArray(op1) && Array.isArray(op2)) {
-    op1.forEach( t => {
-      t.fraction.denom = new Expression(op2);
-    });
+    op1[0].fraction.denom = new Expression(op2);
     return op1;
   }
 
   /* Case 3: multiple terms / term */
-  else if (Array.isArray(op1) && op2 instanceof Term) {
-    let _const = computeConstant([op2]); // term is a constant
+  else if (Array.isArray(op1) && op2.length === 1) {
+    let _const = computeConstant(op2); // term is a constant
     op1.forEach( t => {
       if (_const !== null) {
         t.coefficient = t.coefficient /_const;
       } else {
-        t.fraction.denom = new Expression([op2]);
+        t.fraction.denom = new Expression(op2);
       }
     });
     return op1;
   }
 
-  /* Case 4: term / multiple terms*/
-  else if (op1 instanceof Term && Array.isArray(op2)) {
-    op1.fraction.denom = new Expression(op2);
-    return [op1];
+  /* Case 4: term / multiple terms */
+  else if (op1.length === 1 && op2.length > 1) {
+    op1[0].fraction.denom = new Expression(op2);
+    return op1;
+  }
+
+  /* Case 2: multiple terms / multiple terms */
+  else if (op1.length > 1 && op2.length > 1) {
+    op1.forEach( t => {
+      t.fraction.denom = new Expression(op2);
+    });
+    return op1;
   }
 };
 

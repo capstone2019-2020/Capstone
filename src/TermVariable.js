@@ -45,7 +45,7 @@ var Term = function (variable) {
     this.fraction = new Fraction (1, 1);
   }
   else if (typeof(variable) === "string") {
-    this.variables = [new Variable(variable)];
+    this.variables = [];
     this.coefficient = 1;
     this.fraction = new Fraction(1, 1);
   } else {
@@ -78,29 +78,29 @@ Term.prototype.toString = function () {
   return str;
 };
 
-(function main() {
-  var testVariable = [
-      'x1',
-      'x2 ^ 2'
-  ];
-
-  var testTerms = [
-    new Term(testVariable[0]),
-    new Term('4*x5')
-];
-
-  testVariable.forEach((test) => {
-    var v = new Variable(test);
-    console.log(v);
-    console.log(v.toString());
-  }
-  )
-
-  testTerms.forEach((test2) => {
-    console.log(test2);
-    console.log(test2.toString());
-  })
-})();
+// (function main() {
+//   var testVariable = [
+//       'x1',
+//       'x2 ^ 2'
+//   ];
+//
+//   var testTerms = [
+//     new Term(testVariable[0]),
+//     new Term('4*x5')
+// ];
+//
+//   testVariable.forEach((test) => {
+//     var v = new Variable(test);
+//     console.log(v);
+//     console.log(v.toString());
+//   }
+//   )
+//
+//   testTerms.forEach((test2) => {
+//     console.log(test2);
+//     console.log(test2.toString());
+//   })
+// })();
 
 module.exports = {
   Variable: Variable, 
