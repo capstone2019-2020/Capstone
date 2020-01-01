@@ -47,6 +47,7 @@ const tokenize = (exp) => {
   let char_buff = '';     // buffer to contain characters
   let in_var = false;     // boolean to determine if we are currently tokenizing a variable
   let tokens = [];        // return value
+  exp = exp.replace(/\(\-/g, '(0-');
 
   const chars = exp.split(''); // split into characters
   chars.forEach(ch => {

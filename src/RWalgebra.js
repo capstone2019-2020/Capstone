@@ -13,7 +13,7 @@ const SUPPORTED_FUNCS = ['sin', 'cos', 'tan', 'log'];
 const SUPPORTED_OPS = [ADD, SUB, MULT, DIV, POW];
 const SUPPORTED_VAR_CHARS = ['_']; // special chars that are allowed in variable names
 
-const DEBUG = 0;
+const DEBUG = 1;
 
 
 const Expression = function (exp) {
@@ -106,12 +106,12 @@ Expression.prototype.parse = (tokens => {
  * @returns float if terms.length != 0, null otherwise
  */
 const computeConstant = (terms, _imag) => {
-  terms = terms.filter( t => !t.variables.length && typeof t.fraction.numer === 'number' && typeof t.fraction.denom === 'number' && t.imag === _imag);
+  terms = terms.filter( t => !t.variables.length && typeof t.fraction.numer === 'number' && typeof t.fraction.denom === 'number' && t.imag === _imag && t.coefficient !== 0);
   return terms.length ? terms.reduce( (acc, curr) => acc + curr.coefficient / curr.fraction.denom, 0) : null;
 };
 
 const filterOutConstantTerms = (terms, _imag) => {
-  return terms.filter(t => (t.variables.length || typeof t.fraction.denom !== 'number') && t.imag === _imag);
+  return terms.filter(t => (t.variables.length || typeof t.fraction.denom !== 'number') && t.imag === _imag && t.coefficient !== 0 );
 };
 
 /**

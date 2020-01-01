@@ -12,7 +12,11 @@ function main() {
   const bracket_test = '(x1 + x2) * (x3 - x4) + 1 / (x1 + x2 * x3) + (x1 + x2) /(x1 + x3)';
   const circuit_test = '(15 - n2) / 12000';
   const imaginary = 'x + xj + 5 + 6j + j + (x2 - 10)/(x * j * j)';
-
+  /**
+   * Rules for imaginary numbers - if term
+   * @type {string}
+   */
+  // const imaginary = '(-x)*j * ((-5)+2j)';
   const test_type = process.argv[2];
   let ex;
   if (test_type === 'simple')
