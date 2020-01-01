@@ -176,6 +176,7 @@ const multiplyTerms = (op1, op2) => {
   return result;
 };
 
+// TODO if imaginary number in denominator, multiply by conjugate of denominator
 const divideTerms = (op1, op2) => {
   /* Case 1: term / term */
   if (op1.length === 1 && op2.length === 1) {
@@ -215,6 +216,60 @@ const divideTerms = (op1, op2) => {
     });
     return op1;
   }
+};
+
+/**
+ * EXPRESSION INTERFACE FUNCTIONS
+ * Valid Inputs:
+ * *  Variable ('x', 'y', 'z')
+ * *  Expression/ string of an expression
+ * *  Constant - Integer/floating point
+ */
+Expression.prototype.add = function(op) {
+  if (typeof op === 'number')
+    this.real.constant += op;
+  else if (op instanceof Variable) { // variables can only be real
+    this.real.terms.push(new Term(op));
+  }
+  else  {
+    let exp = typeof op === 'string' ? new Expression(op) : op;
+    this.imag.terms = addTerms(this.imag.terms, exp.imag.terms);
+    this.imag.constant += exp.imag.constant;
+    this.real.terms = addTerms(this.real.terms, exp.real.terms);
+    this.real.constant += exp.real.constant;
+  }
+};
+
+Expression.prototype.subtract = function(op) {
+  if (typeof op === 'number')
+    this.real.constant -= op;
+  else if (op instanceof Variable) { // variables can only be real
+    let term = new Term(op);
+    term.coefficient *= -1;
+    this.real.terms.push(term);
+  }
+  else  {
+    let exp = typeof op === 'string' ? new Expression(op) : op;
+    this.imag.terms = subtractTerms(this.imag.terms, exp.imag.terms);
+    this.imag.constant -= exp.imag.constant;
+    this.real.terms = subtractTerms(this.real.terms, exp.real.terms);
+    this.real.constant -= exp.real.constant;
+  }
+};
+
+Expression.prototype.divide = function(op) {
+  if (typeof op === 'number')
+
+  else if (op instanceof Variable) { // variables can only be real
+
+  }
+  else  {
+
+  }
+};
+
+Expression.prototype.multiply = function(op) {
+
 };
 
 module.exports = { Expression };

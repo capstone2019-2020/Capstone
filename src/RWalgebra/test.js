@@ -1,4 +1,5 @@
 const { Expression } = require('../RWalgebra.js');
+const { Variable } = require('../TermVariable.js');
 const { tokenize } = require('../token.js');
 
 function main() {
@@ -11,12 +12,10 @@ function main() {
   const div_test = 'x1/7 + x2/x3 + 9/7 + 7*x7/x4*8';
   const bracket_test = '(x1 + x2) * (x3 - x4) + 1 / (x1 + x2 * x3) + (x1 + x2) /(x1 + x3)';
   const circuit_test = '(15 - n2) / 12000';
-  const imaginary = 'x + xj + 5 + 6j + j + (x2 - 10)/(x * j * j)';
-  /**
-   * Rules for imaginary numbers - if term
-   * @type {string}
-   */
+  const imaginary = 'x + x_7j + 5 + 6j + j + (x2 - 10)/(x * j * j)';
   // const imaginary = '(-x)*j * ((-5)+2j)';
+
+
   const test_type = process.argv[2];
   let ex;
   if (test_type === 'simple')
@@ -36,7 +35,9 @@ function main() {
   else if (test_type === 'circuit')
     ex = new Expression(circuit_test);
   else if (test_type === 'imag')
-    ex = new Expression(imaginary);
+    ex = new Expression(imaginary)
+
+  ex.subtract('x_8j + 9j + (-9) -(8 - (-8)*j)');
 
   // console.log(tokenize(imaginary));
   console.log(JSON.stringify(ex));
