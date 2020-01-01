@@ -13,33 +13,32 @@ const SUPPORTED_FUNCS = ['sin', 'cos', 'tan', 'log'];
 const SUPPORTED_OPS = [ADD, SUB, MULT, DIV, POW];
 const SUPPORTED_VAR_CHARS = ['_']; // special chars that are allowed in variable names
 
+const DEBUG = 0;
+
 
 const Expression = function (exp) {
-  this.imag = [];   /* List of Terms */
-  this.real = [];   /* List of Terms */
-  this.constant = null; /* List of integers/floats */
+  this.imag = { terms: [], constant: null };   /* List of Terms */
+  this.real = { terms: [], constant: null };   /* List of Terms */
 
   if ( typeof exp === 'string' ) {
     const tokens = tokenize(exp);
     const parsed_data = this.parse(tokens);
-    this.real = parsed_data.real;
-    this.constant = parsed_data.constant;
+    this.real= parsed_data.real;
+    this.imag = parsed_data.imag;
   }
   else if ( typeof exp === 'number')
   {
-    this.constant = parseFloat(exp);
+    this.real.constant = parseFloat(exp);
   }
-  else if (Array.isArray(exp) && exp[0] instanceof Term) {
-    this.real = filterOutConstantTerms(exp);
-    this.constant = computeConstant(exp);
+  else if (Array.isArray(exp) && exp[0] instanceof Term) { // array of Terms
+    this.real.terms = filterOutConstantTerms(exp, false);
+    this.real.constant = computeConstant(exp, false);
+    this.imag.terms = filterOutConstantTerms(exp, true);
+    this.imag.constant = computeConstant(exp, true);
   }
   else {
     throw new ArgumentsError('Invalid argument type for Expression object');
   }
-};
-
-const flatten = (arr) => {
-  return arr.reduce((acc, val) => acc.concat(val), []);
 };
 
 /**
@@ -51,7 +50,8 @@ const flatten = (arr) => {
 Expression.prototype.parse = (tokens => {
   /* Perform Shunting-Yard algorithm to convert tokens from in-fix to post-fix notation */
   const postFix = shuntingYard(tokens);
-  console.log(postFix);
+  if (DEBUG)
+    console.log(postFix);
 
   /* Loop through all - the end result should be a single array of terms in the operand_stack */
   let operand_stack = [];
@@ -72,10 +72,30 @@ Expression.prototype.parse = (tokens => {
     else if (t.type === TOKEN_TYPES.VAR) {
       operand_stack.push([new Term(new Variable(t.value))]);
     }
+    else if (t.type === TOKEN_TYPES.IMAG_LIT) {
+      term = new Term('');
+      term.coefficient = parseFloat(t.value);
+      term.imag = true;
+      operand_stack.push([term]);
+    }
+    else if (t.type === TOKEN_TYPES.IMAG_VAR) {
+      term = new Term(new Variable(t.value));
+      term.imag = true;
+      operand_stack.push([term]);
+    }
   });
 
   /* Must compute the constant term and filter out the constant terms from the result */
-  return {constant : computeConstant(operand_stack[0]), real: filterOutConstantTerms(operand_stack[0])};
+  // return {constant : computeConstant(operand_stack[0]), real: filterOutConstantTerms(operand_stack[0])};
+  const real = {
+    terms: filterOutConstantTerms(operand_stack[0], false),
+    constant: computeConstant(operand_stack[0], false)
+  };
+  const imag = {
+    terms: filterOutConstantTerms(operand_stack[0], true),
+    constant: computeConstant(operand_stack[0], true)
+  };
+  return { real, imag };
 });
 
 
@@ -85,13 +105,13 @@ Expression.prototype.parse = (tokens => {
  * @param terms List of terms
  * @returns float if terms.length != 0, null otherwise
  */
-const computeConstant = (terms) => {
-  terms = terms.filter( t => !t.variables.length && typeof t.fraction.numer === 'number' && typeof t.fraction.denom === 'number');
+const computeConstant = (terms, _imag) => {
+  terms = terms.filter( t => !t.variables.length && typeof t.fraction.numer === 'number' && typeof t.fraction.denom === 'number' && t.imag === _imag);
   return terms.length ? terms.reduce( (acc, curr) => acc + curr.coefficient / curr.fraction.denom, 0) : null;
 };
 
-const filterOutConstantTerms = (terms) => {
-  return terms.filter(t => t.variables.length || typeof t.fraction.denom !== 'number');
+const filterOutConstantTerms = (terms, _imag) => {
+  return terms.filter(t => (t.variables.length || typeof t.fraction.denom !== 'number') && t.imag === _imag);
 };
 
 /**
@@ -101,7 +121,7 @@ const filterOutConstantTerms = (terms) => {
  * @param op1   - OPERAND 1, Type: List of Terms
  * @param op2   - OPERAND 2, Type: List of Terms
  * @param operator - String in [ + , - , * , / ]
- * TODO Add support for pow()
+ * TODO Add support for pow() and other functions, sin, cos, etc
  */
 const compute = (op1, op2, operator) => {
   let result = [];
@@ -131,7 +151,6 @@ const addTerms = (op1, op2) => {
 };
 
 const subtractTerms = (op1, op2) => {
-
   op2.forEach( t => {
     t.coefficient *= -1;
   });
@@ -139,53 +158,30 @@ const subtractTerms = (op1, op2) => {
 };
 
 const multiplyTerms = (op1, op2) => {
-  /* Case 1: term * term - result = single term --> result stored in op1 */
-  if (op1.length === 1 && op2.length === 1) {
-    op1[0].variables = op1[0].variables.concat(op2[0].variables);
-    op1[0].coefficient *= op2[0].coefficient;
-    // TODO handle denominator multiplication
-    return op1;
-  }
-
-  /* Case 2: multiple terms * multiple terms */
-  else if (op1.length > 1 && op2.length > 1) {
-    let result = [];
-    let temp_term;
-    op1.forEach( t1 => {
-      op2.forEach( t2 => {
-        temp_term = new Term('');
-        temp_term.variables = t1.variables.concat(t2.variables);
-        temp_term.coefficient = t1.coefficient * t2.coefficient;
-        // TODO handle denominator multiplication
-        result.push(temp_term);
-      });
-    });
-    return result;
-  }
-
-  /* Case 3: Multiple terms * single term */
-  else {
-    /* Standard: op1 = array, op2 = op1 = term*/
-    if (op2.length > 1) {
-      let temp = op2;
-      op2 = op1;
-      op1 = temp;
-    }
-    op1.forEach( t => {
-      t.variables = t.variables.concat(op2[0].variables);
-      t.coefficient *= op2[0].coefficient;
+  let result = [];
+  let temp_term;
+  op1.forEach( t1 => {
+    op2.forEach( t2 => {
+      temp_term = new Term('');
+      temp_term.variables = t1.variables.concat(t2.variables);
+      temp_term.coefficient = t1.coefficient * t2.coefficient;
+      if (t1.imag && t2.imag) // j * j = -1
+        temp_term.coefficient *= -1;
+      else if (t1.imag || t2.imag) // j * const  or const * j = imaginary term
+        temp_term.imag = true;
       // TODO handle denominator multiplication
+      result.push(temp_term);
     });
-    return op1;
-  }
+  });
+  return result;
 };
 
 const divideTerms = (op1, op2) => {
   /* Case 1: term / term */
   if (op1.length === 1 && op2.length === 1) {
     /* if denom is a constant - just update the coefficient */
-    if (computeConstant(op2) !== null) {
-      op1[0].coefficient = op1[0].coefficient / computeConstant(op2);
+    if (computeConstant(op2, false) !== null) {
+      op1[0].coefficient = op1[0].coefficient / computeConstant(op2, false);
       return op1;
     }
 
@@ -194,8 +190,8 @@ const divideTerms = (op1, op2) => {
   }
 
   /* Case 3: multiple terms / term */
-  else if (Array.isArray(op1) && op2.length === 1) {
-    let _const = computeConstant(op2); // term is a constant
+  else if (op1.length > 1 && op2.length === 1) {
+    let _const = computeConstant(op2, false); // term is a constant
     op1.forEach( t => {
       if (_const !== null) {
         t.coefficient = t.coefficient /_const;

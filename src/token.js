@@ -16,7 +16,8 @@ const TOKEN_TYPES = {
   RIGHTPAR: 'Right Parenthesis',
   LITERAL: 'Literal',
   FUNC: 'Function',
-  IMAG: 'Imaginary'
+  IMAG_LIT: 'Imag Constant',
+  IMAG_VAR: 'Imag Variable'
 };
 
 
@@ -53,7 +54,10 @@ const tokenize = (exp) => {
       return;
 
     if (isImag(ch)) {
-      num_buff += ch;
+      if (char_buff)
+        char_buff += ch;
+      else
+        num_buff += ch;
     }
     else if (isLetter(ch)){
       char_buff += ch;
@@ -142,13 +146,22 @@ const isSupportedFunc = (str) = (str) => { return SUPPORTED_FUNCS.includes(str);
 const getTermFromNB = (num_buff) => {
   if (num_buff.indexOf(IMAG_NUM) === -1)
     return new Token(TOKEN_TYPES.LITERAL, num_buff);
+  else {
+    num_buff = num_buff.replace(IMAG_NUM, '');
+    return new Token(TOKEN_TYPES.IMAG_LIT, num_buff ? num_buff : '1');
+  }
+};
+
+const getTermFromCB = (char_buff) => {
+  if (char_buff.indexOf(IMAG_NUM) === -1)
+    return new Token(TOKEN_TYPES.VAR, char_buff);
   else
-    return new Token(TOKEN_TYPES.IMAG, num_buff);
+    return new Token(TOKEN_TYPES.IMAG_VAR, char_buff.replace(IMAG_NUM, ''));
 };
 
 const getTermFromNBOrCB = (num_buff, char_buff) => {
   if (char_buff) {
-    return new Token(TOKEN_TYPES.VAR, char_buff);
+    return getTermFromCB(char_buff);
   } else if (num_buff) {
     return getTermFromNB(num_buff);
   }

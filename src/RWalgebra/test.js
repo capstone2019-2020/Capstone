@@ -1,4 +1,5 @@
 const { Expression } = require('../RWalgebra.js');
+const { tokenize } = require('../token.js');
 
 function main() {
   const exp = 'x2 - 3*y - (4*z / 12 - 17) + y - 4.5j + (4*x_3 - 2)/(5-12*some_var) + sin(x_3)';
@@ -10,9 +11,9 @@ function main() {
   const div_test = 'x1/7 + x2/x3 + 9/7 + 7*x7/x4*8';
   const bracket_test = '(x1 + x2) * (x3 - x4) + 1 / (x1 + x2 * x3) + (x1 + x2) /(x1 + x3)';
   const circuit_test = '(15 - n2) / 12000';
+  const imaginary = 'x + xj + 5 + 6j + j + (x2 - 10)/(x * j * j)';
 
   const test_type = process.argv[2];
-  console.log(test_type);
   let ex;
   if (test_type === 'simple')
     ex = new Expression(simple);
@@ -30,7 +31,10 @@ function main() {
     ex = new Expression(no_vars);
   else if (test_type === 'circuit')
     ex = new Expression(circuit_test);
+  else if (test_type === 'imag')
+    ex = new Expression(imaginary);
 
+  // console.log(tokenize(imaginary));
   console.log(JSON.stringify(ex));
 };
 

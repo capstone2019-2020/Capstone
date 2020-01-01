@@ -25,7 +25,7 @@ const shuntingYard = (tokens) => {
   let t, op_top;
   while(tokens.length) {
     t = tokens.shift();
-    if (t.type === TOKEN_TYPES.LITERAL || t.type === TOKEN_TYPES.VAR)
+    if (t.type === TOKEN_TYPES.LITERAL || t.type === TOKEN_TYPES.VAR || t.type === TOKEN_TYPES.IMAG_LIT || t.type === TOKEN_TYPES.IMAG_VAR)
       output_q.push(t);
 
     else if (t.type === TOKEN_TYPES.FUNC)

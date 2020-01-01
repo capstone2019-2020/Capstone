@@ -43,11 +43,13 @@ var Term = function (variable) {
     this.variables = [variable];
     this.coefficient = 1;
     this.fraction = new Fraction (1, 1);
+    this.imag = false;
   }
   else if (typeof(variable) === "string") {
     this.variables = [];
     this.coefficient = 1;
     this.fraction = new Fraction(1, 1);
+    this.imag = false;
   } else {
     throw new TypeError("Invalid Argument for Term");
   }
