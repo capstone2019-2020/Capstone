@@ -73,7 +73,7 @@ Expression.prototype.parse = function(tokens) {
       operand_stack.push([term]);
     }
     else if (t.type === TOKEN_TYPES.VAR) {
-      operand_stack.push([new Term(new Variable(t.value))]);
+      operand_stack.push([new Term(t.value)]);
     }
     else if (t.type === TOKEN_TYPES.IMAG_LIT) {
       term = new Term();
@@ -89,14 +89,7 @@ Expression.prototype.parse = function(tokens) {
   });
 
   /* Must compute the constant term and filter out the constant terms from the result */
-  this.real = {
-    terms: filterOutConstantTerms(operand_stack[0], false),
-    constant: computeConstant(operand_stack[0], false)
-  };
-  this.imag = {
-    terms: filterOutConstantTerms(operand_stack[0], true),
-    constant: computeConstant(operand_stack[0], true)
-  };
+  this.termsToExpression(operand_stack[0]);
 };
 
 
@@ -107,7 +100,8 @@ Expression.prototype.parse = function(tokens) {
  * @returns float if terms.length != 0, null otherwise
  */
 const computeConstant = (terms, _imag) => {
-  terms = terms.filter( t => !t.variables.length && typeof t.fraction.numer === 'number' && typeof t.fraction.denom === 'number' && t.imag === _imag && t.coefficient !== 0);
+  terms = terms.filter( t => !t.variables.length && typeof t.fraction.numer === 'number' &&
+    typeof t.fraction.denom === 'number' && t.imag === _imag && t.coefficient !== 0);
   return terms.length ? terms.reduce( (acc, curr) => acc + curr.coefficient / curr.fraction.denom, 0) : null;
 };
 
@@ -194,7 +188,7 @@ const divideTerms = (op1, op2) => {
     return op1;
   }
 
-  /* Case 3: multiple terms / term */
+  /* Case 2: multiple terms / term */
   else if (op1.length > 1 && op2.length === 1) {
     let _const = computeConstant(op2, false); // term is a constant
     op1.forEach( t => {
@@ -207,13 +201,13 @@ const divideTerms = (op1, op2) => {
     return op1;
   }
 
-  /* Case 4: term / multiple terms */
+  /* Case 3: term / multiple terms */
   else if (op1.length === 1 && op2.length > 1) {
     op1[0].fraction.denom = new Expression(op2);
     return op1;
   }
 
-  /* Case 2: multiple terms / multiple terms */
+  /* Case 4: multiple terms / multiple terms */
   else if (op1.length > 1 && op2.length > 1) {
     op1.forEach( t => {
       t.fraction.denom = new Expression(op2);
@@ -263,30 +257,15 @@ Expression.prototype.subtract = function(op) {
   }
 };
 
-Expression.prototype.divide = function(op) {
-  let terms_1 = convertToTerms(this); // dividend
-  let terms_2 = []; // divisor
-  if (typeof op === 'number') {
-    let term = new Term();
-    term.coefficient = op;
-    terms_2.push(term);
-  }
-  else if (op instanceof Variable) { // variables can only be real
-    terms_2.push(new Term(op));
-  }
-  else  {
-    if (typeof op === 'string') {
-      op = new Expression(op);
-    }
-    terms_2 = convertToTerms(op);
-  }
-  const result = divideTerms(terms_1, terms_2);
-  this.real.terms = filterOutConstantTerms(result, false);
-  this.real.constant = computeConstant(result, false);
-  this.imag.terms = filterOutConstantTerms(result, true);
-  this.imag.terms = filterOutConstantTerms(result, true);
-};
-
+/**
+ * Converts Expression object to a list of terms by combining
+ * imaginary and real terms. Converts constants into terms and
+ * includes in the result.
+ * Required for multiply and divide interface functions.
+ *
+ * @param exp
+ * @returns [] list of Term objects
+ */
 const convertToTerms = (exp) => {
   let terms = [];
   terms = terms.concat(exp.real.terms);
@@ -310,6 +289,27 @@ const convertToTerms = (exp) => {
   return terms;
 };
 
+Expression.prototype.divide = function(op) {
+  let terms_1 = convertToTerms(this); // dividend
+  let terms_2 = []; // divisor
+  if (typeof op === 'number') {
+    let term = new Term();
+    term.coefficient = op;
+    terms_2.push(term);
+  }
+  else if (op instanceof Variable) { // variables can only be real
+    terms_2.push(new Term(op));
+  }
+  else  {
+    if (typeof op === 'string') {
+      op = new Expression(op);
+    }
+    terms_2 = convertToTerms(op);
+  }
+  const result = divideTerms(terms_1, terms_2);
+  this.termsToExpression(result);
+};
+
 Expression.prototype.multiply = function(op) {
   let terms_1 = convertToTerms(this); // op1
   let terms_2 = []; // op2
@@ -328,29 +328,23 @@ Expression.prototype.multiply = function(op) {
     terms_2 = convertToTerms(op);
   }
   const result = multiplyTerms(terms_1, terms_2);
-  this.real.terms = filterOutConstantTerms(result, false);
-  this.real.constant = computeConstant(result, false);
-  this.imag.terms = filterOutConstantTerms(result, true);
-  this.imag.terms = filterOutConstantTerms(result, true);
+  this.termsToExpression(result);
+};
+
+/**
+ * Extracts Expression object fields from a list of terms
+ *
+ * @param terms
+ */
+Expression.prototype.termsToExpression = function(terms) {
+  this.real.terms = filterOutConstantTerms(terms, false);
+  this.real.constant = computeConstant(terms, false);
+  this.imag.terms = filterOutConstantTerms(terms, true);
+  this.imag.constant = computeConstant(terms, true);
 };
 
 Expression.prototype.eval = function(sub) {
 
-};
-
-const Equation = function(arg0, arg1) {
-  if (arg1 === undefined) {
-    if (arg0.indexOf(EQUAL) === -1)
-      throw new ArgumentsError('Equation string must include "=" sign!');
-
-    let exp = arg0.split(EQUAL);
-    this.lhs = new Expression(exp[0]);
-    this.rhs = new Expression(exp[1]);
-  }
-  else {
-    this.lhs = arg0;
-    this.rhs = arg1;
-  }
 };
 
 Expression.prototype.toString = function () {
@@ -382,6 +376,21 @@ Expression.prototype.toString = function () {
     return str + (this.constant.valueOf() < 0 ? " - " : " + ");
   } else {
     return str;
+  }
+};
+
+const Equation = function(arg0, arg1) {
+  if (arg1 === undefined) {
+    if (arg0.indexOf(EQUAL) === -1)
+      throw new ArgumentsError('Equation string must include "=" sign!');
+
+    let exp = arg0.split(EQUAL);
+    this.lhs = new Expression(exp[0]);
+    this.rhs = new Expression(exp[1]);
+  }
+  else {
+    this.lhs = arg0;
+    this.rhs = arg1;
   }
 };
 

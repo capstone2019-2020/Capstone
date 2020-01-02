@@ -38,7 +38,7 @@ function main() {
     ex = new Expression(imaginary);
 
   // ex.subtract('x_8j + 9j + (-9) -(8 - (-8)*j)');
-  ex.divide(5);
+  // ex.divide(5);
 
   // console.log(tokenize(imaginary));
   console.log(JSON.stringify(ex));
