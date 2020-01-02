@@ -8,12 +8,13 @@ const SUB = '-';
 const MULT = '*';
 const DIV = '/';
 const POW = '^';
+const EQUAL = '=';
 const IMAG_NUM = 'j';
 const SUPPORTED_FUNCS = ['sin', 'cos', 'tan', 'log'];
 const SUPPORTED_OPS = [ADD, SUB, MULT, DIV, POW];
 const SUPPORTED_VAR_CHARS = ['_']; // special chars that are allowed in variable names
 
-const DEBUG = 1;
+const DEBUG = 0;
 
 
 const Expression = function (exp) {
@@ -22,9 +23,7 @@ const Expression = function (exp) {
 
   if ( typeof exp === 'string' ) {
     const tokens = tokenize(exp);
-    const parsed_data = this.parse(tokens);
-    this.real= parsed_data.real;
-    this.imag = parsed_data.imag;
+    this.parse(tokens);
   }
   else if ( typeof exp === 'number')
   {
@@ -36,10 +35,14 @@ const Expression = function (exp) {
     this.imag.terms = filterOutConstantTerms(exp, true);
     this.imag.constant = computeConstant(exp, true);
   }
+  else if (exp === undefined) {
+    // do nothing
+  }
   else {
     throw new ArgumentsError('Invalid argument type for Expression object');
   }
 };
+
 
 /**
  * String parser that initializes the Expression data structure
@@ -47,7 +50,7 @@ const Expression = function (exp) {
  *
  * @param tokens
  */
-Expression.prototype.parse = (tokens => {
+Expression.prototype.parse = function(tokens) {
   /* Perform Shunting-Yard algorithm to convert tokens from in-fix to post-fix notation */
   const postFix = shuntingYard(tokens);
   if (DEBUG)
@@ -86,17 +89,15 @@ Expression.prototype.parse = (tokens => {
   });
 
   /* Must compute the constant term and filter out the constant terms from the result */
-  // return {constant : computeConstant(operand_stack[0]), real: filterOutConstantTerms(operand_stack[0])};
-  const real = {
+  this.real = {
     terms: filterOutConstantTerms(operand_stack[0], false),
     constant: computeConstant(operand_stack[0], false)
   };
-  const imag = {
+  this.imag = {
     terms: filterOutConstantTerms(operand_stack[0], true),
     constant: computeConstant(operand_stack[0], true)
   };
-  return { real, imag };
-});
+};
 
 
 /**
@@ -145,7 +146,10 @@ const compute = (op1, op2, operator) => {
 };
 
 
-/** Helper functions to perform ADD, SUB, MULT, DIVIDE functions **/
+/**
+ * Helper functions to perform ADD, SUB, MULT, DIVIDE functions
+ * Each takes 2 arguments: op1, op2 -- both are a LIST OF TERMS
+ * **/
 const addTerms = (op1, op2) => {
   return op1.concat(op2);
 };
@@ -232,6 +236,8 @@ Expression.prototype.add = function(op) {
     this.real.terms.push(new Term(op));
   }
   else  {
+    if (typeof op !== 'string' && !(op instanceof Expression))
+      throw new ArgumentsError('Invalid arguments');
     let exp = typeof op === 'string' ? new Expression(op) : op;
     this.imag.terms = addTerms(this.imag.terms, exp.imag.terms);
     this.imag.constant += exp.imag.constant;
@@ -258,21 +264,51 @@ Expression.prototype.subtract = function(op) {
 };
 
 Expression.prototype.divide = function(op) {
-  if (typeof op === 'number')
-
-  else if (op instanceof Variable) { // variables can only be real
+  let terms = [];
+  if (typeof op === 'number') {
 
   }
+  else if (op instanceof Variable) { // variables can only be real
+    terms.push(new Term(op));
+  }
   else  {
+
 
   }
 };
 
 Expression.prototype.multiply = function(op) {
+  if (typeof op === 'number') {
+
+  }
+  else if (op instanceof Variable) {
+
+  }
+  else {
+
+  }
+};
+
+Expression.prototype.eval = function(sub) {
 
 };
 
-module.exports = { Expression };
+const Equation = function(arg0, arg1) {
+  if (arg1 === undefined) {
+    if (arg0.indexOf(EQUAL) === -1)
+      throw new ArgumentsError('Equation string must include "=" sign!');
+
+    let exp = arg0.split(EQUAL);
+    this.lhs = new Expression(exp[0]);
+    this.rhs = new Expression(exp[1]);
+  }
+  else {
+    this.lhs = arg0;
+    this.rhs = arg1;
+  }
+};
+
+module.exports = { Expression, Equation };
 
 // Expression.prototype.toString = function () {
 //   let retString = "";
