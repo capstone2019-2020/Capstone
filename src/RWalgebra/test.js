@@ -35,9 +35,10 @@ function main() {
   else if (test_type === 'circuit')
     ex = new Expression(circuit_test);
   else if (test_type === 'imag')
-    ex = new Expression(imaginary)
+    ex = new Expression(imaginary);
 
   // ex.subtract('x_8j + 9j + (-9) -(8 - (-8)*j)');
+  ex.divide(5);
 
   // console.log(tokenize(imaginary));
   console.log(JSON.stringify(ex));

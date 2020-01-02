@@ -264,29 +264,74 @@ Expression.prototype.subtract = function(op) {
 };
 
 Expression.prototype.divide = function(op) {
-  let terms = [];
+  let terms_1 = convertToTerms(this); // dividend
+  let terms_2 = []; // divisor
   if (typeof op === 'number') {
-
+    let term = new Term();
+    term.coefficient = op;
+    terms_2.push(term);
   }
   else if (op instanceof Variable) { // variables can only be real
-    terms.push(new Term(op));
+    terms_2.push(new Term(op));
   }
   else  {
-
-
+    if (typeof op === 'string') {
+      op = new Expression(op);
+    }
+    terms_2 = convertToTerms(op);
   }
+  const result = divideTerms(terms_1, terms_2);
+  this.real.terms = filterOutConstantTerms(result, false);
+  this.real.constant = computeConstant(result, false);
+  this.imag.terms = filterOutConstantTerms(result, true);
+  this.imag.terms = filterOutConstantTerms(result, true);
+};
+
+const convertToTerms = (exp) => {
+  let terms = [];
+  terms = terms.concat(exp.real.terms);
+  terms = terms.concat(exp.imag.terms);
+
+  // convert the constants into terms
+  let term;
+  if (exp.real.constant !== 0 && exp.real.constant !== null) {
+    term = new Term();
+    term.coefficient = exp.real.constant;
+    terms.push(term);
+  }
+
+  if (exp.imag.constant !== 0 && exp.imag.constant !== null) {
+    term = new Term();
+    term.coefficient = exp.imag.constant;
+    term.imag = true;
+    terms.push(term);
+  }
+
+  return terms;
 };
 
 Expression.prototype.multiply = function(op) {
+  let terms_1 = convertToTerms(this); // op1
+  let terms_2 = []; // op2
   if (typeof op === 'number') {
-
+    let term = new Term();
+    term.coefficient = op;
+    terms_2.push(term);
   }
-  else if (op instanceof Variable) {
-
+  else if (op instanceof Variable) { // variables can only be real
+    terms_2.push(new Term(op));
   }
-  else {
-
+  else  {
+    if (typeof op === 'string') {
+      op = new Expression(op);
+    }
+    terms_2 = convertToTerms(op);
   }
+  const result = multiplyTerms(terms_1, terms_2);
+  this.real.terms = filterOutConstantTerms(result, false);
+  this.real.constant = computeConstant(result, false);
+  this.imag.terms = filterOutConstantTerms(result, true);
+  this.imag.terms = filterOutConstantTerms(result, true);
 };
 
 Expression.prototype.eval = function(sub) {
