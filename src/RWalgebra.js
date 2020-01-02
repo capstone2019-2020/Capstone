@@ -308,15 +308,38 @@ const Equation = function(arg0, arg1) {
   }
 };
 
+Expression.prototype.toString = function () {
+  let str = "";
+  
+  for (var i = 0; i < this.imag.length; i++) {
+    var term = this.imag[i];
+    
+    // For the first term to be printed out and is positive, no sign needed
+    if (str === "" && Number(term.coefficient).valueOf() > 0) {
+      str += term.toString();
+    } else {
+      str += (Number(term.coefficient).valueOf() < 0 ? " - " : " + ") + term.toString();
+    }
+  }
+
+  for (var i = 0; i < this.real.length; i++) {
+    var term = this.real[i];
+
+    if (str === "" && Number(term.coefficient).valueOf() > 0) {
+      str += term.toString();
+    } else {
+      str += (Number(term.coefficient).valueOf() < 0 ? " - " : " + ") + term.toString();
+    }
+  }
+
+  // Include the constant
+  if (this.constant != null) {
+    return str + (this.constant.valueOf() < 0 ? " - " : " + ");
+  } else {
+    return str;
+  }
+};
+
 module.exports = { Expression, Equation };
-
-// Expression.prototype.toString = function () {
-//   let retString = "";
-//   for (var i = 0; i < this.terms.length; i++) {
-//     var tempTerm = this.terms[i];
-
-//     retString += (tempTerm.coefficient[0].valueOf() < 0 ? " - " : " + ") + tempTerm.toString();
-//   }
-// };
 
 

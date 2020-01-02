@@ -46,7 +46,7 @@ var Term = function (variable) {
     this.imag = false;
   }
   else if (typeof(variable) === "string") {
-    this.variables = [];
+    this.variables = [new Variable(variable)];
     this.coefficient = 1;
     this.fraction = new Fraction(1, 1);
     this.imag = false;
@@ -59,12 +59,18 @@ var Term = function (variable) {
 Term.prototype.toString = function () {
   var str = "";
 
-  if (Number(this.coefficient) != 1) {
+  if (math.abs(Number(this.coefficient)) !== 1 && this.variables[0].name === "") {
+    str += math.abs(this.coefficient.toString());
+  } else if (math.abs(Number(this.coefficient)) != 1) {
     str = this.coefficient + "*" + str;
-  }
+  } 
 
-  if (math.abs(Number(this.fraction.numer)) != 1 || math.abs(Number(this.fraction.denom)) != 1) {
-    str += this.fraction.numer.toString() + " / " + this.fraction.denom.toString();
+  if (math.abs(Number(this.fraction.numer)) !== 1 || math.abs(Number(this.fraction.denom)) !== 1) {
+    if (math.abs(Number(this.fraction.numer)) == 1 && math.abs(Number(this.coefficient)) !== 1) {
+      str = "(" + str + " / " + this.fraction.denom.toString() + ")";  
+    } else  {
+      str += "(" + this.fraction.numer.toString() + " / " + this.fraction.denom.toString() + ")";
+    }
   }
 
   str = this.variables.reduce(function (p, c) {

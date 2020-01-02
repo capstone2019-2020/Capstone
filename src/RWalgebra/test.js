@@ -41,6 +41,7 @@ function main() {
 
   // console.log(tokenize(imaginary));
   console.log(JSON.stringify(ex));
+  console.log(ex.toString());
 };
 
 main();
