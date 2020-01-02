@@ -50,9 +50,17 @@ var Term = function (variable) {
     this.coefficient = 1;
     this.fraction = new Fraction(1, 1);
     this.imag = false;
-  } else {
+  }
+  else if (variable === undefined) {
+    this.variables = [];
+    this.coefficient = 1;
+    this.fraction = new Fraction(1, 1);
+    this.imag = false;
+  }
+  else {
     throw new TypeError("Invalid Argument for Term");
   }
+
   this.coefficient
 };
 

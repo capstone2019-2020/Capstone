@@ -37,7 +37,7 @@ function main() {
   else if (test_type === 'imag')
     ex = new Expression(imaginary)
 
-  ex.subtract('x_8j + 9j + (-9) -(8 - (-8)*j)');
+  // ex.subtract('x_8j + 9j + (-9) -(8 - (-8)*j)');
 
   // console.log(tokenize(imaginary));
   console.log(JSON.stringify(ex));

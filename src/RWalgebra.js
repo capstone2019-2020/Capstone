@@ -68,7 +68,7 @@ Expression.prototype.parse = function(tokens) {
       operand_stack.push(result);
     }
     else if (t.type === TOKEN_TYPES.LITERAL) {
-      term = new Term('');
+      term = new Term();
       term.coefficient = parseFloat(t.value);
       operand_stack.push([term]);
     }
@@ -76,7 +76,7 @@ Expression.prototype.parse = function(tokens) {
       operand_stack.push([new Term(new Variable(t.value))]);
     }
     else if (t.type === TOKEN_TYPES.IMAG_LIT) {
-      term = new Term('');
+      term = new Term();
       term.coefficient = parseFloat(t.value);
       term.imag = true;
       operand_stack.push([term]);
@@ -166,7 +166,7 @@ const multiplyTerms = (op1, op2) => {
   let temp_term;
   op1.forEach( t1 => {
     op2.forEach( t2 => {
-      temp_term = new Term('');
+      temp_term = new Term();
       temp_term.variables = t1.variables.concat(t2.variables);
       temp_term.coefficient = t1.coefficient * t2.coefficient;
       if (t1.imag && t2.imag) // j * j = -1
