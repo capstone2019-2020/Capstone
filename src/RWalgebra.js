@@ -350,19 +350,19 @@ Expression.prototype.eval = function(sub) {
 Expression.prototype.toString = function () {
   let str = "";
   
-  for (var i = 0; i < this.imag.length; i++) {
-    var term = this.imag[i];
+  for (var i = 0; i < this.imag.terms.length; i++) {
+    var term = this.imag.terms[i];
     
     // For the first term to be printed out and is positive, no sign needed
     if (str === "" && Number(term.coefficient).valueOf() > 0) {
-      str += term.toString();
+      str += term.toString() + "j";
     } else {
-      str += (Number(term.coefficient).valueOf() < 0 ? " - " : " + ") + term.toString();
+      str += (Number(term.coefficient).valueOf() < 0 ? " - " : " + ") + term.toString() + "j";
     }
   }
 
-  for (var i = 0; i < this.real.length; i++) {
-    var term = this.real[i];
+  for (var i = 0; i < this.real.terms.length; i++) {
+    var term = this.real.terms[i];
 
     if (str === "" && Number(term.coefficient).valueOf() > 0) {
       str += term.toString();
@@ -371,9 +371,21 @@ Expression.prototype.toString = function () {
     }
   }
 
-  // Include the constant
-  if (this.constant != null) {
-    return str + (this.constant.valueOf() < 0 ? " - " : " + ");
+  // Include the constant at the end 
+  if (this.imag.constant != null) {
+    // No variables exist
+    if (str === "") {
+      return this.imag.constant + "j";
+    } else {
+      return str + (this.imag.constant.valueOf() < 0 ? " - " : " + ") + this.imag.constant + "j";
+    } 
+  } else if (this.real.constant != null) {
+    // No variables exist
+    if (str === "") {
+      return this.real.constant;
+    } else {
+      return str + (this.real.constant.valueOf() < 0 ? " - " : " + ") + this.real.constant;
+    }
   } else {
     return str;
   }
