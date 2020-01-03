@@ -42,6 +42,8 @@ function main() {
 
   // console.log(tokenize(imaginary));
   console.log(JSON.stringify(ex));
+  // console.log(ex.real.terms.toString());
+  // console.log(ex.imag.terms.toString());
   console.log(ex.toString());
 };
 
