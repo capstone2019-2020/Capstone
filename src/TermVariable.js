@@ -67,13 +67,14 @@ var Term = function (variable) {
 Term.prototype.toString = function () {
   var str = "";
 
-  if (math.abs(Number(this.coefficient)) !== 1 && this.variables[0].name === "") {
-    str += math.abs(this.coefficient.toString());
-  } else if (math.abs(Number(this.coefficient)) != 1) {
-    str = this.coefficient + "*" + str;
+  // Coefficient is not 1
+  if (math.abs(Number(this.coefficient)) !== 1) {
+    str += math.abs(this.coefficient).toString();
   } 
 
+  // There exists a fraction in the term
   if (math.abs(Number(this.fraction.numer)) !== 1 || math.abs(Number(this.fraction.denom)) !== 1) {
+    // The numerator is one which can be replaced with the coefficient number
     if (math.abs(Number(this.fraction.numer)) == 1 && math.abs(Number(this.coefficient)) !== 1) {
       str = "(" + str + " / " + this.fraction.denom.toString() + ")";  
     } else  {
