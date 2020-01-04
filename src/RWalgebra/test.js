@@ -1,4 +1,4 @@
-const { Expression } = require('../RWalgebra.js');
+const { Expression, parse } = require('../RWalgebra.js');
 const { Variable } = require('../TermVariable.js');
 const { tokenize } = require('../token.js');
 
@@ -45,6 +45,8 @@ function main() {
   // console.log(ex.real.terms.toString());
   // console.log(ex.imag.terms.toString());
   console.log(ex.toString());
+
+  console.log(JSON.stringify(parse('x+7')));
 };
 
 main();

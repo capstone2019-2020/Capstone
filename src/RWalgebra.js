@@ -406,6 +406,14 @@ const Equation = function(arg0, arg1) {
   }
 };
 
-module.exports = { Expression, Equation };
+const parse = (str) => {
+  if (str.indexOf('=') !== -1)
+    return new Equation(str);
+  else
+    return new Expression(str);
+
+};
+
+module.exports = { Expression, Equation, parse };
 
 
