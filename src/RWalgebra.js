@@ -370,7 +370,10 @@ Expression.prototype.eval = function(sub) {
   result.real.constant += this.real.constant;
   result.imag.constant += this.imag.constant;
 
-  return result;
+  if (!result.real.length && !result.imag.length && (result.imag.constant === 0 || result.imag.constant === null))
+    return result.real.constant;
+  else
+    return result;
 };
 
 Expression.prototype.toString = function () {

@@ -71,15 +71,14 @@ Term.prototype.eval = function(sub) {
       if (typeof sub[v.name] !== 'number')
         throw new ArgumentsError('ERROR: eval() only accepts floating point numbers!')
       copy.coefficient *= sub[v.name];
-      copy.variables.splice(i, 1);
     }
   });
+
+  copy.variables = copy.variables.filter(v => !vars.includes(v.name));
 
   // evaluate fraction
   if (typeof copy.fraction.denom !== 'number'){
     let denom = copy.fraction.denom.eval(sub);
-    if (!denom.real.terms.length && !denom.imag.terms.length && (denom.imag.constant === 0 || denom.imag.constant === null))
-      denom = denom.real.constant;
 
     if (typeof denom === 'number') {
       copy.coefficient = copy.coefficient / denom;
