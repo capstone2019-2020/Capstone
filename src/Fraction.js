@@ -14,7 +14,7 @@ var Fraction = function (n, d) {
 
 // In case it needs to be modified 
 // Without touching the actual object
-Fraction.prototype.temp = function () {
+Fraction.prototype.copy = function () {
   return new Fraction(this.numer, this.denom);
 }
 

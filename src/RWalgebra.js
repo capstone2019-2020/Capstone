@@ -229,6 +229,12 @@ Expression.prototype.add = function(op) {
   else if (op instanceof Variable) { // variables can only be real
     this.real.terms.push(new Term(op));
   }
+  else if (op instanceof Term) {
+    if (op.imag)
+      this.imag.terms.push(op);
+    else
+      this.real.terms.push(op);
+  }
   else  {
     if (typeof op !== 'string' && !(op instanceof Expression))
       throw new ArgumentsError('Invalid arguments');
@@ -238,6 +244,7 @@ Expression.prototype.add = function(op) {
     this.real.terms = addTerms(this.real.terms, exp.real.terms);
     this.real.constant += exp.real.constant;
   }
+  return this;
 };
 
 Expression.prototype.subtract = function(op) {
@@ -343,8 +350,30 @@ Expression.prototype.termsToExpression = function(terms) {
   this.imag.constant = computeConstant(terms, true);
 };
 
+/**
+ * Given an object of the form {'var_name': <floating_point> }
+ * Evaluates the expression by substituting the input variables
+ * Returns an Expression if not all variables are submitted.
+ *
+ * NOTE: only accepts floating point values for substitutions, no complex numbers or variables/expressions
+ *
+ * @param sub
+ * @return Expression or floating point
+ */
 Expression.prototype.eval = function(sub) {
+  let result = new Expression();
+  result.real.constant = this.real.constant;
+  result.imag.constant = this.imag.constant;
 
+  const real = (this.real.terms.reduce((acc, curr) => {return acc.add(curr.eval(sub))}, result)).real.terms;
+  const imag = (this.imag.terms.reduce((acc, curr) => {return acc.add(curr.eval(sub))}, result)).real.terms;
+
+  result.real.constant += computeConstant(real, false);
+  result.imag.constant += computeConstant(imag, true);
+  result.real.terms = filterOutConstantTerms(real, false);
+  result.imag.terms = filterOutConstantTerms(imag, true);
+
+  return result;
 };
 
 Expression.prototype.toString = function () {

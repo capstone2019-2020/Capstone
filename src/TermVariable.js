@@ -18,7 +18,7 @@ var Variable = function (variable) {
   }
 };
 
-Variable.prototype.temp = function () {
+Variable.prototype.copy = function () {
   return new Variable(this.variable);
 };
 
@@ -62,6 +62,28 @@ var Term = function (variable) {
   }
 
   this.coefficient
+};
+
+Term.prototype.eval = function(sub) {
+  let copy = this.copy();
+  const vars = Object.keys(sub);
+  copy.variables.forEach((v, i) => {
+    if (vars.includes(v.name)) {
+      if (typeof sub[v.name] !== 'number')
+        throw new ArgumentsError('ERROR: eval() only accepts floating point numbers!')
+      copy.coefficient *= sub[v.name];
+      copy.variables.splice(i, 1);
+    }
+  });
+  return copy;
+};
+
+Term.prototype.copy = function() {
+  let term = new Term();
+  term.coefficient = this.coefficient;
+  term.variables = this.variables.map(v => new Variable(v.name));
+  term.fraction = this.fraction.copy();
+  return term;
 };
 
 Term.prototype.toString = function () {

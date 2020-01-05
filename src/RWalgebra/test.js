@@ -46,7 +46,10 @@ function main() {
   // console.log(ex.imag.terms.toString());
   console.log(ex.toString());
 
-  console.log(JSON.stringify(parse('x+7')));
+  let result = ex.eval({'x1': -2.0, 'x_7': 5.7});
+
+  console.log(JSON.stringify(result));
+  console.log(result.toString());
 };
 
 main();
