@@ -353,7 +353,7 @@ Expression.prototype.termsToExpression = function(terms) {
 /**
  * Given an object of the form {'var_name': <floating_point> }
  * Evaluates the expression by substituting the input variables
- * Returns an Expression if not all variables are submitted.
+ * Returns an Expression object
  *
  * NOTE: only accepts floating point values for substitutions, no complex numbers or variables/expressions
  *
@@ -362,16 +362,13 @@ Expression.prototype.termsToExpression = function(terms) {
  */
 Expression.prototype.eval = function(sub) {
   let result = new Expression();
-  result.real.constant = this.real.constant;
-  result.imag.constant = this.imag.constant;
 
   const real = (this.real.terms.reduce((acc, curr) => {return acc.add(curr.eval(sub))}, result)).real.terms;
-  const imag = (this.imag.terms.reduce((acc, curr) => {return acc.add(curr.eval(sub))}, result)).real.terms;
+  const imag = (this.imag.terms.reduce((acc, curr) => {return acc.add(curr.eval(sub))}, result)).imag.terms;
 
-  result.real.constant += computeConstant(real, false);
-  result.imag.constant += computeConstant(imag, true);
-  result.real.terms = filterOutConstantTerms(real, false);
-  result.imag.terms = filterOutConstantTerms(imag, true);
+  result.termsToExpression(real.concat(imag));
+  result.real.constant += this.real.constant;
+  result.imag.constant += this.imag.constant;
 
   return result;
 };

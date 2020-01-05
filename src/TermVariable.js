@@ -83,6 +83,7 @@ Term.prototype.copy = function() {
   term.coefficient = this.coefficient;
   term.variables = this.variables.map(v => new Variable(v.name));
   term.fraction = this.fraction.copy();
+  term.imag = this.imag;
   return term;
 };
 
