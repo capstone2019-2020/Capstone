@@ -46,7 +46,7 @@ function main() {
   // console.log(ex.imag.terms.toString());
   console.log(ex.toString());
 
-  let result = ex.eval({'x': -2.0, 'x2': 5.7});
+  let result = ex.eval({'x1': -2.0, 'x2': 5.7});
 
   console.log(JSON.stringify(result));
   console.log(result.toString());

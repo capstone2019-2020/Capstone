@@ -61,7 +61,6 @@ var Term = function (variable) {
     throw new TypeError("Invalid Argument for Term");
   }
 
-  this.coefficient
 };
 
 Term.prototype.eval = function(sub) {
@@ -75,6 +74,20 @@ Term.prototype.eval = function(sub) {
       copy.variables.splice(i, 1);
     }
   });
+
+  // evaluate fraction
+  if (typeof copy.fraction.denom !== 'number'){
+    let denom = copy.fraction.denom.eval(sub);
+    if (!denom.real.terms.length && !denom.imag.terms.length && (denom.imag.constant === 0 || denom.imag.constant === null))
+      denom = denom.real.constant;
+
+    if (typeof denom === 'number') {
+      copy.coefficient = copy.coefficient / denom;
+      copy.fraction = new Fraction(1, 1);
+    } else
+      copy.fraction.denom = denom;
+  }
+
   return copy;
 };
 
