@@ -144,11 +144,20 @@ Node.prototype.computeShortCircuitCurrent = function(){
 
     // Ignore passive components connected to ground
     this.passiveComponents.forEach ((r, i) => {
+        // no current flows for the branch that has ground on both ends
         if (r.pnode != 0 && r.nnode != 0) {
-            if (i != 0){
-                iShortCircuit += " + ";
+            // current goes from pnode->nnode: current going out -> negative by convention
+            if (this.id == r.pnode){
+                iShortCircuit += " - ";
+            } 
+            else{
+                // Skip (+) sign for the first term
+                if (i != 0){
+                    iShortCircuit += " + ";
+                }
             }
 
+            // Determine if numeric current value is available
             if (r.currentNumeric != undefined){
                 iShortCircuit += r.currentNumeric.toString();
             }
@@ -159,11 +168,15 @@ Node.prototype.computeShortCircuitCurrent = function(){
         }
     });
 
+
     this.currentSources.forEach ((c) => {
         if (iShortCircuit.length > 0){ 
             iShortCircuit += " + ";
         }
         
+        // Check for current direction
+        // -- if statement goes here --
+
         iShortCircuit += c.value.toString();
     });
 
@@ -367,26 +380,26 @@ function createCircuit(components){
     return circuit;
 }
 
- // (function main(){
- //     const voltage_div = '../test/netlist_ann1.txt'
- //    const var_simple = 'test/netlist_ann2.txt'
- //    const curr_src = 'test/netlist_ann_csrc.txt'
- //
- //    var c = [
- //        { id: 'I1', type: 'I', pnode: 1, nnode: 0, value: '0.003'  },
- //        { id: 'R1', type: 'R', pnode: 1, nnode: 0, value: '4000'  },
- //        { id: 'R2', type: 'R', pnode: 1, nnode: 2, value: '5600'  },
- //        { id: 'I2', type: 'I', pnode: 0, nnode: 2, value: '0.002'  }
- //    ];
- //
- //    // example1 = nl.nlConsume(voltage_div);
- //    circuit = createCircuit(c);
- //
- //    console.log(circuit.nodalAnalysis());
- //    console.log(circuit.dpiAnalysis(2));
- //
- //
- // })();
+ (function main(){
+    const voltage_div = 'test/netlist_ann1.txt'
+    const var_simple = 'test/netlist_ann2.txt'
+    const curr_src = 'test/netlist_ann_csrc.txt'
+
+    var c = [
+        { id: 'I1', type: 'I', pnode: 1, nnode: 0, value: '0.003'  },
+        { id: 'R1', type: 'R', pnode: 1, nnode: 0, value: '4000'  },
+        { id: 'R2', type: 'R', pnode: 1, nnode: 2, value: '5600'  },
+        { id: 'I2', type: 'I', pnode: 0, nnode: 2, value: '0.002'  }
+    ];
+
+    c = nl.nlConsume(curr_src);
+    circuit = createCircuit(c);
+
+    console.log(circuit.nodalAnalysis());
+    console.log(circuit.dpiAnalysis(2));
+
+
+ })();
 
  exports.createCircuit = createCircuit;
 
