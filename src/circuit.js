@@ -45,14 +45,8 @@ Node.prototype.allCurrentKnown = function(){
 };
 
 Node.prototype.kcl = function(){
-    if (this.allCurrentKnown()){
-        return;
-    }
-
     var sum_string = "";
     var equations = [];
-
-    console.log(`KCL at node ${this.id.toString()}`);
 
     for (var i = 0; i < this.passiveComponents.length; i++){
         pComp = this.passiveComponents[i];
@@ -168,19 +162,25 @@ Node.prototype.computeShortCircuitCurrent = function(){
         }
     });
 
-
     this.currentSources.forEach ((c) => {
+        // @TODO: may have to add more logic to determine the sign
         if (iShortCircuit.length > 0){ 
             iShortCircuit += " + ";
         }
-        
-        // Check for current direction
-        // -- if statement goes here --
 
         iShortCircuit += c.value.toString();
     });
 
     return iShortCircuit;
+};
+
+/* Calculate Driving Point Impedance and short circuit current at the node 
+   n is the ID of the node at which DPI analysis will be done */
+Node.prototype.dpiAnalysis = function(){
+    var dpi = this.computeDpi();
+    var isc = this.computeShortCircuitCurrent();
+
+    return [dpi, isc];
 };
 
 function Circuit(n, vsrc) {
@@ -208,31 +208,39 @@ Circuit.prototype.findNodeById = function(nid){
     return this.nodes.find(n => n.id === nid);
 };
 
-/* Calculate Driving Point Impedance and short circuit current at the node 
-   n is the ID of the node at which DPI analysis will be done */
-Circuit.prototype.dpiAnalysis = function(n){
-    var node = this.findNodeById(n);
-    var dpi = node.computeDpi();
-    var isc = node.computeShortCircuitCurrent();
-
-    return [dpi, isc];
-};
-
 Circuit.prototype.nodalAnalysis = function(){
     const numEqToSolve = this.nodes.length - this.numVsrc - 1;
     assert(this.unknownVnodes.length == numEqToSolve);
 
-    var equations_at_nodes = [];
+    var resultSummary = new AnalysisSummary();
+    var equations_at_nodes = [];    // Store a list of equations at node x
+
     this.unknownVnodes.forEach((n_id) => {
-        var equations = this.findNodeById(n_id).kcl();
+        unknownVnode = this.findNodeById(n_id);
+        
+        if (unknownVnode.allCurrentKnown()){
+            return;
+        }
+    
+        // --- Start nodal analysis ---
+        var equations = unknownVnode.kcl();
 
         if (equations != undefined){
-            //console.log(equations);
             equations_at_nodes.push(equations);
         }
+        // --- End nodal analysis ---
+
+        // --- Start DPI analysis ---
+        var dpiAndShortCurrent = unknownVnode.dpiAnalysis();
+        // --- End DPI analysis ---
+
+        resultSummary.addSummary(n_id,
+                                 dpiAndShortCurrent[0],
+                                 dpiAndShortCurrent[1],
+                                 equations_at_nodes);
     });
 
-    return equations_at_nodes;
+    return resultSummary;
 };
 
 function Resistor(r, p, n){
@@ -380,6 +388,26 @@ function createCircuit(components){
     return circuit;
 }
 
+/* A stucture to store useful results from circuit analysis 
+   This stucture can be used to compare analysis outputs for unit testing
+   or passed into SFG functions 
+   Use index to access the correct member variable in the arrays
+   For example, if 4th element of nodeId array is 2, dpi[4] and currentEquations[4] will
+   give you dpi and equations for node #2 */
+function AnalysisSummary() {
+    this.nodeId = [], // IDs of nodes
+    this.dpi = [], // Driving point impedances (returned by dpiAnalysis())
+    this.shorCircuitCurrent = [] // also returned by dpiAnalysis()
+    this.currentEquations = [] // lists of equations returned by kcl()
+};
+
+AnalysisSummary.prototype.addSummary= function(id, dpi, isc, eqs){
+    this.nodeId.push(id);
+    this.dpi.push(dpi);
+    this.shorCircuitCurrent.push(isc);
+    this.currentEquations.push(eqs);
+};
+
  (function main(){
     const voltage_div = 'test/netlist_ann1.txt'
     const var_simple = 'test/netlist_ann2.txt'
@@ -395,19 +423,5 @@ function createCircuit(components){
     c = nl.nlConsume(curr_src);
     circuit = createCircuit(c);
 
-    console.log(circuit.nodalAnalysis());
-    console.log(circuit.dpiAnalysis(2));
-
-
+    console.log(JSON.stringify(circuit.nodalAnalysis()));
  })();
-
- exports.createCircuit = createCircuit;
-
- exports.setCircuit = (c) => {
-     circuit = c;
- };
-
- exports.consumeFrontend = arr => {
-     return createCircuit(nl.nlConsumeArr(arr))
-       .dpiAnalysis(2);
- };
