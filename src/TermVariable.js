@@ -103,7 +103,7 @@ Term.prototype.toString = function () {
   var str = "";
 
   // Coefficient is not 1
-  if (math.abs(Number(this.coefficient)) !== 1) {
+  if (math.abs(Number(this.coefficient)) !== 1 && math.abs(Number(this.coefficient)) !== 0) {
     str += math.abs(this.coefficient).toString();
   } 
 
