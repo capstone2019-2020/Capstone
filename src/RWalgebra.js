@@ -400,23 +400,27 @@ Expression.prototype.toString = function () {
   }
 
   // Include the constant at the end 
-  if (this.imag.constant != null) {
+  if (this.imag.constant !== null) {
     // No variables exist
-    if (str === "") {
-      return this.imag.constant + "j";
-    } else {
-      return str + (this.imag.constant.valueOf() < 0 ? " - " : " + ") + this.imag.constant + "j";
+    if (str === "" && this.imag.constant !== 0) {
+      str += this.imag.constant + "j";
+      console.log(str);
+    } else if (this.imag.constant !== 0) {
+      str = str + (this.imag.constant.valueOf() < 0 ? " - " : " + ") + this.imag.constant + "j";
+      console.log(str);
     } 
-  } else if (this.real.constant != null) {
+  } 
+  
+  if (this.real.constant !== null) {
     // No variables exist
-    if (str === "") {
-      return this.real.constant;
-    } else {
-      return str + (this.real.constant.valueOf() < 0 ? " - " : " + ") + this.real.constant;
+    if (str === "" && this.real.constant !== 0) {
+      str += this.real.constant;
+    } else if (this.real.constant !== 0) {
+      str = str + (this.real.constant.valueOf() < 0 ? " - " : " + ") + this.real.constant;
     }
-  } else {
-    return str;
-  }
+  } 
+
+  return str;
 };
 
 const Equation = function(arg0, arg1) {
