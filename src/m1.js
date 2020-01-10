@@ -1,7 +1,8 @@
 /**
  * Import the required libraries
  */
-const algebra = require('algebra.js');
+// const algebra = require('algebra.js');
+const algebra = require('./RWalgebra.js');
 const math = require('mathjs');
 const readline = require('readline');
 const m1helper = require('./m1helper.js');
@@ -105,42 +106,57 @@ function getUserInput() {
 // Create a dynamic array and input each node
 function computeSFG (params) {
   let nodes = [];
-  let termsoflhs = [];
-  let termsofrhs = [];
+  let termsoflhs = [], termsofrhs = [];
   let vNodeNotFound = 0;
   let needToSearchRelation = false;
 
   // for (let i in nodes) {
   for (let i = 0; i < params.length; i++) {
     //Access the eqns and split by lhs and rhs
-    termsoflhs.push(params[i].lhs.terms);
-    termsofrhs.push(params[i].rhs.terms);
+    if (params[i].lhs.real.terms.length != 0) {
+      termsoflhs.push(params[i].lhs.real.terms);
+    }
+    if (params[i].lhs.imag.terms.length != 0) {
+      termsoflhs.push(params[i].lhs.imag.terms);
+    }
+    if (params[i].rhs.imag.terms.length != 0) {
+      termsofrhs.push(params[i].rhs.imag.terms);
+    }
+    if (params[i].rhs.real.terms.length != 0) {
+      termsofrhs.push(params[i].rhs.real.terms);
+    }
   }   
-  
+
+  // console.log(termsoflhs.length);
+  // console.log(termsofrhs.length);
   // To store into the nodes, go thorugh the termsoflhs list array
   for (let i = 0; i < termsoflhs.length; i++) {
-    newNode = new datamodel.Node (termsoflhs[i].toString());
+    newNode = new datamodel.Node(termsoflhs[i].toString());
+    // console.log(`LHS term # ${i}: ${termsoflhs[i].toString()}`);
+    // console.log("--------------------------------------------------");
 
     // Find the Node corresponding to the termsoflhs to determine the outoging edges
     // Divide the rhs into coefficients and variables and store into the edges
     for (let j = 0; j < termsofrhs.length; j++) {
       var tempTermOfrhs = termsofrhs[j];
+      // console.log(`RHS term # ${j}: ${tempTermOfrhs.toString()}`);
 
       // The variable is found in the rhs of the equation then it must be an outgoing node
       // More than one term in the rhs of the equation
       for (k = 0; k < tempTermOfrhs.length; k++) {
         if (tempTermOfrhs[k].toString().search(termsoflhs[i].toString()) != -1) {
-          var weight = tempTermOfrhs[k].coefficient();
+          var weight = tempTermOfrhs[k].coefficient;
           var startNode = tempTermOfrhs[k].variables;
+          // console.log(`Coefficient of the Term is ${weight.toString()}, startNode is ${startNode.toString()}`);
 
           // Means there is an alphabet as part of the coefficient
           if (startNode.length != 1) {
             check = startNode[startNode.length-1].toString();
             var toBeWeight = startNode.toString().split(termsoflhs[i].toString());
 
-            if (weight == 1) {
+            if (weight > 0) {
               weight = toBeWeight[0];
-            } else if (weight == -1) {
+            } else if (weight < 0) {
               weight = "-"+toBeWeight[0];
             } else {
               weight = weight.toString()+toBeWeight[0];
@@ -154,10 +170,22 @@ function computeSFG (params) {
             check = startNode.toString();
           }
 
-          // Verifying it is the exact value of the node not just an instance of it
-          if (check === termsoflhs[i].toString()) {
-            newNode.outgoingEdges.push(new datamodel.Edge (weight.toString(), termsoflhs[i].toString(), termsoflhs[j].toString()));
+          // Coefficient includes a fraction  
+          if (math.abs(Number(tempTermOfrhs[k].fraction.numer)) !== 1 || math.abs(Number(tempTermOfrhs[k].fraction.numer)) !== 1) {
+            if (math.abs(Number(tempTermOfrhs[k].fraction.numer)) == 1 && math.abs(Number(tempTermOfrhs[k].coefficient)) !== 1) {
+              weight = weight + "/" + tempTermOfrhs[k].fraction.denom.toString();
+            } else {
+              weight += "(" + tempTermOfrhs[k].fraction.numer.toString() + ") / (" + tempTermOfrhs[k].fraction.denom.toString() + ")";
+            }
           }
+
+          // Imaginary number case
+          if (tempTermOfrhs[k].imag === true) {
+            weight = weight + "j";
+          }
+
+          // console.log(`Weight is: ${weight}`);
+          newNode.outgoingEdges.push(new datamodel.Edge(weight.toString(), termsoflhs[i].toString(), termsoflhs[j].toString()));
         }
       }      
     }
@@ -180,7 +208,6 @@ function computeSFG (params) {
 
       // Create only the missing node
       if (vNodeNotFound === nodes.length) {
-        var weight = tempTerm[j].coefficient();
         var tempVariable = tempTerm[j].variables;
         needToSearchRelation = true;
 
@@ -190,7 +217,6 @@ function computeSFG (params) {
         } else if (tempVariable.length === 1) {
           startNode = tempVariable;
         }
-
         newNode = new datamodel.Node(startNode.toString()); 
         nodes.push(newNode);
       }
@@ -205,16 +231,16 @@ function computeSFG (params) {
 
         for (let j = 0; j < tempTerm.length; j++) {
           if (tempTerm[j].toString().search(nodes[searchNeeded].id) != -1) {
-            var weight = tempTerm[j].coefficient();
+            var weight = tempTerm[j].coefficient;
             var tempVariable = tempTerm[j].variables;
 
             if (tempVariable.length != 1) {
               var temp = tempVariable[tempVariable.length-1].toString();
               var toBeWeight = tempVariable.toString().split(temp);
 
-              if (weight == 1) {
+              if (weight > 0) {
                 weight = toBeWeight[0];
-              } else if (weight == -1) {
+              } else if (weight < 0) {
                 weight = "-"+toBeWeight[0];
               } else {
                 weight = weight.toString()+toBeWeight[0];
@@ -228,9 +254,20 @@ function computeSFG (params) {
               temp = tempVariable.toString();
             }
 
-            if (temp === nodes[searchNeeded].id) {
-              nodes[searchNeeded].outgoingEdges.push(new datamodel.Edge (weight.toString(), nodes[searchNeeded].id, termsoflhs[i].toString()));
+            // Coefficient includes a fraction  
+            if (math.abs(Number(tempTerm[j].fraction.numer)) !== 1 || math.abs(Number(tempTerm[j].fraction.numer)) !== 1) {
+              if (math.abs(Number(tempTerm[j].fraction.numer)) == 1 && math.abs(Number(tempTerm[j].coefficient)) !== 1) {
+                weight = weight + "/" + tempTerm[j].fraction.denom.toString();
+              } else {
+                weight += "(" + tempTerm[j].fraction.numer.toString() + ") / (" + tempTerm[j].fraction.denom.toString() + ")";
+              }
             }
+
+            if (tempTerm[j].imag === true) {
+              weight = weight + "j";
+            }
+
+            nodes[searchNeeded].outgoingEdges.push(new datamodel.Edge (weight, nodes[searchNeeded].id, termsoflhs[i].toString()));
           }
         }
       }
