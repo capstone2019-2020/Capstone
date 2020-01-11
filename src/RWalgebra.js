@@ -261,6 +261,7 @@ Expression.prototype.subtract = function(op) {
     this.real.terms = subtractTerms(this.real.terms, exp.real.terms);
     this.real.constant -= exp.real.constant;
   }
+  return this;
 };
 
 /**
@@ -314,6 +315,7 @@ Expression.prototype.divide = function(op) {
   }
   const result = divideTerms(terms_1, terms_2);
   this.termsToExpression(result);
+  return this;
 };
 
 Expression.prototype.multiply = function(op) {
@@ -335,6 +337,7 @@ Expression.prototype.multiply = function(op) {
   }
   const result = multiplyTerms(terms_1, terms_2);
   this.termsToExpression(result);
+  return this;
 };
 
 /**

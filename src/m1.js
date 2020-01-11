@@ -25,10 +25,7 @@ function computeMasons(nodes, start, end) {
   const denom = m1helper.calculateDenominator(allLoops, nonTouchingLoops);
   const numer = m1helper.calculateNumerator(start, end, nodes);
 
-  return {
-    n: numer,
-    d: denom
-  };
+  return {n: numer, d: denom};
 }
 
 /**
@@ -289,6 +286,8 @@ function outputSFG (sfgnodes) {
         sfgnodes[i].outgoingEdges.forEach((eq) => console.log(`Edge id ${eq.id}: connected node = ${eq.endNode}, weight = ${eq.weight}`));
     }
 };
+
+// getUserInput();
 
 /**
  * Export functions as part of m1 module
