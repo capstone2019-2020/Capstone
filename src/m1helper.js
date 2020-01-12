@@ -1,4 +1,4 @@
-const algebra = require('algebra.js');
+const algebra = require('./RWalgebra.js');
 const Expression = algebra.Expression;
 
 const DEBUG = 0;
@@ -294,11 +294,12 @@ function calculateDenominator(allLoops, nonTouching) {
 function calculateLoopGain(edges) {
   let ex = new Expression(1);
   edges.forEach((e) => {
-    ex = ex.multiply(algebra.parse(e.weight));
+    ex = ex.multiply(e.weight);
   });
 
   if (DEBUG) {
     console.log(`Loop Gain: ${ex.toString()}`);
+    console.log(JSON.stringify(ex));
   }
   return ex;
 }

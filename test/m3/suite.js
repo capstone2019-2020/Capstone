@@ -1,4 +1,4 @@
-const algebra = require('algebra.js');
+const algebra = require('../../src/RWalgebra.js');
 const {validate} = require('jsonschema');
 
 const DEBUG = process.env.M3_LOG_LEVEL;
@@ -119,9 +119,9 @@ exports.verifyNetList = function (output, expected) {
 const generate_variable_map = (eqn) => {
   const rhs = eqn.rhs;
   let result = {};
-  rhs.terms.forEach((term) => {
+  rhs.real.terms.forEach((term) => {
     term.variables.forEach((v) => {
-      result[v] = Math.round(Math.random() * RANDOM_SEED);
+      result[v.name] = Math.round(Math.random() * RANDOM_SEED);
     })
   });
   // debug_log(`Variable map for eqn ${eqn.toString()}: `, JSON.stringify(result));
@@ -192,8 +192,8 @@ exports.verifyCircuit = function(output, expected) {
 
       /* Assume that the last equation will always be of the form Ix - Iy + Iz... = 0 */
       if (j !== enode.length-1) {
-        result1[node_eqn1.lhs.terms[0].variables[0]] = val1;
-        result2[node_eqn2.lhs.terms[0].variables[0]] = val2;
+        result1[node_eqn1.lhs.real.terms[0].variables[0].name] = val1;
+        result2[node_eqn2.lhs.real.terms[0].variables[0].name] = val2;
       } else {
         val1 = parseFloat(node_eqn1.lhs.eval(result1));
         val2 = parseFloat(node_eqn2.lhs.eval(result2));

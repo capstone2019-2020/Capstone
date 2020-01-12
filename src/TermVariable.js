@@ -69,7 +69,7 @@ Term.prototype.eval = function(sub) {
   copy.variables.forEach((v, i) => {
     if (vars.includes(v.name)) {
       if (typeof sub[v.name] !== 'number')
-        throw new ArgumentsError('ERROR: eval() only accepts floating point numbers!')
+        throw new ArgumentsError('ERROR: eval() only accepts floating point numbers!');
       copy.coefficient *= sub[v.name];
     }
   });
@@ -103,7 +103,7 @@ Term.prototype.toString = function () {
   var str = "";
 
   // Coefficient is not 1
-  if (math.abs(Number(this.coefficient)) !== 1) {
+  if (math.abs(Number(this.coefficient)) !== 1 && math.abs(Number(this.coefficient)) !== 0) {
     str += math.abs(this.coefficient).toString();
   } 
 

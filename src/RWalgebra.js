@@ -1,5 +1,4 @@
 const { Variable, Term } = require('./TermVariable.js');
-const { Fraction } = require('./Fraction.js');
 const { TOKEN_TYPES, tokenize } = require ('./token.js');
 const { shuntingYard } = require('./parseHelper.js');
 
@@ -262,6 +261,7 @@ Expression.prototype.subtract = function(op) {
     this.real.terms = subtractTerms(this.real.terms, exp.real.terms);
     this.real.constant -= exp.real.constant;
   }
+  return this;
 };
 
 /**
@@ -315,6 +315,7 @@ Expression.prototype.divide = function(op) {
   }
   const result = divideTerms(terms_1, terms_2);
   this.termsToExpression(result);
+  return this;
 };
 
 Expression.prototype.multiply = function(op) {
@@ -336,6 +337,7 @@ Expression.prototype.multiply = function(op) {
   }
   const result = multiplyTerms(terms_1, terms_2);
   this.termsToExpression(result);
+  return this;
 };
 
 /**
@@ -370,7 +372,7 @@ Expression.prototype.eval = function(sub) {
   result.real.constant += this.real.constant;
   result.imag.constant += this.imag.constant;
 
-  if (!result.real.length && !result.imag.length && (result.imag.constant === 0 || result.imag.constant === null))
+  if (!result.real.terms.length && !result.imag.terms.length && (result.imag.constant === 0 || result.imag.constant === null))
     return result.real.constant;
   else
     return result;
@@ -401,23 +403,27 @@ Expression.prototype.toString = function () {
   }
 
   // Include the constant at the end 
-  if (this.imag.constant != null) {
+  if (this.imag.constant !== null) {
     // No variables exist
-    if (str === "") {
-      return this.imag.constant + "j";
-    } else {
-      return str + (this.imag.constant.valueOf() < 0 ? " - " : " + ") + this.imag.constant + "j";
+    if (str === "" && this.imag.constant !== 0) {
+      str += this.imag.constant + "j";
+      console.log(str);
+    } else if (this.imag.constant !== 0) {
+      str = str + (this.imag.constant.valueOf() < 0 ? " - " : " + ") + this.imag.constant + "j";
+      console.log(str);
     } 
-  } else if (this.real.constant != null) {
+  } 
+  
+  if (this.real.constant !== null) {
     // No variables exist
-    if (str === "") {
-      return this.real.constant;
-    } else {
-      return str + (this.real.constant.valueOf() < 0 ? " - " : " + ") + this.real.constant;
+    if (str === "" && this.real.constant !== 0) {
+      str += this.real.constant;
+    } else if (this.real.constant !== 0) {
+      str = str + (this.real.constant.valueOf() < 0 ? " - " : " + ") + this.real.constant;
     }
-  } else {
-    return str;
-  }
+  } 
+
+  return str;
 };
 
 const Equation = function(arg0, arg1) {
