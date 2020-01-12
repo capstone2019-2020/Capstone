@@ -4,7 +4,7 @@ const { tokenize } = require('../token.js');
 
 function main() {
   const exp = 'x2 - 3*y - (4*z / 12 - 17) + y - 4.5j + (4*x_3 - 2)/(5-12*some_var) + sin(x_3)';
-  const simple = 'x3';
+  const simple = 'x3j + 2*x3j - 5*x3/(x+1)';
   const no_vars = '5 + 7 * 9 - 10/10 +37 * 0.5';
   const add_test = 'x1 + 5 + 7 + x_7';
   const sub_test = 'x1 + 5 - 7 + x_7 - test + 8.7 - x8';
@@ -46,8 +46,8 @@ function main() {
   console.log('=======================================');
   console.log(`Data Structure: `);
   console.log(JSON.stringify(ex));
-  // console.log(ex.real.terms.toString());
-  // console.log(ex.imag.terms.toString());
+  // // console.log(ex.real.terms.toString());
+  // // console.log(ex.imag.terms.toString());
   console.log('=======================================');
   console.log(`Testing toString():`);
   console.log(ex.toString());
@@ -73,8 +73,8 @@ function main() {
   console.log(ex.toString());
 
   console.log('=======================================');
-  console.log(`Testing .eval({n2: 0}):`);
-  let result = ex.eval({'n2' : 0});
+  console.log(`Testing .eval({x3: 1}):`);
+  let result = ex.eval({'x3' : 1});
   console.log(JSON.stringify(ex));
   console.log(result.toString());
 };
