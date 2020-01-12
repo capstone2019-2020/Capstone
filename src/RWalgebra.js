@@ -441,6 +441,10 @@ const Equation = function(arg0, arg1) {
   }
 };
 
+Equation.prototype.toString = function() {
+  return this.lhs.toString() + " = " + this.rhs.toString();
+};
+
 const parse = (str) => {
   if (str.indexOf('=') !== -1)
     return new Equation(str);
