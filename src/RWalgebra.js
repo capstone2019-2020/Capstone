@@ -109,6 +109,37 @@ const filterOutConstantTerms = (terms, _imag) => {
 };
 
 /**
+ * Given a list of terms - combine likes terms
+ * i.e. x + 2x -> 3x
+ *
+ * Note: if there are expressions in the denominator - will not combine
+ * i.e. x / (x + 2) + x / ( x + 3) -> no simplification
+ *
+ * @param terms
+ */
+const simplify = (terms) => {
+  let vars = { }; // key = var name, val = Term object
+  let f = [];
+  let v_names;
+  terms.forEach( t => {
+    v_names = t.variables.map(v => v.name).join('') + t.imag;
+    if (!vars[v_names])
+      vars[v_names] = t;
+    else  { // need to combine variables
+      let _t = vars[v_names];
+      if (typeof t.fraction.denom === 'number') {
+        _t.coefficient += t.coefficient;
+      } else {
+        f.push(t);
+      }
+    }
+  });
+
+  return Object.keys(vars).map( v => vars[v]).concat(f);
+};
+
+
+/**
  * Returns a list of Term objects representing the computation of
  * op1 operator op2
  *
@@ -135,7 +166,7 @@ const compute = (op1, op2, operator) => {
     default: // do nothing
       break;
   }
-  return result;
+  return simplify(result);
 };
 
 
@@ -426,6 +457,16 @@ Expression.prototype.toString = function () {
   return str;
 };
 
+/**
+ * Equation Constructor
+ * Possible Arguments:
+ * 1) Single string input - new Equation('x = y + z')
+ * 2) 2 Expression objects -> lhs = arg0, rhs - arg1
+ *
+ * @param arg0
+ * @param arg1
+ * @constructor
+ */
 const Equation = function(arg0, arg1) {
   if (arg1 === undefined) {
     if (arg0.indexOf(EQUAL) === -1)
