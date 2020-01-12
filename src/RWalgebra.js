@@ -495,7 +495,15 @@ const Equation = function(arg0, arg1) {
 };
 
 Equation.prototype.toString = function() {
-  return this.lhs.toString() + " = " + this.rhs.toString();
+  if (this.lhs.toString() === "" && this.rhs.toString() === "") {
+    return "0 = 0";
+  } else if (this.lhs.toString() === "") {
+    return "0 = " + this.rhs.toString();
+  } else if (this.rhs.toString() === "") {
+    return this.lhs.toString() + " = 0";
+  } else {
+    return this.lhs.toString() + " = " + this.rhs.toString();
+  }
 };
 
 const parse = (str) => {
