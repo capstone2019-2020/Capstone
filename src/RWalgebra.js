@@ -197,7 +197,14 @@ const multiplyTerms = (op1, op2) => {
         temp_term.coefficient *= -1;
       else if (t1.imag || t2.imag) // j * const  or const * j = imaginary term
         temp_term.imag = true;
-      // TODO handle denominator multiplication
+
+      // Need to handle denominator multiplication
+      if (typeof t1.fraction.denom !== 'number' && typeof t2.fraction.denom != 'number')
+        temp_term.fraction.denom = t1.fraction.denom.multiply(t2.fraction.denom);
+      else if (typeof t1.fraction.denom !== 'number')
+        temp_term.fraction.denom = t1.fraction.denom;
+      else if (typeof t2.fraction.denom !== 'number')
+        temp_term.fraction.denom = t2.fraction.denom;
       result.push(temp_term);
     });
   });
@@ -260,18 +267,22 @@ Expression.prototype.add = function(op) {
     this.real.terms.push(new Term(op));
   }
   else if (op instanceof Term) {
-    if (op.imag)
+    if (op.imag) {
       this.imag.terms.push(op);
-    else
+      this.imag.terms = simplify(this.imag.terms);
+    }
+    else {
       this.real.terms.push(op);
+      this.real.terms = simplify(this.real.terms);
+    }
   }
   else  {
     if (typeof op !== 'string' && !(op instanceof Expression))
       throw new ArgumentsError('Invalid arguments');
     let exp = typeof op === 'string' ? new Expression(op) : op;
-    this.imag.terms = addTerms(this.imag.terms, exp.imag.terms);
+    this.imag.terms = simplify(addTerms(this.imag.terms, exp.imag.terms));
     this.imag.constant += exp.imag.constant;
-    this.real.terms = addTerms(this.real.terms, exp.real.terms);
+    this.real.terms = simplify(addTerms(this.real.terms, exp.real.terms));
     this.real.constant += exp.real.constant;
   }
   return this;
@@ -284,12 +295,13 @@ Expression.prototype.subtract = function(op) {
     let term = new Term(op);
     term.coefficient *= -1;
     this.real.terms.push(term);
+    this.real.terms = simplify(this.real.terms);
   }
   else  {
     let exp = typeof op === 'string' ? new Expression(op) : op;
-    this.imag.terms = subtractTerms(this.imag.terms, exp.imag.terms);
+    this.imag.terms = simplify(subtractTerms(this.imag.terms, exp.imag.terms));
     this.imag.constant -= exp.imag.constant;
-    this.real.terms = subtractTerms(this.real.terms, exp.real.terms);
+    this.real.terms = simplify(subtractTerms(this.real.terms, exp.real.terms));
     this.real.constant -= exp.real.constant;
   }
   return this;

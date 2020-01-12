@@ -54,22 +54,26 @@ function main() {
   console.log('=======================================');
 
   console.log(`Testing .add(5):`);
-  ex.add(5);
+  ex.add('x3j');
+  console.log(JSON.stringify(ex));
   console.log(ex.toString());
   console.log('=======================================');
 
   console.log(`Testing .subtract(1)`);
-  ex.subtract(1);
+  ex.subtract('5*x3j');
+  console.log(JSON.stringify(ex));
   console.log(ex.toString());
   console.log('=======================================');
 
   console.log(`Testing .multiply(12000)`);
   ex.multiply(12000);
+  console.log(JSON.stringify(ex));
   console.log(ex.toString());
   console.log('=======================================');
 
   console.log(`Testing .divide(12000)`);
   ex.divide(12000);
+  console.log(JSON.stringify(ex));
   console.log(ex.toString());
 
   console.log('=======================================');
