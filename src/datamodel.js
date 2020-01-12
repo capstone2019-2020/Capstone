@@ -1,8 +1,9 @@
 // --------------------------------------------------------------------------------------------
 // The equation variables must be in the form of lowercase x 
 // Objects Node and Edge
-function Node (id) {
+function Node (id, value) {
     this.id = id,
+    this.value = value,
     this.outgoingEdges = []
 };
 

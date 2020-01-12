@@ -107,7 +107,6 @@ function computeSFG (params) {
   let vNodeNotFound = 0;
   let needToSearchRelation = false;
 
-  // for (let i in nodes) {
   for (let i = 0; i < params.length; i++) {
     //Access the eqns and split by lhs and rhs
     if (params[i].lhs.real.terms.length != 0) {
@@ -124,11 +123,9 @@ function computeSFG (params) {
     }
   }   
 
-  // console.log(termsoflhs.length);
-  // console.log(termsofrhs.length);
   // To store into the nodes, go thorugh the termsoflhs list array
   for (let i = 0; i < termsoflhs.length; i++) {
-    newNode = new datamodel.Node(termsoflhs[i].toString());
+    newNode = new datamodel.Node(termsoflhs[i].toString(), null);
     // console.log(`LHS term # ${i}: ${termsoflhs[i].toString()}`);
     // console.log("--------------------------------------------------");
 
@@ -168,11 +165,11 @@ function computeSFG (params) {
           }
 
           // Coefficient includes a fraction  
-          if (math.abs(Number(tempTermOfrhs[k].fraction.numer)) !== 1 || math.abs(Number(tempTermOfrhs[k].fraction.numer)) !== 1) {
+          if (math.abs(Number(tempTermOfrhs[k].fraction.numer)) !== 1 || math.abs(Number(tempTermOfrhs[k].fraction.denom)) !== 1) {
             if (math.abs(Number(tempTermOfrhs[k].fraction.numer)) == 1 && math.abs(Number(tempTermOfrhs[k].coefficient)) !== 1) {
               weight = weight + "/" + tempTermOfrhs[k].fraction.denom.toString();
             } else {
-              weight += "(" + tempTermOfrhs[k].fraction.numer.toString() + ") / (" + tempTermOfrhs[k].fraction.denom.toString() + ")";
+              weight = "(" + tempTermOfrhs[k].fraction.numer.toString() + " / " + tempTermOfrhs[k].fraction.denom.toString() + ")";
             }
           }
 
@@ -206,15 +203,19 @@ function computeSFG (params) {
       // Create only the missing node
       if (vNodeNotFound === nodes.length) {
         var tempVariable = tempTerm[j].variables;
+        var value = null;
         needToSearchRelation = true;
 
         // Means there is an alphabet as part of the coefficient
         if (tempVariable.length != 1) {
           startNode = tempVariable[tempVariable.length-1];
-        } else if (tempVariable.length === 1) {
+        } 
+        else if (tempVariable.length === 1) {
           startNode = tempVariable;
+          value = 1;
         }
-        newNode = new datamodel.Node(startNode.toString()); 
+
+        newNode = new datamodel.Node(startNode.toString(), value); 
         nodes.push(newNode);
       }
     }
@@ -252,11 +253,11 @@ function computeSFG (params) {
             }
 
             // Coefficient includes a fraction  
-            if (math.abs(Number(tempTerm[j].fraction.numer)) !== 1 || math.abs(Number(tempTerm[j].fraction.numer)) !== 1) {
+            if (math.abs(Number(tempTerm[j].fraction.numer)) !== 1 || math.abs(Number(tempTerm[j].fraction.denom)) !== 1) {
               if (math.abs(Number(tempTerm[j].fraction.numer)) == 1 && math.abs(Number(tempTerm[j].coefficient)) !== 1) {
                 weight = weight + "/" + tempTerm[j].fraction.denom.toString();
               } else {
-                weight += "(" + tempTerm[j].fraction.numer.toString() + ") / (" + tempTerm[j].fraction.denom.toString() + ")";
+                weight += "(" + tempTerm[j].fraction.numer.toString() + " / " + tempTerm[j].fraction.denom.toString() + ")";
               }
             }
 
@@ -271,6 +272,24 @@ function computeSFG (params) {
     }
   }
 
+  // Deal with the constants in the rhs of the equation
+  for (let i = 0; i < params.length; i++) {
+    // Constant exist in the equation - y1&i as the id for imaginary constants
+    if (params[i].rhs.imag.constant !== null) {
+      var id = "y1"+i;
+      newNode = new datamodel.Node(id, params[i].rhs.imag.constant+"j"); 
+      newNode.outgoingEdges.push(new datamodel.Edge(1, id, termsoflhs[i].toString()));
+      nodes.push(newNode);
+    }
+
+    if (params[i].rhs.real.constant !== null) {
+      var id = "y2"+i;
+      newNode = new datamodel.Node(id, params[i].rhs.real.constant); 
+      newNode.outgoingEdges.push(new datamodel.Edge(1, id, termsoflhs[i].toString()));
+      nodes.push(newNode);
+    }
+  }
+
   return nodes;
 };
 
@@ -281,6 +300,7 @@ function outputSFG (sfgnodes) {
     for (let i = 0; i < sfgnodes.length; i++) {
         console.log('------------------------------------');
         console.log(`Node: ${sfgnodes[i].id} `);
+        console.log(`The value stored in the node is ${sfgnodes[i].value}`)
         console.log('------------------------------------');
         console.log(`Connections: `);
         sfgnodes[i].outgoingEdges.forEach((eq) => console.log(`Edge id ${eq.id}: connected node = ${eq.endNode}, weight = ${eq.weight}`));

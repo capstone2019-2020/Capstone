@@ -388,7 +388,7 @@ Expression.prototype.toString = function () {
     if (str === "" && Number(term.coefficient).valueOf() > 0) {
       str += term.toString() + "j";
     } else {
-      str += (Number(term.coefficient).valueOf() < 0 ? " - " : " + ") + term.toString() + "j";
+      str += (Number(term.coefficient).valueOf() < 0 ? " + (- " + term.toString() + "j)": " + " + term.toString() + "j");
     }
   }
 
@@ -398,7 +398,7 @@ Expression.prototype.toString = function () {
     if (str === "" && Number(term.coefficient).valueOf() > 0) {
       str += term.toString();
     } else {
-      str += (Number(term.coefficient).valueOf() < 0 ? " - " : " + ") + term.toString();
+      str += (Number(term.coefficient).valueOf() < 0 ? " + (- " + term.toString() + ")" : " + " + term.toString());
     }
   }
 
@@ -409,7 +409,7 @@ Expression.prototype.toString = function () {
       str += this.imag.constant + "j";
       console.log(str);
     } else if (this.imag.constant !== 0) {
-      str = str + (this.imag.constant.valueOf() < 0 ? " - " : " + ") + this.imag.constant + "j";
+      str = str + (this.imag.constant.valueOf() < 0 ? " (- " + this.imag.constant + "j)" : " + " + this.imag.constant + "j");
       console.log(str);
     } 
   } 
@@ -419,7 +419,7 @@ Expression.prototype.toString = function () {
     if (str === "" && this.real.constant !== 0) {
       str += this.real.constant;
     } else if (this.real.constant !== 0) {
-      str = str + (this.real.constant.valueOf() < 0 ? " - " : " + ") + this.real.constant;
+      str = str + (this.real.constant.valueOf() < 0 ? " (- " +this.real.constant + ")" : " + " + this.real.constant);
     }
   } 
 
@@ -439,6 +439,10 @@ const Equation = function(arg0, arg1) {
     this.lhs = arg0;
     this.rhs = arg1;
   }
+};
+
+Equation.prototype.toString = function() {
+  return this.lhs.toString() + " = " + this.rhs.toString();
 };
 
 const parse = (str) => {
