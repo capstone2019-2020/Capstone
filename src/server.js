@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');	// pull info from HTML POST (express4)
 const m1 = require("./m1.js");
-const circuitjs = require('./circuit.js');
+const circuit = require("./circuit.js");
 const algebra = require('algebra.js');
 const app = express();
 const path = require('path');
@@ -50,12 +50,6 @@ app.post("/input-form", (req, res) => {
     return res.status(200).send(eqns);
 });
 
-app.post("/netlist", (req, res) => {
-    let netlist = req.body.netlist;
-    let eqns = circuitjs.consumeFrontend(netlist);
-    return res.status(200).send(eqns);
-});
-
 // Send back the nodes array as successful
 app.get("/computeSFG", (req, res) => {
     nodes = m1.computeSFG(equations);
@@ -100,6 +94,9 @@ app.get("/computeMasons", (req, res) => {
     res.status(200).send({n: newNumer.toString(), d: newDenom.toString()});
 });
 
+app.get("/nodalAnalysis", (req, res) => {
+
+});
 
 // add router
 app.use('/', router);

@@ -248,3 +248,7 @@ function addEquation() {
   children.forEach(c => newEqnInput.appendChild(c));
   equations.appendChild(newEqnInput);
 }
+
+function UploadNetlist() {
+
+};
