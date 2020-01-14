@@ -431,7 +431,7 @@ Expression.prototype.toString = function () {
     if (str === "" && Number(term.coefficient).valueOf() > 0) {
       str += term.toString() + "j";
     } else {
-      str += (Number(term.coefficient).valueOf() < 0 ? " + (- " + term.toString() + "j)": " + " + term.toString() + "j");
+      str += (Number(term.coefficient).valueOf() < 0 ? " (- " + term.toString() + "j)": " + " + term.toString() + "j");
     }
   }
 
@@ -441,7 +441,7 @@ Expression.prototype.toString = function () {
     if (str === "" && Number(term.coefficient).valueOf() > 0) {
       str += term.toString();
     } else {
-      str += (Number(term.coefficient).valueOf() < 0 ? " + (- " + term.toString() + ")" : " + " + term.toString());
+      str += (Number(term.coefficient).valueOf() < 0 ? " (- " + term.toString() + ")" : " + " + term.toString());
     }
   }
 
