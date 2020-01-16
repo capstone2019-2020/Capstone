@@ -438,10 +438,10 @@ Expression.prototype.toString = function () {
     
     // For the first term to be printed out and is positive, no sign needed
     if (str === "") {
-      str += term.toString() + "j";
+      str += term.toString() + "*j";
     } else {
-//       str += (Number(term.coefficient).valueOf() < 0 ? " (- " + term.toString() + "j)": " + " + term.toString() + "j");
-      str += " + " + term.toString() + "j";
+      // str += (Number(term.coefficient).valueOf() < 0 ? " (- " + term.toString() + "j)": " + " + term.toString() + "j");
+      str += " + " + term.toString() + "*j"
     }
   }
 
@@ -451,7 +451,7 @@ Expression.prototype.toString = function () {
     if (str === "") {
       str += term.toString();
     } else {
-//       str += (Number(term.coefficient).valueOf() < 0 ? " (- " + term.toString() + ")" : " + " + term.toString());
+      // str += (Number(term.coefficient).valueOf() < 0 ? " (- " + term.toString() + ")" : " + " + term.toString());
       str += " + " + term.toString();
     }
   }
@@ -461,10 +461,8 @@ Expression.prototype.toString = function () {
     // No variables exist
     if (str === "" && this.imag.constant !== 0) {
       str += this.imag.constant + "j";
-//       console.log(str);
     } else if (this.imag.constant !== 0) {
-      str = str + (this.imag.constant.valueOf() < 0 ? " ( " + this.imag.constant + "j )" : " + " + this.imag.constant + "j");
-//       console.log(str);
+      str = str + (this.imag.constant.valueOf() < 0 ? " + " + this.imag.constant + "*j" : " + " + this.imag.constant + "*j");
     } 
   } 
   
@@ -473,10 +471,10 @@ Expression.prototype.toString = function () {
     if (str === "" && this.real.constant !== 0) {
       str += this.real.constant;
     } else if (this.real.constant !== 0) {
-      str = str + (this.real.constant.valueOf() < 0 ? " ( " +this.real.constant + " )" : " + " + this.real.constant);
+      str = str + (this.real.constant.valueOf() < 0 ? this.real.constant : " + " + this.real.constant);
     }
   } 
-  
+
   // If the str still remains empty then print out 0
   if (str === "") 
     str = "0";
