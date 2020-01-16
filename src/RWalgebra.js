@@ -504,6 +504,12 @@ const Equation = function(arg0, arg1) {
     this.rhs = new Expression(exp[1]);
   }
   else {
+    if (typeof arg0 === 'string')
+      arg0 = new Expression(arg0);
+
+    if (typeof arg1 === 'string')
+      arg1 = new Expression(arg1);
+
     this.lhs = arg0;
     this.rhs = arg1;
   }

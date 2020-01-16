@@ -54,7 +54,7 @@ describe('nodalAnalysis()', function () {
   const test_nodalAnalysis = (expected) => {
     const c = circuit.createCircuit(expected.c);
     circuit.setCircuit(c);
-    const eqns = c.nodalAnalysis();
+    const eqns = c.nodalAnalysis().currentEquations[0];
     assert.ok(suite.verifyCircuit(eqns, expected.eqns));
   };
 

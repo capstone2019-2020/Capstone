@@ -138,7 +138,6 @@ const generate_variable_map = (eqn) => {
  * @returns true if actual output matches expected
  */
 exports.verifyCircuit = function(output, expected) {
-  // debug_log(output, expected);
 
   /**
    * Step 1: Convert equations into algebra.js Equations
@@ -151,7 +150,7 @@ exports.verifyCircuit = function(output, expected) {
   });
 
   output.forEach((node_eqns) => {
-    actual_eqns.push(node_eqns.map( x => algebra.parse(x)));
+    actual_eqns.push(node_eqns);
   });
 
   /* Step 2: Loop through all the equations, verify that they match */
@@ -171,9 +170,9 @@ exports.verifyCircuit = function(output, expected) {
 
     /* Verify number of equations */
     if (enode.length !== anode.length) {
-      debug_log(`ERROR: Expected ${enode.length} equations, received `,
-        `Expected: ${JSON.stringify(expected)}`,
-        `Actual: ${JSON.stringify(output)}`);
+      debug_log(`ERROR: Expected ${enode.length} equations, received ${anode.length}`,
+        `Expected: ${JSON.stringify(expected[i])}`,
+        `Actual: ${output[i][0].toString() } `);
       return false;
     }
 
@@ -200,7 +199,7 @@ exports.verifyCircuit = function(output, expected) {
       }
 
       if ( val1 !== val2 ){
-        debug_log(`ERROR: Equations don't match\n { expected: ${expected[i][j]}, actual: ${output[i][j]} }`);
+        debug_log(`ERROR: Equations don't match\n { expected: ${expected_eqns[i][j]}, actual: ${output[i][j]} }`);
         return false;
       }
     }
