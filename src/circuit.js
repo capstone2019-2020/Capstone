@@ -8,11 +8,21 @@ const Expression = algebra.Expression;
 const Equation = algebra.Equation;
 var circuit;
 
+/**
+ * @param {node ID} id  
+ * @param {voltage} v 
+ * Class Attributes: 
+ *  id: int
+ *  voltage: Expression (initialized empty or with a #)
+ *  passiveComponents: array of connected passive components (currently, only Resistor objects)
+ *  incomingBranches: not used
+ *  outgoingBranches: not used 
+ */
 function Node(id, v) {
     this.id = id,
     this.voltage = v,
-    this.passiveComponents = [], // array of connected passive components (currently, only Resistor objects)
-    this.currentSources = [], // array of CurrentSource objects
+    this.passiveComponents = [],
+    this.currentSources = [],
     this.incomingBranches = [],
     this.outgoingBranches = []
 };
@@ -234,6 +244,18 @@ Circuit.prototype.nodalAnalysis = function(){
     return resultSummary;
 };
 
+/**
+ * 
+ * @param {value of resistance} r 
+ * @param {positive node ID} p 
+ * @param {negative node ID} n 
+ * Class Attributes:
+ *  value: Expression (initialized with a #)
+ *  pnode: int
+ *  nnode: int
+ *  current: Expression
+ *  currentNumeric: Expression
+ */
 function Resistor(r, p, n){
     this.value = r;
     this.pnode = p;
@@ -245,7 +267,7 @@ function Resistor(r, p, n){
 /**
  * Find the expression of the current going through Resistor
  * Note it always subtract np from vp and does not handle the direction of current
- * @param circuit circuit object that Resistor belongs to
+ * @param {circuit object that Resistor belongs to} circuit 
  */
 Resistor.prototype.ohmsLaw = function(circuit){
     const pnode = circuit.findNodeById(this.pnode);
@@ -273,6 +295,16 @@ Resistor.prototype.ohmsLaw = function(circuit){
     this.current = numer.divide(denom); 
 };
 
+/**
+ * 
+ * @param {Current value} i 
+ * @param {positive node ID} p 
+ * @param {Negative node ID} n
+ * Class Attributes:
+ *  value: Expression (initialized with a #)
+ *  pnode: int
+ *  nnode: int
+ */
 function CurrentSource(i, p, n){
     this.value = i;
     this.pnode = p;
@@ -282,8 +314,8 @@ function CurrentSource(i, p, n){
 /**
  * Determine whether r and csrc are in parallel and return a boolean value
  * If they are in parallel, update Resistor.currentNumeric
- * @param r Resistor object under the subject
- * @param csrc CurrentSource object under the subject
+ * @param {Resistor object under the subject} r 
+ * @param {CurrentSource object under the subject} csrc 
  */
 function resistorInSeriesWithCSrc(r, csrc){
     if (r.pnode == csrc.pnode){
@@ -309,7 +341,7 @@ function resistorInSeriesWithCSrc(r, csrc){
 
 /**
  * Create circuit object from intermediary input data structure
- * @param components intermediary data structure generated after parsing netlist file
+ * @param {intermediary data structure generated after parsing netlist file} components 
  * @returns circuit circuit object that represent the input circuit schematic
  */
 function createCircuit(components){
@@ -408,10 +440,10 @@ function createCircuit(components){
    For example, if 4th element of nodeId array is 2, dpi[4] and currentEquations[4] will
    give you dpi and equations for node #2 */
 function AnalysisSummary() {
-    this.nodeId = [], // IDs of nodes
-    this.dpi = [], // Driving point impedances (returned by dpiAnalysis())
-    this.shorCircuitCurrent = [] // also returned by dpiAnalysis()
-    this.currentEquations = [] // lists of equations returned by kcl()
+    this.nodeId = [], // IDs of nodes -- integers
+    this.dpi = [], // Driving point impedances (returned by dpiAnalysis()) -- Expressions
+    this.shorCircuitCurrent = [] // also returned by dpiAnalysis() -- Expressions
+    this.currentEquations = [] // lists of equations returned by kcl() -- Expressions
 };
 
 AnalysisSummary.prototype.addSummary= function(id, dpi, isc, eqs){
