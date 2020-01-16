@@ -384,6 +384,15 @@ Expression.prototype.multiply = function(op) {
 };
 
 /**
+ * Returns the inverse of the expression
+ * Note it does NOT the expression itself does not change by calling this function
+ */
+Expression.prototype.inverse = function(){
+  var numer = new Expression(1);
+  return numer.divide(this);
+};
+
+/**
  * Extracts Expression object fields from a list of terms
  *
  * @param terms
@@ -431,7 +440,7 @@ Expression.prototype.toString = function () {
     if (str === "" && Number(term.coefficient).valueOf() > 0) {
       str += term.toString() + "j";
     } else {
-      str += (Number(term.coefficient).valueOf() < 0 ? " + (- " + term.toString() + "j)": " + " + term.toString() + "j");
+      str += (Number(term.coefficient).valueOf() < 0 ? " (- " + term.toString() + "j)": " + " + term.toString() + "j");
     }
   }
 
@@ -441,7 +450,7 @@ Expression.prototype.toString = function () {
     if (str === "" && Number(term.coefficient).valueOf() > 0) {
       str += term.toString();
     } else {
-      str += (Number(term.coefficient).valueOf() < 0 ? " + (- " + term.toString() + ")" : " + " + term.toString());
+      str += (Number(term.coefficient).valueOf() < 0 ? " (- " + term.toString() + ")" : " + " + term.toString());
     }
   }
 

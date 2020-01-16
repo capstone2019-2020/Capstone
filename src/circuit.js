@@ -2,19 +2,31 @@
 // Circuit API for circuit analysis
 const nl = require('./netlist.js');
 const assert = require('assert');
-const algebra = require('algebra.js');
+const algebra = require('./RWalgebra.js');
 const math = require('mathjs');
 const Expression = algebra.Expression;
+const Equation = algebra.Equation;
 var circuit;
 
+/**
+ * @param {node ID} id  
+ * @param {voltage} v 
+ * Class Attributes: 
+ *  id: int
+ *  voltage: Expression (initialized empty or with a #)
+ *  passiveComponents: array of connected passive components (currently, only Resistor objects)
+ *  incomingBranches: not used
+ *  outgoingBranches: not used 
+ */
 function Node(id, v) {
     this.id = id,
     this.voltage = v,
-    this.passiveComponents = [], // array of connected passive components (currently, only Resistor objects)
-    this.currentSources = [], // array of CurrentSource objects
+    this.passiveComponents = [],
+    this.currentSources = [],
     this.incomingBranches = [],
     this.outgoingBranches = []
 };
+
 Node.prototype.allCurrentKnown = function(){
     // only current source(s) is/are connected to the node
     if (this.passiveComponents.length == 0 && this.currentSources.length != 0){
@@ -29,10 +41,6 @@ Node.prototype.allCurrentKnown = function(){
         this.passiveComponents.forEach((p) => {
             this.currentSources.forEach((c) => {
                  ret = resistorInSeriesWithCSrc(p, c);
-
-                 //if(ret){
-                 //   p.currentNumeric = c.value;
-                 //}
             });
 
             if (!ret){
@@ -45,7 +53,10 @@ Node.prototype.allCurrentKnown = function(){
 };
 
 Node.prototype.kcl = function(){
-    var sum_string = "";
+    var sum_lhs = new Expression(); // This is what this function will compute
+    var sum_rhs = new Expression(0); // sum of current is always 0
+    var sum_eq;
+    
     var equations = [];
 
     for (var i = 0; i < this.passiveComponents.length; i++){
@@ -55,40 +66,27 @@ Node.prototype.kcl = function(){
             pComp.ohmsLaw(circuit);
         }
 
-        if (pComp.currentNumeric != undefined){
-            //console.log(`${pComp.currentNumeric} = ${pComp.current}`);
-            equations.push(`${pComp.currentNumeric} = ${pComp.current}`);
-            sum_string += `+ (${pComp.currentNumeric})`;
+        if (pComp.currentNumeric.real.constant != null){
+            equations.push(new Equation(pComp.currentNumeric, pComp.current));
+            sum_lhs.add(pComp.currentNumeric);
         }
         else{
-            //console.log(`I${i} = ${pComp.current}`);
-            equations.push(`I${i} = ${pComp.current}`);
-            var sign = "";
+            equations.push(new Equation(`I${i}`, pComp.current));
             if (this.id == pComp.pnode){
-                sign = '-';
+                sum_lhs.subtract(`I${i}`);
             } 
             else{
-                if (i != 0){
-                    sign = '+';
-                }
-                else{
-                    sum_string += `I${i} `;
-                    continue;
-                }
+                sum_lhs.add(`I${i}`);
             }
-            sum_string += `${sign} I${i} `;
         }
     }
 
     this.currentSources.forEach((c) => {
-        sum_string += `+ (${c.value})`;
+        sum_lhs.add(c.value);
     });
 
-    //var last_plus_index = sum_string.lastIndexOf('+');
-    //sum_string = sum_string.replace(1, last_plus_index);
-    sum_string += ' = 0';
-    //console.log(sum_string);
-    equations.push(sum_string);
+    sum_eq = new Equation(sum_lhs, sum_rhs);
+    equations.push(sum_eq);
     return equations;
 };
 
@@ -96,7 +94,7 @@ Node.prototype.kcl = function(){
    DPI = The impedance seen at a node when when we zero all the other node voltages and all
          current sources in the circuit */
 Node.prototype.computeDpi = function(){
-    var inverseSum = 0; // store (1/R1 + 1/R2 + ... + 1/Rn)
+    var inverseSum = new Expression(0); // store (1/R1 + 1/R2 + ... + 1/Rn)
     /*var allConnectedBranches = this.incomingBranches.concat(this.outgoingBranches);
     var branchToIgnore;
     
@@ -122,11 +120,11 @@ Node.prototype.computeDpi = function(){
     });
     */
    this.passiveComponents.forEach ((r) => {
-    if (r.currentNumeric == undefined){
-            inverseSum += math.inv(r.value);
+    if (r.currentNumeric.real.constant == null){
+            inverseSum.add(r.value.inverse());
     }
     });
-    return math.inv(inverseSum);
+    return inverseSum.inverse();
 };
 
 /* Helper function for dpiAnalysis()
@@ -134,29 +132,32 @@ Node.prototype.computeDpi = function(){
    the currents due to all the other node voltages and current
    sources are added together */
 Node.prototype.computeShortCircuitCurrent = function(){
-    iShortCircuit = "";
+    var iShortCircuit = new Expression();
 
     // Ignore passive components connected to ground
     this.passiveComponents.forEach ((r, i) => {
         // no current flows for the branch that has ground on both ends
         if (r.pnode != 0 && r.nnode != 0) {
-            // current goes from pnode->nnode: current going out -> negative by convention
-            if (this.id == r.pnode){
-                iShortCircuit += " - ";
-            } 
-            else{
-                // Skip (+) sign for the first term
-                if (i != 0){
-                    iShortCircuit += " + ";
+            // Determine if numeric current value is available
+            if (r.currentNumeric.real.constant != null){
+                // current goes from pnode->nnode: current going out -> negative by convention
+                if (this.id == r.pnode){
+                    iShortCircuit.subtract(r.currentNumeric);
+                } 
+                else{
+                    // Skip (+) sign for the first term
+                    iShortCircuit.add(r.currentNumeric);
                 }
             }
-
-            // Determine if numeric current value is available
-            if (r.currentNumeric != undefined){
-                iShortCircuit += r.currentNumeric.toString();
-            }
             else{
-                iShortCircuit += r.current;
+                // current goes from pnode->nnode: current going out -> negative by convention
+                if (this.id == r.pnode){
+                    iShortCircuit.subtract(r.current);
+                } 
+                else{
+                    // Skip (+) sign for the first term
+                    iShortCircuit.add(r.current);
+                }
             }
 
         }
@@ -164,11 +165,7 @@ Node.prototype.computeShortCircuitCurrent = function(){
 
     this.currentSources.forEach ((c) => {
         // @TODO: may have to add more logic to determine the sign
-        if (iShortCircuit.length > 0){ 
-            iShortCircuit += " + ";
-        }
-
-        iShortCircuit += c.value.toString();
+        iShortCircuit.add(c.value);
     });
 
     return iShortCircuit;
@@ -208,6 +205,9 @@ Circuit.prototype.findNodeById = function(nid){
     return this.nodes.find(n => n.id === nid);
 };
 
+/**
+ * Nodal analysis uses KCL, which gives a system of equations written in terms of node voltages
+ */
 Circuit.prototype.nodalAnalysis = function(){
     const numEqToSolve = this.nodes.length - this.numVsrc - 1;
     assert(this.unknownVnodes.length == numEqToSolve);
@@ -233,72 +233,117 @@ Circuit.prototype.nodalAnalysis = function(){
         // --- Start DPI analysis ---
         var dpiAndShortCurrent = unknownVnode.dpiAnalysis();
         // --- End DPI analysis ---
-
+        
         resultSummary.addSummary(n_id,
                                  dpiAndShortCurrent[0],
                                  dpiAndShortCurrent[1],
                                  equations_at_nodes);
+        
     });
 
     return resultSummary;
 };
 
+/**
+ * 
+ * @param {value of resistance} r 
+ * @param {positive node ID} p 
+ * @param {negative node ID} n 
+ * Class Attributes:
+ *  value: Expression (initialized with a #)
+ *  pnode: int
+ *  nnode: int
+ *  current: Expression
+ *  currentNumeric: Expression
+ */
 function Resistor(r, p, n){
     this.value = r;
     this.pnode = p;
     this.nnode = n;
-    this.current = undefined;
-    this.currentNumeric = undefined;
+    this.current = new Expression(); // start off undefined
+    this.currentNumeric = new Expression(); // start off undefined
 };
 
+/**
+ * Find the expression of the current going through Resistor
+ * Note it always subtract np from vp and does not handle the direction of current
+ * @param {circuit object that Resistor belongs to} circuit 
+ */
 Resistor.prototype.ohmsLaw = function(circuit){
     const pnode = circuit.findNodeById(this.pnode);
     const nnode = circuit.findNodeById(this.nnode);
-    if (pnode.voltage == undefined){
-        var vp = "n" + (pnode.id).toString();
+    var vp, np;
+
+    if (pnode.voltage.real.constant == null){
+        var term = "n" + pnode.id.toString();
+        vp = new Expression(term);
     }
     else{
-        var vp = pnode.voltage;
-    }
-    if (nnode.voltage == undefined){
-        var np = "n" + (nnode.id).toString();
-    }
-    else{
-        var np = nnode.voltage;
+        vp = pnode.voltage; // already in Expression form
     }
 
-    var numer = new Expression(vp).subtract(np);
-    var denom = this.value;
-    this.current = '(' +  numer.toString() + ')' + '/' + denom.toString();
+    if (nnode.voltage.real.constant == null){
+        var term = "n" + nnode.id.toString();
+        np = new Expression(term);
+    }
+    else{
+        np = nnode.voltage;
+    }
+
+    var numer = vp.subtract(np);
+    var denom = this.value; // already in Expression form
+    this.current = numer.divide(denom); 
 };
 
+/**
+ * 
+ * @param {Current value} i 
+ * @param {positive node ID} p 
+ * @param {Negative node ID} n
+ * Class Attributes:
+ *  value: Expression (initialized with a #)
+ *  pnode: int
+ *  nnode: int
+ */
 function CurrentSource(i, p, n){
     this.value = i;
     this.pnode = p;
     this.nnode = n;
 };
 
+/**
+ * Determine whether r and csrc are in parallel and return a boolean value
+ * If they are in parallel, update Resistor.currentNumeric
+ * @param {Resistor object under the subject} r 
+ * @param {CurrentSource object under the subject} csrc 
+ */
 function resistorInSeriesWithCSrc(r, csrc){
     if (r.pnode == csrc.pnode){
-        r.currentNumeric = -1 * csrc.value;
+        r.currentNumeric = new Expression(-1 * csrc.value);
         return true;
     }
     else if (r.pnode == csrc.nnode){
-        r.currentNumeric = csrc.value;
+        r.currentNumeric = new Expression(csrc.value);
         return true;
     }
     else if (r.nnode == csrc.pnode){
-        r.currentNumeric = csrc.value;
+        r.currentNumeric = new Expression(csrc.value);
         return true;
     }
     else if (r.nnode == csrc.nnode){
-        r.currentNumeric = -1 * csrc.value;
+        r.currentNumeric = new Expression(-1 * csrc.value);
         return true;
     }
     else {
         false;
     }
 }
+
+/**
+ * Create circuit object from intermediary input data structure
+ * @param {intermediary data structure generated after parsing netlist file} components 
+ * @returns circuit circuit object that represent the input circuit schematic
+ */
 function createCircuit(components){
     // Initialize an empty Circuit object
     var circuit = new Circuit([], 0);
@@ -313,12 +358,12 @@ function createCircuit(components){
             // Adding nodes to Circuit object
             if (!nodeExists){
                 if (nodeid == 0){ // ground node
-                    v = 0
+                    v = new Expression(0);
                 }
 
                 else{
                     circuit.unknownVnodes.push(nodeid);
-                    v = undefined; //node voltage is unknown
+                    v = new Expression(); //node voltage is unknown
                 }
                 
                 node = new Node(nodeid, v);
@@ -351,11 +396,11 @@ function createCircuit(components){
             // Set the voltage value
             if (c.nnode == 0){
                 var pnode = circuit.findNodeById(c.pnode);
-                pnode.voltage = c.value;
+                pnode.voltage = new Expression(c.value);
             }
             else if (c.pnode == 0){
                 var nnode = circuit.findNodeById(c.nnode);
-                nnode.voltage = c.value * -1;
+                nnode.voltage = new Expression(c.value * -1);
             }
 
             // Remove pnode and nnode of Voltage source from unknownVnodes array
@@ -369,14 +414,14 @@ function createCircuit(components){
             }
         }
         else if(c.type == 'I'){
-            cSrc  = new CurrentSource(c.value, c.pnode, c.nnode);
+            cSrc  = new CurrentSource(new Expression(c.value), c.pnode, c.nnode);
             pnode = circuit.findNodeById(c.pnode);
             nnode = circuit.findNodeById(c.nnode);
             pnode.currentSources.push(cSrc);
             nnode.currentSources.push(cSrc);
         }
         else if (c.type == 'R'){
-            r = new Resistor(c.value, c.pnode, c.nnode);
+            r = new Resistor(new Expression(c.value), c.pnode, c.nnode);
             //r.ohmsLaw(circuit);
             pnode = circuit.findNodeById(c.pnode);
             nnode = circuit.findNodeById(c.nnode);
@@ -395,10 +440,10 @@ function createCircuit(components){
    For example, if 4th element of nodeId array is 2, dpi[4] and currentEquations[4] will
    give you dpi and equations for node #2 */
 function AnalysisSummary() {
-    this.nodeId = [], // IDs of nodes
-    this.dpi = [], // Driving point impedances (returned by dpiAnalysis())
-    this.shorCircuitCurrent = [] // also returned by dpiAnalysis()
-    this.currentEquations = [] // lists of equations returned by kcl()
+    this.nodeId = [], // IDs of nodes -- integers
+    this.dpi = [], // Driving point impedances (returned by dpiAnalysis()) -- Expressions
+    this.shorCircuitCurrent = [] // also returned by dpiAnalysis() -- Expressions
+    this.currentEquations = [] // lists of equations returned by kcl() -- Expressions
 };
 
 AnalysisSummary.prototype.addSummary= function(id, dpi, isc, eqs){
@@ -408,7 +453,7 @@ AnalysisSummary.prototype.addSummary= function(id, dpi, isc, eqs){
     this.currentEquations.push(eqs);
 };
 
- (function main(){
+(function main(){
     const voltage_div = 'test/netlist_ann1.txt'
     const var_simple = 'test/netlist_ann2.txt'
     const curr_src = 'test/netlist_ann_csrc.txt'
