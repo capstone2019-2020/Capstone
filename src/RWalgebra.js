@@ -437,7 +437,7 @@ Expression.prototype.toString = function () {
     var term = this.imag.terms[i];
     
     // For the first term to be printed out and is positive, no sign needed
-    if (str === "" && Number(term.coefficient).valueOf() > 0) {
+    if (str === "") {
       str += term.toString() + "j";
     } else {
 //       str += (Number(term.coefficient).valueOf() < 0 ? " (- " + term.toString() + "j)": " + " + term.toString() + "j");
@@ -448,7 +448,7 @@ Expression.prototype.toString = function () {
   for (var i = 0; i < this.real.terms.length; i++) {
     var term = this.real.terms[i];
 
-    if (str === "" && Number(term.coefficient).valueOf() > 0) {
+    if (str === "") {
       str += term.toString();
     } else {
 //       str += (Number(term.coefficient).valueOf() < 0 ? " (- " + term.toString() + ")" : " + " + term.toString());
