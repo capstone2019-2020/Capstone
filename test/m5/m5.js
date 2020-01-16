@@ -22,7 +22,7 @@ const CONCAT = (str, op, key) => str.length > 0 ? `${str} ${op} ${key}` : key;
 const TEST_EXPONENTS = false;
 const MAX_EVAL_VAL = 100;
 
-function generate(nTerms, nDegrees, terms) {
+function __generate__(nTerms, nDegrees, terms) {
   let term, termVal;
   if (nTerms === 1) {
     if (RANDB()) {
@@ -73,7 +73,7 @@ function generate(nTerms, nDegrees, terms) {
 
   let {
     str: genStr, val: genVal
-  } = generate(nTerms-r, nDegrees, terms);
+  } = __generate__(nTerms-r, nDegrees, terms);
 
   op = RAND_OP();
   compiled = math.compile(CONCAT(eval, op, genVal));
@@ -85,22 +85,21 @@ function generate(nTerms, nDegrees, terms) {
 
 function __internal__() {
   /*
-   * Just a sanity check - to test if the generation
-   * function is working as expected. This is a sanity
-   * check because we are computing the equation's expected
-   * output as we build it and now we check again if the
-   * recursively built equation corresponds to the result
-   * equation.
+   * Just a sanity check - to test if the generation function is
+   * working as expected. This is a sanity check because we are
+   * computing the equation's expected output as we build it and
+   * now we check again if the recursively built equation corresponds
+   * to the result equation.
    *
-   * Test the generation function for up to 100 terms
-   * and evaluate whether answers match math.js's answers.
+   * Test the generation function for up to 1000 terms and evaluate
+   * whether answers match math.js's answers.
    */
   console.log('m5 internal test sanity check');
   let gen, terms, compiled, expr;
   let i;
   for (i=1; i<=1000; i++) {
     terms = [];
-    gen = generate(i, 1, terms);
+    gen = __generate__(i, 1, terms);
 
     expr = gen.str;
     terms.forEach(t => {
