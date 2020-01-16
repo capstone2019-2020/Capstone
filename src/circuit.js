@@ -2,9 +2,10 @@
 // Circuit API for circuit analysis
 const nl = require('./netlist.js');
 const assert = require('assert');
-const algebra = require('algebra.js');
+const algebra = require('./RWalgebra.js');
 const math = require('mathjs');
 const Expression = algebra.Expression;
+const Equation = algebra.Equation;
 var circuit;
 
 function Node(id, v) {
@@ -299,6 +300,12 @@ function resistorInSeriesWithCSrc(r, csrc){
         false;
     }
 }
+
+/**
+ * Create circuit object from intermediary input data structure
+ * @param components intermediary data structure generated after parsing netlist file
+ * @returns circuit circuit object that represent the input circuit schematic
+ */
 function createCircuit(components){
     // Initialize an empty Circuit object
     var circuit = new Circuit([], 0);
@@ -313,12 +320,12 @@ function createCircuit(components){
             // Adding nodes to Circuit object
             if (!nodeExists){
                 if (nodeid == 0){ // ground node
-                    v = 0
+                    v = new Expression(0);
                 }
 
                 else{
                     circuit.unknownVnodes.push(nodeid);
-                    v = undefined; //node voltage is unknown
+                    v = new Expression(); //node voltage is unknown
                 }
                 
                 node = new Node(nodeid, v);
@@ -351,11 +358,11 @@ function createCircuit(components){
             // Set the voltage value
             if (c.nnode == 0){
                 var pnode = circuit.findNodeById(c.pnode);
-                pnode.voltage = c.value;
+                pnode.voltage = new Expression(c.value);
             }
             else if (c.pnode == 0){
                 var nnode = circuit.findNodeById(c.nnode);
-                nnode.voltage = c.value * -1;
+                nnode.voltage = new Expression(c.value * -1);
             }
 
             // Remove pnode and nnode of Voltage source from unknownVnodes array
@@ -369,14 +376,14 @@ function createCircuit(components){
             }
         }
         else if(c.type == 'I'){
-            cSrc  = new CurrentSource(c.value, c.pnode, c.nnode);
+            cSrc  = new CurrentSource(new Expression(c.value), c.pnode, c.nnode);
             pnode = circuit.findNodeById(c.pnode);
             nnode = circuit.findNodeById(c.nnode);
             pnode.currentSources.push(cSrc);
             nnode.currentSources.push(cSrc);
         }
         else if (c.type == 'R'){
-            r = new Resistor(c.value, c.pnode, c.nnode);
+            r = new Resistor(new Expression(c.value), c.pnode, c.nnode);
             //r.ohmsLaw(circuit);
             pnode = circuit.findNodeById(c.pnode);
             nnode = circuit.findNodeById(c.nnode);
