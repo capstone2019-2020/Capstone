@@ -104,7 +104,8 @@ Term.prototype.toString = function () {
 
   // Coefficient is not 1
   if (math.abs(Number(this.coefficient)) !== 1 && math.abs(Number(this.coefficient)) !== 0) {
-    str += math.abs(this.coefficient).toString();
+    // str += math.abs(this.coefficient).toString();
+    str += (Number(this.coefficient).valueOf() < 0 ? "(" + this.coefficient.toString() + ")" : this.coefficient.toString());
   } 
 
   // There exists a fraction in the term
