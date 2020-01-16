@@ -84,7 +84,7 @@ Node.prototype.kcl = function(){
    DPI = The impedance seen at a node when when we zero all the other node voltages and all
          current sources in the circuit */
 Node.prototype.computeDpi = function(){
-    var inverseSum = 0; // store (1/R1 + 1/R2 + ... + 1/Rn)
+    var inverseSum = new Expression(0); // store (1/R1 + 1/R2 + ... + 1/Rn)
     /*var allConnectedBranches = this.incomingBranches.concat(this.outgoingBranches);
     var branchToIgnore;
     
@@ -110,11 +110,11 @@ Node.prototype.computeDpi = function(){
     });
     */
    this.passiveComponents.forEach ((r) => {
-    if (r.currentNumeric == undefined){
-            inverseSum += math.inv(r.value);
+    if (r.currentNumeric.real.constant == null){
+            inverseSum.add(r.value.inverse());
     }
     });
-    return math.inv(inverseSum);
+    return inverseSum.inverse();
 };
 
 /* Helper function for dpiAnalysis()
@@ -122,29 +122,32 @@ Node.prototype.computeDpi = function(){
    the currents due to all the other node voltages and current
    sources are added together */
 Node.prototype.computeShortCircuitCurrent = function(){
-    iShortCircuit = "";
+    var iShortCircuit = new Expression();
 
     // Ignore passive components connected to ground
     this.passiveComponents.forEach ((r, i) => {
         // no current flows for the branch that has ground on both ends
         if (r.pnode != 0 && r.nnode != 0) {
-            // current goes from pnode->nnode: current going out -> negative by convention
-            if (this.id == r.pnode){
-                iShortCircuit += " - ";
-            } 
-            else{
-                // Skip (+) sign for the first term
-                if (i != 0){
-                    iShortCircuit += " + ";
+            // Determine if numeric current value is available
+            if (r.currentNumeric.real.constant != null){
+                // current goes from pnode->nnode: current going out -> negative by convention
+                if (this.id == r.pnode){
+                    iShortCircuit.subtract(r.currentNumeric);
+                } 
+                else{
+                    // Skip (+) sign for the first term
+                    iShortCircuit.add(r.currentNumeric);
                 }
             }
-
-            // Determine if numeric current value is available
-            if (r.currentNumeric != undefined){
-                iShortCircuit += r.currentNumeric.toString();
-            }
             else{
-                iShortCircuit += r.current;
+                // current goes from pnode->nnode: current going out -> negative by convention
+                if (this.id == r.pnode){
+                    iShortCircuit.subtract(r.current);
+                } 
+                else{
+                    // Skip (+) sign for the first term
+                    iShortCircuit.add(r.current);
+                }
             }
 
         }
@@ -152,11 +155,7 @@ Node.prototype.computeShortCircuitCurrent = function(){
 
     this.currentSources.forEach ((c) => {
         // @TODO: may have to add more logic to determine the sign
-        if (iShortCircuit.length > 0){ 
-            iShortCircuit += " + ";
-        }
-
-        iShortCircuit += c.value.toString();
+        iShortCircuit.add(c.value);
     });
 
     return iShortCircuit;
@@ -224,11 +223,12 @@ Circuit.prototype.nodalAnalysis = function(){
         // --- Start DPI analysis ---
         var dpiAndShortCurrent = unknownVnode.dpiAnalysis();
         // --- End DPI analysis ---
-
+        
         resultSummary.addSummary(n_id,
                                  dpiAndShortCurrent[0],
                                  dpiAndShortCurrent[1],
                                  equations_at_nodes);
+        
     });
 
     return resultSummary;
@@ -421,7 +421,7 @@ AnalysisSummary.prototype.addSummary= function(id, dpi, isc, eqs){
     this.currentEquations.push(eqs);
 };
 
- (function main(){
+(function main(){
     const voltage_div = 'test/netlist_ann1.txt'
     const var_simple = 'test/netlist_ann2.txt'
     const curr_src = 'test/netlist_ann_csrc.txt'

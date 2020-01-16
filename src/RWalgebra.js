@@ -384,6 +384,15 @@ Expression.prototype.multiply = function(op) {
 };
 
 /**
+ * Returns the inverse of the expression
+ * Note it does NOT the expression itself does not change by calling this function
+ */
+Expression.prototype.inverse = function(){
+  var numer = new Expression(1);
+  return numer.divide(this);
+};
+
+/**
  * Extracts Expression object fields from a list of terms
  *
  * @param terms
