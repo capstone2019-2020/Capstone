@@ -56,7 +56,6 @@ function toNetlist(arr) {
       .trim().split(' ');
     assert(a.length <= MAX_SUPPORTED_PARAMS);
 
-
     // value for 4-operand input
     val = a[3];
 
