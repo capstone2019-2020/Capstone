@@ -27,6 +27,20 @@ function Node(id, v) {
     this.outgoingBranches = []
 };
 
+Node.prototype.print = function(){
+    console.log(`------------- Node ID: ${this.id} --------------`);
+    console.log(`voltage: ${this.voltage}`);
+    this.passiveComponents.forEach((pc, i) => {
+        console.log(`Resistor #${i}`);
+        pc.print();
+    });
+    this.currentSources.forEach((csrc, i) => {
+        console.log(`Current Source #${i}`);
+        csrc.print();
+    });
+    console.log(`-------------------------------------------`);
+};
+
 Node.prototype.allCurrentKnown = function(){
     // only current source(s) is/are connected to the node
     if (this.passiveComponents.length == 0 && this.currentSources.length != 0){
@@ -186,6 +200,12 @@ function Circuit(n, vsrc) {
     this.numVsrc = vsrc // number of voltage sources in circuit
 };
 
+Circuit.prototype.print = function(){
+    this.nodes.forEach((n, i) => {
+        n.print();
+    });
+};
+
 /* Return True if a node with id 'nid' has not been added
    to the circuit object */
 Circuit.prototype.nodeExists = function(nid){
@@ -264,6 +284,13 @@ function Resistor(r, p, n){
     this.currentNumeric = new Expression(); // start off undefined
 };
 
+Resistor.prototype.print = function(){
+    console.log(`resistance: ${this.value}`);
+    console.log(`positive node: ${this.pnode}`);
+    console.log(`negative node: ${this.nnode}`);
+    console.log(`current: ${this.current.toString()} Numeric current: ${this.currentNumeric.toString()}`);
+};
+
 /**
  * Find the expression of the current going through Resistor
  * Note it always subtract np from vp and does not handle the direction of current
@@ -275,16 +302,16 @@ Resistor.prototype.ohmsLaw = function(circuit){
     var vp, np;
 
     if (pnode.voltage.real.constant == null){
-        var term = "n" + pnode.id.toString();
-        vp = new Expression(term);
+        var pterm = "n" + pnode.id.toString();
+        vp = new Expression(pterm);
     }
     else{
         vp = pnode.voltage; // already in Expression form
     }
 
     if (nnode.voltage.real.constant == null){
-        var term = "n" + nnode.id.toString();
-        np = new Expression(term);
+        var nterm = "n" + nnode.id.toString();
+        np = new Expression(nterm);
     }
     else{
         np = nnode.voltage;
@@ -309,6 +336,12 @@ function CurrentSource(i, p, n){
     this.value = i;
     this.pnode = p;
     this.nnode = n;
+};
+
+CurrentSource.prototype.print = function(){
+    console.log(`current value: ${this.value}`);
+    console.log(`positive node: ${this.pnode}`);
+    console.log(`negative node: ${this.nnode}`);
 };
 
 /**
