@@ -41,7 +41,7 @@ function main() {
   // ex.divide(5);
 
   // console.log(tokenize(imaginary));
-  // console.log('=======================================');
+  console.log('=======================================');
     console.log(`Test Equation: ${circuit_test}`);
     console.log('=======================================');
     console.log(`Data Structure: `);
@@ -84,8 +84,8 @@ function main() {
 
   // let x = new Expression('n1');
   // let x2 = new Expression('n2');
-  // console.log(JSON.stringify(x.subtract(x2)));
-  // console.log(JSON.stringify(x2));
+  // let sub = x.subtract('n2');
+  // console.log(JSON.stringify(sub));
 };
 
 main();

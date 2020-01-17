@@ -135,7 +135,7 @@ const simplify = (terms) => {
     }
   });
 
-  return Object.keys(vars).map( v => vars[v]).concat(f);
+  return Object.keys(vars).map( v => vars[v]).concat(f).filter(t => t.coefficient !== 0);
 };
 
 
@@ -204,11 +204,11 @@ const multiplyTerms = (op1, op2) => {
         temp_term.imag = true;
 
       // Need to handle denominator multiplication
-      if (typeof t1.fraction.denom !== 'number' && typeof t2.fraction.denom != 'number')
+      if (typeof t1.fraction.denom !== 'number' && typeof t2.fraction.denom != 'number') // expression * expression
         temp_term.fraction.denom = t1.fraction.denom.multiply(t2.fraction.denom);
-      else if (typeof t1.fraction.denom !== 'number')
+      else if (typeof t1.fraction.denom !== 'number') // expression * const
         temp_term.fraction.denom = t1.fraction.denom;
-      else if (typeof t2.fraction.denom !== 'number')
+      else if (typeof t2.fraction.denom !== 'number') // const * expression
         temp_term.fraction.denom = t2.fraction.denom;
       result.push(temp_term);
     });
