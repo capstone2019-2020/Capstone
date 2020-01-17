@@ -13,7 +13,7 @@ const SUPPORTED_FUNCS = ['sin', 'cos', 'tan', 'log'];
 const SUPPORTED_OPS = [ADD, SUB, MULT, DIV, POW];
 const SUPPORTED_VAR_CHARS = ['_']; // special chars that are allowed in variable names
 
-const DEBUG = 1;
+const DEBUG = 0;
 
 
 const Expression = function (exp) {
@@ -122,7 +122,7 @@ const simplify = (terms) => {
   let f = [];
   let v_names;
   terms.forEach( t => {
-    if (!t.variables.length) {
+    if (!t.variables.length) { // no variables
       f.push(t);
       return;
     }
@@ -131,7 +131,8 @@ const simplify = (terms) => {
       vars[v_names] = t;
     else  { // need to combine variables
       let _t = vars[v_names];
-      if (typeof t.fraction.denom === 'number') {
+      // terms with variables in the denominator will not be simplified - too complex
+      if (typeof t.fraction.denom === 'number' && typeof _t.fraction.denom === 'number') {
         _t.coefficient += t.coefficient;
       } else {
         f.push(t);
@@ -139,7 +140,7 @@ const simplify = (terms) => {
     }
   });
 
-  return Object.keys(vars).map( v => vars[v]).concat(f).filter(t => t.coefficient !== 0);
+  return Object.keys(vars).map( v => vars[v]).concat(f);
 };
 
 
@@ -230,7 +231,7 @@ const divideTerms = (op1, op2) => {
       return op1;
     }
 
-    op1[0].fraction.denom = new Expression(op2);
+    op1[0].fraction.denom = (new Expression(op2)).multiply(op1[0].fraction.denom);
     return op1;
   }
 
@@ -241,7 +242,10 @@ const divideTerms = (op1, op2) => {
       if (_const !== null) {
         t.coefficient = t.coefficient /_const;
       } else {
-        t.fraction.denom = new Expression(op2);
+        if (typeof t.fraction.denom === 'number')
+          t.fraction.denom = new Expression(op2);
+        else
+          t.fraction.denom.multiply(new Expression(op2));
       }
     });
     return op1;
@@ -249,14 +253,15 @@ const divideTerms = (op1, op2) => {
 
   /* Case 3: term / multiple terms */
   else if (op1.length === 1 && op2.length > 1) {
-    op1[0].fraction.denom = new Expression(op2);
+
+    op1[0].fraction.denom = (new Expression(op2)).multiply(op1[0].fraction.denom);
     return op1;
   }
 
   /* Case 4: multiple terms / multiple terms */
   else if (op1.length > 1 && op2.length > 1) {
     op1.forEach( t => {
-      t.fraction.denom = new Expression(op2);
+      t.fraction.denom = (new Expression(op2)).multiply(t.fraction.denom);
     });
     return op1;
   }
@@ -289,9 +294,9 @@ Expression.prototype.add = function(op) {
     if (typeof op !== 'string' && !(op instanceof Expression))
       throw new ArgumentsError('Invalid arguments');
     let exp = typeof op === 'string' ? new Expression(op) : op;
-    this.imag.terms = simplify(addTerms(this.imag.terms, exp.imag.terms));
+    this.imag.terms = simplify(addTerms(this.imag.terms, exp.imag.terms)).filter(t => t.coefficient !== 0);;
     this.imag.constant += exp.imag.constant;
-    this.real.terms = simplify(addTerms(this.real.terms, exp.real.terms));
+    this.real.terms = simplify(addTerms(this.real.terms, exp.real.terms)).filter(t => t.coefficient !== 0);;
     this.real.constant += exp.real.constant;
   }
   return this;
@@ -308,9 +313,9 @@ Expression.prototype.subtract = function(op) {
   }
   else  {
     let exp = typeof op === 'string' ? new Expression(op) : op;
-    this.imag.terms = simplify(subtractTerms(this.imag.terms, exp.imag.terms));
+    this.imag.terms = simplify(subtractTerms(this.imag.terms, exp.imag.terms)).filter(t => t.coefficient !== 0);;
     this.imag.constant -= exp.imag.constant;
-    this.real.terms = simplify(subtractTerms(this.real.terms, exp.real.terms));
+    this.real.terms = simplify(subtractTerms(this.real.terms, exp.real.terms)).filter(t => t.coefficient !== 0);;
     this.real.constant -= exp.real.constant;
   }
   return this;

@@ -86,9 +86,12 @@ function main() {
   // let x2 = new Expression('n2');
   // let sub = x.subtract('n2');
   // console.log(JSON.stringify(sub));
-  let x = new Expression('((((86) / (x4)) - (37)) - (x4)) - (((82) * (x0)) * ((86) / (x0)))');
+  // let x = new Expression('(x9) + (((((((10) / (x7)) - (x7)) + (80)) - (30)) / (x7)) / (((x0) + (53)) * (x0))) ');
+  let x = new Expression('(((((((((((((((((((((((x08) - (73)) * (70)) - (x08)) / (24)) - (x08)) * (x08)) - (91)) / (61)) * (x08)) / (16)) + (x08)) / (65)) - (x08)) + (5)) - (25)) * (x08)) * (x08)) * (43)) * (92)) / (x08)) - (20)) / (14)) * ((((41) * (x01)) * (x01)) * (((77) - (x02)) / ((69) / ((x00) * ((91) - (x00))))))');
+  // x.divide('x1')
   console.log(JSON.stringify(x));
-  console.log(x.eval({'x4': 34, 'x0': 23}));
+  // console.log('--');
+  // console.log(JSON.stringify(x.eval({"x9":40,"x7":16,"x0":46} )));
 
 };
 
