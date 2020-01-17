@@ -13,7 +13,7 @@ const SUPPORTED_FUNCS = ['sin', 'cos', 'tan', 'log'];
 const SUPPORTED_OPS = [ADD, SUB, MULT, DIV, POW];
 const SUPPORTED_VAR_CHARS = ['_']; // special chars that are allowed in variable names
 
-const DEBUG = 0;
+const DEBUG = 1;
 
 
 const Expression = function (exp) {
@@ -122,6 +122,10 @@ const simplify = (terms) => {
   let f = [];
   let v_names;
   terms.forEach( t => {
+    if (!t.variables.length) {
+      f.push(t);
+      return;
+    }
     v_names = t.variables.map(v => v.name).join('') + t.imag;
     if (!vars[v_names])
       vars[v_names] = t;

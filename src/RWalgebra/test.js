@@ -16,76 +16,80 @@ function main() {
   // const imaginary = '(-x)*j + (2j) + x1 + 5' ;
 
 
-  const test_type = process.argv[2];
-  let ex;
-  if (test_type === 'simple')
-    ex = new Expression(simple);
-  else if (test_type === 'add')
-    ex = new Expression(add_test);
-  else if (test_type === 'sub')
-    ex = new Expression(sub_test);
-  else if (test_type === 'mult')
-    ex = new Expression(mult_test);
-  else if (test_type === 'div')
-    ex = new Expression(div_test);
-  else if (test_type === 'bracket')
-    ex = new Expression(bracket_test);
-  else if (test_type === 'no_vars')
-    ex = new Expression(no_vars);
-  else if (test_type === 'circuit')
-    ex = new Expression(circuit_test);
-  else if (test_type === 'imag')
-    ex = new Expression(imaginary);
+  // const test_type = process.argv[2];
+  // let ex;
+  // if (test_type === 'simple')
+  //   ex = new Expression(simple);
+  // else if (test_type === 'add')
+  //   ex = new Expression(add_test);
+  // else if (test_type === 'sub')
+  //   ex = new Expression(sub_test);
+  // else if (test_type === 'mult')
+  //   ex = new Expression(mult_test);
+  // else if (test_type === 'div')
+  //   ex = new Expression(div_test);
+  // else if (test_type === 'bracket')
+  //   ex = new Expression(bracket_test);
+  // else if (test_type === 'no_vars')
+  //   ex = new Expression(no_vars);
+  // else if (test_type === 'circuit')
+  //   ex = new Expression(circuit_test);
+  // else if (test_type === 'imag')
+  //   ex = new Expression(imaginary);
 
   // ex.subtract('x_8j + 9j + (-9) -(8 - (-8)*j)');
   // ex.divide(5);
 
   // console.log(tokenize(imaginary));
-  console.log('=======================================');
-    console.log(`Test Equation: ${circuit_test}`);
-    console.log('=======================================');
-    console.log(`Data Structure: `);
-    console.log(JSON.stringify(ex));
-    // // console.log(ex.real.terms.toString());
-    // // console.log(ex.imag.terms.toString());
-    console.log('=======================================');
-    console.log(`Testing toString():`);
-    console.log(ex.toString());
-    console.log('=======================================');
-
-    console.log(`Testing .add(5):`);
-    ex.add('x3j');
-    console.log(JSON.stringify(ex));
-    console.log(ex.toString());
-    console.log('=======================================');
-
-    console.log(`Testing .subtract(1)`);
-    ex.subtract('5*x3j');
-    console.log(JSON.stringify(ex));
-    console.log(ex.toString());
-    console.log('=======================================');
-
-    console.log(`Testing .multiply(12000)`);
-    ex.multiply(12000);
-    console.log(JSON.stringify(ex));
-    console.log(ex.toString());
-    console.log('=======================================');
-
-    console.log(`Testing .divide(12000)`);
-    ex.divide(12000);
-    console.log(JSON.stringify(ex));
-    console.log(ex.toString());
-
-    console.log('=======================================');
-    console.log(`Testing .eval({x3: 1}):`);
-    let result = ex.eval({'x3' : 1});
-    console.log(JSON.stringify(ex));
-    console.log(result.toString());
+  // console.log('=======================================');
+  //   console.log(`Test Equation: ${circuit_test}`);
+  //   console.log('=======================================');
+  //   console.log(`Data Structure: `);
+  //   console.log(JSON.stringify(ex));
+  //   // // console.log(ex.real.terms.toString());
+  //   // // console.log(ex.imag.terms.toString());
+  //   console.log('=======================================');
+  //   console.log(`Testing toString():`);
+  //   console.log(ex.toString());
+  //   console.log('=======================================');
+  //
+  //   console.log(`Testing .add(5):`);
+  //   ex.add('x3j');
+  //   console.log(JSON.stringify(ex));
+  //   console.log(ex.toString());
+  //   console.log('=======================================');
+  //
+  //   console.log(`Testing .subtract(1)`);
+  //   ex.subtract('5*x3j');
+  //   console.log(JSON.stringify(ex));
+  //   console.log(ex.toString());
+  //   console.log('=======================================');
+  //
+  //   console.log(`Testing .multiply(12000)`);
+  //   ex.multiply(12000);
+  //   console.log(JSON.stringify(ex));
+  //   console.log(ex.toString());
+  //   console.log('=======================================');
+  //
+  //   console.log(`Testing .divide(12000)`);
+  //   ex.divide(12000);
+  //   console.log(JSON.stringify(ex));
+  //   console.log(ex.toString());
+  //
+  //   console.log('=======================================');
+  //   console.log(`Testing .eval({x3: 1}):`);
+  //   let result = ex.eval({'x3' : 1});
+  //   console.log(JSON.stringify(ex));
+  //   console.log(result.toString());
 
   // let x = new Expression('n1');
   // let x2 = new Expression('n2');
   // let sub = x.subtract('n2');
   // console.log(JSON.stringify(sub));
+  let x = new Expression('((((86) / (x4)) - (37)) - (x4)) - (((82) * (x0)) * ((86) / (x0)))');
+  console.log(JSON.stringify(x));
+  console.log(x.eval({'x4': 34, 'x0': 23}));
+
 };
 
 main();
