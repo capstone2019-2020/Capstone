@@ -1,4 +1,4 @@
-const {Equation, Expression} = require('algebra.js');
+const {Equation, Expression} = require('../../src/RWalgebra.js');
 const {validate} = require('jsonschema');
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
 const LOG_LEVEL = LOG_LEVELS[process.env.M1_LOG_LEVEL];
@@ -122,7 +122,7 @@ exports.simple_sfg = function get_sfg_mat(eqns) {
   let nodes = {};
 
   eqns.forEach(eqn => {
-    let src_id = eqn.lhs.terms.find(() => true).variables[0].toString(); // find first (and hopefully only)
+    let src_id = eqn.lhs.real.terms.find(() => true).variables[0].toString(); // find first (and hopefully only)
 
     // create node if not exists
     let src_node = nodes[src_id];
@@ -134,8 +134,8 @@ exports.simple_sfg = function get_sfg_mat(eqns) {
       nodes[src_id] = src_node;
     }
 
-    eqn.rhs.terms.forEach(term => {
-      let coeff = term.coefficient();
+    eqn.rhs.real.terms.forEach(term => {
+      let coeff = term.coefficient;
       let variables = term.variables.map(v => v.toString());
       let dest_id = variables[variables.length-1];
       variables = variables.slice(0, variables.length-1);
@@ -270,7 +270,7 @@ exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d)
   });
 
   const map_expr_terms = (expr, map, default_val) => {
-    expr.terms.forEach(term =>
+    expr.real.terms.forEach(term =>
       term.variables.forEach(v => map[v] = default_val)
     );
   };

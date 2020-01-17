@@ -1,7 +1,7 @@
 const assert = require('assert');
 const suite = require('./suite');
 const {equations} = require('./tests');
-const algebra = require('algebra.js');
+const algebra = require('../../src/RWalgebra.js');
 
 // run private tests to make sure testing framework is working
 (function test_suite() {
