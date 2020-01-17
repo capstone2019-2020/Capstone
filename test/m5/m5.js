@@ -246,9 +246,16 @@ function __test_that__(exprs, op, terms, expected, isImag=false) {
   }
 
   if (errMsg.length || FIXED(actual, 4) !== FIXED(expected, 4)) {
+    let exprStr = '';
+    exprs.forEach((expr, i) => {
+      exprStr+=expr;
+      if (i !== exprs.length-1) {
+        exprStr+='\n';
+      }
+    });
     let output = `
     \n========================================= \
-    \nEquation: \n${expr}                       \
+    \nEquation(s): \n${exprStr}                       \
     \nExpected: ${expected}, Actual: ${actual}  \
     \nErrors(s): ${errMsg}
     \nTerms: ${JSON.stringify(terms)}           \

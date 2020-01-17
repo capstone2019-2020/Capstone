@@ -13,10 +13,14 @@ const algebra = require('algebra.js');
 //   console.log(suite.verify_masons(parsed_n, parsed_d, parsed_n, parsed_d));
 //   return eqns;
 // });
-let eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(6));
+// let eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(6));
+// eqns.forEach(eqn => console.log(eqn.toString()));
+// const sfg = suite.simple_sfg(eqns);
+// console.log(JSON.stringify(sfg));
+const eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(30));
 eqns.forEach(eqn => console.log(eqn.toString()));
-const sfg = suite.simple_sfg(eqns);
-console.log(JSON.stringify(sfg));
+const output = m1.computeSFG(eqns);
+console.log(JSON.stringify(output));
 
 // alg_eqns.forEach(eqns => {
 //   let ans_sfg = suite.simple_sfg(eqns);
