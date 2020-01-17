@@ -111,13 +111,14 @@ Term.prototype.toString = function () {
   // There exists a fraction in the term
   if (math.abs(Number(this.fraction.numer)) !== 1 || math.abs(Number(this.fraction.denom)) !== 1) {
     // The numerator is one which can be replaced with the coefficient number
-    if (math.abs(Number(this.fraction.numer)) == 1 && math.abs(Number(this.coefficient)) !== 1) {
-      str = "(" + str + " / " + this.fraction.denom.toString() + ")";  
-    } else  {
-      str += "(" + this.fraction.numer.toString() + " / " + this.fraction.denom.toString() + ")";
+    if (math.abs(Number(this.fraction.numer)) === 1 && math.abs(Number(this.coefficient)) !== 1) {
+      str = "((" + str + ") / (" + this.fraction.denom.toString() + "))";  
+    } else {
+      str += "((" + this.fraction.numer.toString() + ") / (" + this.fraction.denom.toString() + "))";
     }
   }
 
+  // From algebra.js
   str = this.variables.reduce(function (p, c) {
       if (!!p) {
           var vStr = c.toString();
@@ -126,34 +127,16 @@ Term.prototype.toString = function () {
           return p.concat(c.toString());
   }, str);
   str = (str.substring(0, 3) === " * " ? str.substring(3, str.length) : str);
-  str = (str.substring(0, 1) === "-" ? str.substring(1, str.length) : str);
+  // str = (str.substring(0, 1) === "-" ? str.substring(1, str.length) : str);
+
+  if (Number(this.coefficient) === -1 && str !== "") {
+    str = "(-" + str + ")";
+  } else if (str === "" && Number(this.coefficient) === -1) {
+    str = this.coefficient;
+  }
 
   return str;
 };
-
-// (function main() {
-//   var testVariable = [
-//       'x1',
-//       'x2 ^ 2'
-//   ];
-//
-//   var testTerms = [
-//     new Term(testVariable[0]),
-//     new Term('4*x5')
-// ];
-//
-//   testVariable.forEach((test) => {
-//     var v = new Variable(test);
-//     console.log(v);
-//     console.log(v.toString());
-//   }
-//   )
-//
-//   testTerms.forEach((test2) => {
-//     console.log(test2);
-//     console.log(test2.toString());
-//   })
-// })();
 
 module.exports = {
   Variable: Variable, 
