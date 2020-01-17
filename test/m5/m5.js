@@ -123,13 +123,10 @@ function __simple__(nTerms, terms, isImag=false) {
     }
   }
 
-  for (let [k, v] of Object.entries(terms)) {
-    evalExpr = REPLACE_ALL(evalExpr, k, v);
-  }
-  let compiled = math.compile(evalExpr);
-
   return {
-    str: expr, evalStr: evalExpr, val: compiled.evaluate()
+    str: expr,
+    evalStr: evalExpr,
+    val: __compile__(evalExpr, terms)
   };
 }
 
@@ -190,12 +187,54 @@ function __internal__() {
   }
 }
 
-function __test_that__(expr, terms, expected, isImag=false) {
-  if (!isFinite(expected)) {
-    return;
+function __set_left_join__(left, right) {
+  let joined = {};
+
+  for (let [k, v] of Object.entries(left)) {
+    joined[k] = v;
   }
 
-  let rwExpr = new Expression(expr);
+  for (let [k, v] of Object.entries(right)) {
+    if (!joined.hasOwnProperty(k)) {
+      joined[k] = v;
+    }
+  }
+  return joined;
+}
+
+function __compile__(expr, terms) {
+  for (let [k, v] of Object.entries(terms)) {
+    expr = REPLACE_ALL(expr, k, v);
+  }
+  let compiled = math.compile(expr);
+  return compiled.evaluate();
+}
+
+function __test_that__(exprs, op, terms, expected, isImag=false) {
+  if (!isFinite(expected) || !exprs.length) {
+    return; /* don't test this */
+  }
+  let rwExpr, _expr;
+  exprs.forEach(expr => {
+    _expr = new Expression(expr);
+    if (!rwExpr) {
+      rwExpr = _expr;
+    } else {
+      switch (op) {
+        case '+': rwExpr = rwExpr.add(_expr); break;
+        case '-': rwExpr = rwExpr.subtract(_expr); break;
+        case '*': rwExpr = rwExpr.multiply(_expr); break;
+        case '/': rwExpr = rwExpr.divide(_expr); break;
+        default:
+          throw new Error(`invalid op: ${op}`);
+      }
+    }
+  });
+
+  if (op === '^-1') {
+    rwExpr = rwExpr.inverse();
+  }
+
   let errMsg = '', actual;
   try {
     actual = rwExpr.eval(terms);
@@ -239,13 +278,43 @@ describe('m5 math utilities library tests', function() {
   const MAX_ITERS_HARD = 500;
   const NUM_TERMS_FUNC = 20;
 
+  /**
+   * Test operations (add, sub, mul, div). Makes use of
+   * __simple__ expression generator. 2 expressions are
+   * <<op>>'d together. __simple__ generates numerical
+   * value mappings for each variable used (in 'terms'),
+   * and there is overlap in the variables in the 2 generated
+   * expressions. To resolve this, a set left_join is
+   * performed, arbitrarily selecting the left side
+   *
+   * @param op: the operation to perform (e.g. +,-,*,/)
+   * @param iters: number of iterations to run
+   * @param isImag: test for imaginary?
+   */
+  const test_ops = (op, iters, isImag=false) => {
+    let expr, terms;
+    let e1, e2, terms_e1, terms_e2;
+    let i;
+    for (i=0; i<iters; i++) {
+      terms_e1 = {};
+      terms_e2 = {};
+      e1 = __simple__(NUM_TERMS_FUNC, terms_e1, isImag);
+      e2 = __simple__(NUM_TERMS_FUNC, terms_e2, isImag);
+      expr = CONCAT(e1.str, op, e2.str);
+      terms = __set_left_join__(terms_e1, terms_e2);
+
+      __test_that__([e1.str, e2.str], op, terms,
+        __compile__(expr, terms), isImag);
+    }
+  };
+
   describe('functionality', function() {
     it('real', function() {
       let i, simple, terms;
       for (i=0; i<MAX_ITERS_EASY; i++) {
         terms = {};
         simple = __simple__(NUM_TERMS_FUNC, terms, false);
-        __test_that__(simple.str, terms, simple.val);
+        __test_that__([simple.str], '', terms, simple.val);
       }
     });
     it('imaginary', function() {
@@ -253,7 +322,31 @@ describe('m5 math utilities library tests', function() {
       for (i=0; i<MAX_ITERS_EASY; i++) {
         terms = {};
         simple = __simple__(NUM_TERMS_FUNC, terms, true);
-        __test_that__(simple.str, terms, simple.val, true);
+        __test_that__([simple.str], '', terms, simple.val,
+          true);
+      }
+    });
+    it('add', () => test_ops('+', MAX_ITERS_EASY));
+    it('subtract', () => test_ops('-', MAX_ITERS_EASY));
+    it('multiply', () => test_ops('*', MAX_ITERS_EASY));
+    it('divide', () => test_ops('/', MAX_ITERS_EASY));
+    it('inverse', function() {
+      let i, simple, terms;
+      for (i=0; i<MAX_ITERS_EASY; i++) {
+        terms = {};
+        simple = __simple__(NUM_TERMS_FUNC, terms, true);
+        __test_that__([simple.str], '^-1', terms,
+          1/simple.val, true);
+      }
+    });
+    it('toString', function() {
+      this.timeout(50000);
+      let i, simple, terms, expr;
+      for (i=0; i<MAX_ITERS_EASY; i++) {
+        terms = {};
+        simple = __simple__(NUM_TERMS_FUNC, terms, false);
+        expr = new Expression(simple.str).toString();
+        __test_that__([expr], '', terms, simple.val);
       }
     });
     it('easy', function() {
@@ -261,7 +354,7 @@ describe('m5 math utilities library tests', function() {
       for (i=1; i<=MAX_ITERS_EASY; i++) {
         terms = {};
         simple = __simple__(i, terms, false);
-        __test_that__(simple.str, terms, simple.val);
+        __test_that__([simple.str], '', terms, simple.val);
       }
     });
     it('medium', function() {
@@ -269,7 +362,7 @@ describe('m5 math utilities library tests', function() {
       for (i=1; i<=MAX_ITERS_MED; i++) {
         terms = {};
         simple = __generate__(i, i, 1, terms);
-        __test_that__(simple.str, terms, simple.val);
+        __test_that__([simple.str], '', terms, simple.val);
       }
     });
     it('hard', function() {
@@ -277,7 +370,7 @@ describe('m5 math utilities library tests', function() {
       for (i=1; i<=MAX_ITERS_HARD; i++) {
         terms = {};
         simple = __generate__(i, i, 1, terms);
-        __test_that__(simple.str, terms, simple.val);
+        __test_that__([simple.str], '', terms, simple.val);
       }
     });
   });

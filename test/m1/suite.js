@@ -37,6 +37,8 @@ const Schema = function Schema() {
       items: {type: 'string'},
     }),
     String: () => ({type: 'string'}),
+    NumberString: () => ({type: 'number, string'}),
+    StringNull: () => ({type: 'string, null'}),
     Boolean: () => ({type: 'boolean'}),
     PlainObject: () => ({type: 'object'}),
   };
@@ -183,9 +185,10 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
     let schema = Schema();
     validate(output_sfg, schema.Init(schema.ObjectArray({
       id: schema.String(),
+      value: schema.StringNull(),
       outgoingEdges: schema.ObjectArray({
         id: schema.String(),
-        weight: schema.String(),
+        weight: schema.NumberString(),
         startNode: schema.String(),
         endNode: schema.String()
       })
@@ -198,11 +201,12 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
   }
 
   // (2)
-  output_sfg.forEach(node => {
+  for (let node of output_sfg) {
     let ans_node = ans_sfg.find(a_n => a_n.id === node.id);
     if (!ans_node) {
       info_log(`could not find node: ${node.id} in solution`);
       valid = false;
+      continue;
     }
 
     let adj = {};
@@ -224,11 +228,11 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
         info_log(`expecting node ${node.id} to be`,
                     `connected to node ${ans_e.endNode}`);
         valid = false;
-        return;
       }
 
-      let e_weight = e.weight.toString();
-      let ans_e_weight = ans_e.weight.toString();
+      let regex = /[()]/gm;
+      let e_weight = e.weight.toString().replace(regex, '');
+      let ans_e_weight = ans_e.weight.toString().replace(regex, '');
 
       if (e_weight !== ans_e_weight) {
         info_log(`expecting edge ${e.id} to have`,
@@ -236,10 +240,11 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
         valid = false;
       }
     })
-  });
+  }
 
   if (!valid) {
-    debug_log('expected graph to look like: ', JSON.stringify(ans_sfg, null, 2));
+    debug_log('expected graph to look like: ',
+      JSON.stringify(ans_sfg, null, 2));
   }
   return valid;
 };
@@ -261,7 +266,9 @@ exports.perf_stats = function perf_stats(highest, lowest, total, iters) {
  * where n = numerator
  *       d = denominator
  */
-exports.verify_masons = function verify_masons(output_n, output_d, ans_n, ans_d) {
+exports.verify_masons = function verify_masons(output_n,
+                                               output_d,
+                                               ans_n, ans_d) {
   let valid = true;
 
   info_log('verify masons:', {

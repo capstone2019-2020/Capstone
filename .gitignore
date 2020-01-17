@@ -3,3 +3,4 @@ node_modules/
 *.debug
 *.results
 test/m5/output.txt
+output.txt
