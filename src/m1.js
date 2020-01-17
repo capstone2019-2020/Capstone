@@ -169,7 +169,7 @@ function computeSFG (params) {
             if (math.abs(Number(tempTermOfrhs[k].fraction.numer)) == 1 && math.abs(Number(tempTermOfrhs[k].coefficient)) !== 1) {
               weight = weight + "/" + tempTermOfrhs[k].fraction.denom.toString();
             } else {
-              weight = "(" + tempTermOfrhs[k].fraction.numer.toString() + " / " + tempTermOfrhs[k].fraction.denom.toString() + ")";
+              weight += "*((" + tempTermOfrhs[k].fraction.numer.toString() + ") / (" + tempTermOfrhs[k].fraction.denom.toString() + "))";
             }
           }
 
@@ -256,7 +256,7 @@ function computeSFG (params) {
               if (math.abs(Number(tempTerm[j].fraction.numer)) == 1 && math.abs(Number(tempTerm[j].coefficient)) !== 1) {
                 weight = weight + "/" + tempTerm[j].fraction.denom.toString();
               } else {
-                weight += "(" + tempTerm[j].fraction.numer.toString() + " / " + tempTerm[j].fraction.denom.toString() + ")";
+                weight += "*((" + tempTerm[j].fraction.numer.toString() + ") / (" + tempTerm[j].fraction.denom.toString() + "))";
               }
             }
 
@@ -264,7 +264,7 @@ function computeSFG (params) {
               weight = weight + "j";
             }
 
-            nodes[searchNeeded].outgoingEdges.push(new datamodel.Edge (weight, nodes[searchNeeded].id, termsoflhs[i].toString()));
+            nodes[searchNeeded].outgoingEdges.push(new datamodel.Edge (weight.toString(), nodes[searchNeeded].id, termsoflhs[i].toString()));
           }
         }
       }
@@ -278,14 +278,14 @@ function computeSFG (params) {
       var id = "y1"+i;
       var value = params[i].rhs.imag.constant+"j";
       newNode = new datamodel.Node(id, value); 
-      newNode.outgoingEdges.push(new datamodel.Edge(1, id, termsoflhs[i].toString()));
+      newNode.outgoingEdges.push(new datamodel.Edge("1", id, termsoflhs[i].toString()));
       nodes.push(newNode);
     }
 
     if (params[i].rhs.real.constant !== null) {
       var id = "y2"+i;
       newNode = new datamodel.Node(id, params[i].rhs.real.constant.toString()); 
-      newNode.outgoingEdges.push(new datamodel.Edge(1, id, termsoflhs[i].toString()));
+      newNode.outgoingEdges.push(new datamodel.Edge("1", id, termsoflhs[i].toString()));
       nodes.push(newNode);
     }
   }
