@@ -99,26 +99,26 @@ function getUserInput() {
   });
 }
 
-
 // Create a dynamic array and input each node
 function computeSFG (params) {
   let nodes = [];
-  let termsoflhs = [], termsofrhs = [];
+  let termsoflhs = [];
+  let termsofrhs = [];
   let vNodeNotFound = 0;
   let needToSearchRelation = false;
 
   for (let i = 0; i < params.length; i++) {
     //Access the eqns and split by lhs and rhs
-    if (params[i].lhs.real.terms.length != 0) {
+    if (params[i].lhs.real.terms.length !== 0) {
       termsoflhs.push(params[i].lhs.real.terms);
     }
-    if (params[i].lhs.imag.terms.length != 0) {
+    if (params[i].lhs.imag.terms.length !== 0) {
       termsoflhs.push(params[i].lhs.imag.terms);
     }
-    if (params[i].rhs.imag.terms.length != 0) {
+    if (params[i].rhs.imag.terms.length !== 0) {
       termsofrhs.push(params[i].rhs.imag.terms);
     }
-    if (params[i].rhs.real.terms.length != 0) {
+    if (params[i].rhs.real.terms.length !== 0) {
       termsofrhs.push(params[i].rhs.real.terms);
     }
   }   
@@ -212,7 +212,6 @@ function computeSFG (params) {
         } 
         else if (tempVariable.length === 1) {
           startNode = tempVariable;
-          value = 1;
         }
 
         newNode = new datamodel.Node(startNode.toString(), value); 
@@ -284,7 +283,7 @@ function computeSFG (params) {
 
     if (params[i].rhs.real.constant !== null) {
       var id = "y2"+i;
-      newNode = new datamodel.Node(id, params[i].rhs.real.constant); 
+      newNode = new datamodel.Node(id, params[i].rhs.real.constant.toString()); 
       newNode.outgoingEdges.push(new datamodel.Edge(1, id, termsoflhs[i].toString()));
       nodes.push(newNode);
     }
