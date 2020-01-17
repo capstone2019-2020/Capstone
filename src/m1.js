@@ -276,7 +276,8 @@ function computeSFG (params) {
     // Constant exist in the equation - y1&i as the id for imaginary constants
     if (params[i].rhs.imag.constant !== null) {
       var id = "y1"+i;
-      newNode = new datamodel.Node(id, params[i].rhs.imag.constant+"j"); 
+      var value = params[i].rhs.imag.constant+"j";
+      newNode = new datamodel.Node(id, value); 
       newNode.outgoingEdges.push(new datamodel.Edge(1, id, termsoflhs[i].toString()));
       nodes.push(newNode);
     }
