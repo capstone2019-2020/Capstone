@@ -175,14 +175,19 @@ const compute = (op1, op2, operator) => {
  * Each takes 2 arguments: op1, op2 -- both are a LIST OF TERMS
  * **/
 const addTerms = (op1, op2) => {
-  return op1.concat(op2);
+  let _op2 = [];
+  op2.forEach(t => _op2.push(t.copy()));
+  return op1.concat(_op2);
 };
 
 const subtractTerms = (op1, op2) => {
+  let _op2 = [];
   op2.forEach( t => {
-    t.coefficient *= -1;
+    let _t = t.copy();
+    _t.coefficient *= -1;
+    _op2.push(_t);
   });
-  return op1.concat(op2);
+  return op1.concat(_op2);
 };
 
 const multiplyTerms = (op1, op2) => {
@@ -507,6 +512,8 @@ const Equation = function(arg0, arg1) {
 
     if (typeof arg1 === 'string')
       arg1 = new Expression(arg1);
+
+
 
     this.lhs = arg0;
     this.rhs = arg1;

@@ -189,6 +189,11 @@ exports.verifyCircuit = function(output, expected) {
       let val1 = parseFloat(node_eqn1.rhs.eval(variable_map));
       let val2 = parseFloat(node_eqn2.rhs.eval(variable_map));
 
+      debug_log(`Expected: ${JSON.stringify(node_eqn2.rhs)}`);
+      debug_log(`Actual: ${JSON.stringify(node_eqn1.rhs)}`);
+      debug_log(`variable map: ${JSON.stringify(variable_map)}`);
+      debug_log(`val1: ${val1} val2: ${val2}`);
+
       /* Assume that the last equation will always be of the form Ix - Iy + Iz... = 0 */
       if (j !== enode.length-1) {
         result1[node_eqn1.lhs.real.terms[0].variables[0].name] = val1;
