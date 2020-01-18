@@ -222,12 +222,13 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
 
     // index by endNode
     edges.forEach(e => adj[e.endNode] = e);
-    ans_edges.forEach(ans_e => {
+    for (let ans_e of ans_edges) {
       let e = adj[ans_e.endNode];
       if (!e) {
         info_log(`expecting node ${node.id} to be`,
                     `connected to node ${ans_e.endNode}`);
         valid = false;
+        continue;
       }
 
       let regex = /[()]/gm;
@@ -239,7 +240,7 @@ exports.verify_sfg = function verify_sfg(output_sfg, ans_sfg) {
                     `weight ${ans_e_weight}, got ${e_weight}`);
         valid = false;
       }
-    })
+    }
   }
 
   if (!valid) {

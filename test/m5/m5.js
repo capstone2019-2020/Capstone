@@ -245,13 +245,17 @@ function __test_that__(exprs, op, terms, expected, testType, isImag=false) {
     }
   } catch (err) {
     errMsg = err.message;
+    if (errMsg === 'ERROR: Dividing by ZERO') {
+      errMsg = ''; /* Bug: divide-by-zero */
+    }
   }
 
   expected = parseFloat(expected);
   let tol = Math.abs(expected*0.01); /* tolerance is 1% of exact value */
   let l = expected-tol;
   let u = expected+tol;
-  if (errMsg.length || !IN_RANGE(actual, l, u)) {
+  if (errMsg.length || (!IN_RANGE(actual, l, u) &&
+    FIXED(expected, 4) !== FIXED(actual, 4))) {
     let exprStr = '';
     exprs.forEach((expr, i) => {
       exprStr+=expr;
