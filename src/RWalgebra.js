@@ -29,10 +29,12 @@ const Expression = function (exp) {
     this.real.constant = parseFloat(exp);
   }
   else if (Array.isArray(exp) && exp[0] instanceof Term) { // array of Terms
+    let real_const = computeConstant(exp, false);
+    let imag_const = computeConstant(exp, true);
     this.real.terms = filterOutConstantTerms(exp, false);
-    this.real.constant = computeConstant(exp, false);
+    this.real.constant = real_const === null ? 0 : real_const;
     this.imag.terms = filterOutConstantTerms(exp, true);
-    this.imag.constant = computeConstant(exp, true);
+    this.imag.constant = imag_const === null ? 0 : imag_const;
   }
   else if (exp === undefined) {
     // do nothing
@@ -427,10 +429,12 @@ Expression.prototype.inverse = function(){
  * @param terms
  */
 Expression.prototype.termsToExpression = function(terms) {
+  let real_const = computeConstant(terms, false);
+  let imag_const = computeConstant(terms, true);
   this.real.terms = filterOutConstantTerms(terms, false);
-  this.real.constant = computeConstant(terms, false);
+  this.real.constant = real_const === null ? 0 : real_const;
   this.imag.terms = filterOutConstantTerms(terms, true);
-  this.imag.constant = computeConstant(terms, true);
+  this.imag.constant = imag_const === null ? 0 : imag_const;
 };
 
 /**

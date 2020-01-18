@@ -81,6 +81,8 @@ Term.prototype.eval = function(sub) {
     let denom = copy.fraction.denom.eval(sub);
 
     if (typeof denom === 'number') {
+      if (denom === 0)
+        throw new Error('ERROR: Dividing by ZERO');
       copy.coefficient = copy.coefficient / denom;
       copy.fraction = new Fraction(1, 1);
     } else
