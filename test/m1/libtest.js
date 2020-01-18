@@ -17,7 +17,7 @@ const algebra = require('algebra.js');
 // eqns.forEach(eqn => console.log(eqn.toString()));
 // const sfg = suite.simple_sfg(eqns);
 // console.log(JSON.stringify(sfg));
-const eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(30));
+const eqns = suite.matmult_to_eqn(suite.gen_eqns_mat(5));
 eqns.forEach(eqn => console.log(eqn.toString()));
 const output = m1.computeSFG(eqns);
 console.log(JSON.stringify(output));

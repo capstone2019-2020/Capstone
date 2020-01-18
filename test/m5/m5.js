@@ -23,6 +23,8 @@ const RAND_OP = () => OPS[RAND(0, OPS.length)];
 const TERM = (key, deg) => deg === 1 ? key : `${key}^${deg}`;
 const CONCAT = (str, op, key) => str.length > 0 ? `(${str}) ${op} (${key})` : key;
 const REPLACE_ALL = (src, match, dest) => src.replace(new RegExp(match, 'g'), dest);
+const IN_RANGE = (n, l, u) => n >= l && n <= u;
+const SCALE = (n, s) => n*s;
 
 const TEST_EXPONENTS = false;
 const MAX_EVAL_VAL = 100;
@@ -245,7 +247,11 @@ function __test_that__(exprs, op, terms, expected, isImag=false) {
     errMsg = err.message;
   }
 
-  if (errMsg.length || FIXED(actual, 4) !== FIXED(expected, 4)) {
+  expected = parseFloat(expected);
+  let tol = Math.abs(expected*0.01); /* tolerance is 1% of exact value */
+  let l = expected-tol;
+  let u = expected+tol;
+  if (errMsg.length || !IN_RANGE(actual, l, u)) {
     let exprStr = '';
     exprs.forEach((expr, i) => {
       exprStr+=expr;
@@ -268,8 +274,9 @@ function __test_that__(exprs, op, terms, expected, isImag=false) {
 }
 
 describe('m5 math utilities library tests', function() {
+  this.timeout(0);
+
   before(function() {
-    this.timeout(0);
     try {
       fs.unlinkSync(OUTPUT_FILE_PATH);
     } catch (err) {
@@ -280,9 +287,9 @@ describe('m5 math utilities library tests', function() {
     console.log('\nm5 internal test passed');
   });
 
-  const MAX_ITERS_EASY = 30;
-  const MAX_ITERS_MED = 200;
-  const MAX_ITERS_HARD = 500;
+  const MAX_ITERS_EASY = 50;
+  const MAX_ITERS_MED = 100;
+  const MAX_ITERS_HARD = 200;
   const NUM_TERMS_FUNC = 20;
 
   /**
@@ -347,7 +354,6 @@ describe('m5 math utilities library tests', function() {
       }
     });
     it('toString', function() {
-      this.timeout(50000);
       let i, simple, terms, expr;
       for (i=0; i<MAX_ITERS_EASY; i++) {
         terms = {};
