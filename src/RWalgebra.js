@@ -17,8 +17,8 @@ const DEBUG = 0;
 
 
 const Expression = function (exp) {
-  this.imag = { terms: [], constant: null };   /* List of Terms */
-  this.real = { terms: [], constant: null };   /* List of Terms */
+  this.imag = { terms: [], constant: 0 };   /* List of Terms */
+  this.real = { terms: [], constant: 0 };   /* List of Terms */
 
   if ( typeof exp === 'string' ) {
     const tokens = tokenize(exp);
@@ -450,8 +450,8 @@ Expression.prototype.eval = function(sub) {
   const imag = (this.imag.terms.reduce((acc, curr) => {return acc.add(curr.eval(sub))}, result)).imag.terms;
 
   result.termsToExpression(real.concat(imag));
-  result.real.constant += this.real.constant;
-  result.imag.constant += this.imag.constant;
+  result.real.constant += this.real.constant === null ? 0 : this.real.constant;
+  result.imag.constant += this.imag.constant === null ? 0 : this.imag.constant;
 
   if (!result.real.terms.length && !result.imag.terms.length && (result.imag.constant === 0 || result.imag.constant === null))
     return result.real.constant;
