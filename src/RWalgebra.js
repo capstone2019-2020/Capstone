@@ -42,6 +42,15 @@ const Expression = function (exp) {
   }
 };
 
+Expression.prototype.copy = function() {
+  let copy = new Expression();
+  copy.real.terms = this.real.terms.map(t => t.copy());
+  copy.imag.terms = this.imag.terms.map(t => t.copy());
+  copy.real.constant = this.real.constant;
+  copy.imag.constant = this.imag.constant;
+  return copy;
+};
+
 
 /**
  * String parser that initializes the Expression data structure
@@ -196,6 +205,11 @@ const subtractTerms = (op1, op2) => {
 };
 
 const multiplyTerms = (op1, op2) => {
+  if (DEBUG) {
+    console.log('============================');
+    console.log(`multiplying ${JSON.stringify(op1)} && ${JSON.stringify(op2)}`);
+  }
+
   let result = [];
   let temp_term;
   op1.forEach( t1 => {
@@ -209,12 +223,13 @@ const multiplyTerms = (op1, op2) => {
         temp_term.imag = true;
 
       // Need to handle denominator multiplication
-      if (typeof t1.fraction.denom !== 'number' && typeof t2.fraction.denom != 'number') // expression * expression
-        temp_term.fraction.denom = t1.fraction.denom.multiply(t2.fraction.denom);
+      if (typeof t1.fraction.denom !== 'number' && typeof t2.fraction.denom !== 'number') // expression * expression
+        temp_term.fraction.denom = t1.fraction.denom.copy().multiply(t2.fraction.denom);
       else if (typeof t1.fraction.denom !== 'number') // expression * const
-        temp_term.fraction.denom = t1.fraction.denom;
+        temp_term.fraction.denom = t1.fraction.denom.copy();
       else if (typeof t2.fraction.denom !== 'number') // const * expression
-        temp_term.fraction.denom = t2.fraction.denom;
+        temp_term.fraction.denom = t2.fraction.denom.copy();
+
       result.push(temp_term);
     });
   });
