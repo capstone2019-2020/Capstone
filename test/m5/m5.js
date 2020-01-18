@@ -212,7 +212,7 @@ function __compile__(expr, terms) {
   return compiled.evaluate();
 }
 
-function __test_that__(exprs, op, terms, expected, isImag=false) {
+function __test_that__(exprs, op, terms, expected, testType, isImag=false) {
   if (!isFinite(expected) || !exprs.length) {
     return; /* don't test this */
   }
@@ -261,7 +261,8 @@ function __test_that__(exprs, op, terms, expected, isImag=false) {
     });
     let output = `
     \n========================================= \
-    \nEquation(s): \n${exprStr}                       \
+    \nTest type: ${testType}                    \
+    \nEquation(s): \n${exprStr}                 \
     \nExpected: ${expected}, Actual: ${actual}  \
     \nErrors(s): ${errMsg}
     \nTerms: ${JSON.stringify(terms)}           \
@@ -318,7 +319,7 @@ describe('m5 math utilities library tests', function() {
       terms = __set_left_join__(terms_e1, terms_e2);
 
       __test_that__([e1.str, e2.str], op, terms,
-        __compile__(expr, terms), isImag);
+        __compile__(expr, terms), op, isImag);
     }
   };
 
@@ -328,7 +329,8 @@ describe('m5 math utilities library tests', function() {
       for (i=0; i<MAX_ITERS_EASY; i++) {
         terms = {};
         simple = __simple__(NUM_TERMS_FUNC, terms, false);
-        __test_that__([simple.str], '', terms, simple.val);
+        __test_that__([simple.str], '', terms, simple.val,
+          'real');
       }
     });
     it('imaginary', function() {
@@ -337,7 +339,7 @@ describe('m5 math utilities library tests', function() {
         terms = {};
         simple = __simple__(NUM_TERMS_FUNC, terms, true);
         __test_that__([simple.str], '', terms, simple.val,
-          true);
+          'imaginary', true);
       }
     });
     it('add', () => test_ops('+', MAX_ITERS_EASY));
@@ -350,7 +352,7 @@ describe('m5 math utilities library tests', function() {
         terms = {};
         simple = __simple__(NUM_TERMS_FUNC, terms, true);
         __test_that__([simple.str], '^-1', terms,
-          1/simple.val, true);
+          1/simple.val, 'inverse', true);
       }
     });
     it('toString', function() {
@@ -359,7 +361,8 @@ describe('m5 math utilities library tests', function() {
         terms = {};
         simple = __simple__(NUM_TERMS_FUNC, terms, false);
         expr = new Expression(simple.str).toString();
-        __test_that__([expr], '', terms, simple.val);
+        __test_that__([expr], '', terms, simple.val,
+          'toString');
       }
     });
     it('easy', function() {
@@ -367,23 +370,26 @@ describe('m5 math utilities library tests', function() {
       for (i=1; i<=MAX_ITERS_EASY; i++) {
         terms = {};
         simple = __simple__(i, terms, false);
-        __test_that__([simple.str], '', terms, simple.val);
+        __test_that__([simple.str], '', terms, simple.val,
+          'easy');
       }
     });
     it('medium', function() {
       let i, simple, terms;
-      for (i=1; i<=MAX_ITERS_MED; i++) {
+      for (i=MAX_ITERS_EASY; i<=MAX_ITERS_MED; i++) {
         terms = {};
         simple = __generate__(i, i, 1, terms);
-        __test_that__([simple.str], '', terms, simple.val);
+        __test_that__([simple.str], '', terms, simple.val,
+          'medium');
       }
     });
     it('hard', function() {
       let i, simple, terms;
-      for (i=1; i<=MAX_ITERS_HARD; i++) {
+      for (i=MAX_ITERS_MED; i<=MAX_ITERS_HARD; i++) {
         terms = {};
         simple = __generate__(i, i, 1, terms);
-        __test_that__([simple.str], '', terms, simple.val);
+        __test_that__([simple.str], '', terms, simple.val,
+          'hard');
       }
     });
   });
