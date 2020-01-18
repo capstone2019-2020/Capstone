@@ -178,8 +178,9 @@ function computeSFG (params) {
             weight = weight + "j";
           }
 
-          // console.log(`Weight is: ${weight}`);
-          newNode.outgoingEdges.push(new datamodel.Edge(weight.toString(), termsoflhs[i].toString(), termsoflhs[j].toString()));
+          if (check === termsoflhs[i].toString()) {
+            newNode.outgoingEdges.push(new datamodel.Edge(weight.toString(), termsoflhs[i].toString(), termsoflhs[j].toString()));
+          }
         }
       }      
     }
@@ -264,7 +265,9 @@ function computeSFG (params) {
               weight = weight + "j";
             }
 
-            nodes[searchNeeded].outgoingEdges.push(new datamodel.Edge (weight.toString(), nodes[searchNeeded].id, termsoflhs[i].toString()));
+            if (temp === nodes[searchNeeded].id) {
+              nodes[searchNeeded].outgoingEdges.push(new datamodel.Edge (weight.toString(), nodes[searchNeeded].id, termsoflhs[i].toString()));
+            }
           }
         }
       }
