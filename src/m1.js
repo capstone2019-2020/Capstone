@@ -279,21 +279,17 @@ function computeSFG (params) {
     // Constant exist in the equation - y1&i as the id for imaginary constants
     if (params[i].rhs.imag.constant !== null) {
       var id = "y1"+i;
-      if (params[i].rhs.imag.constant.toString() !== "0") {
-        var value = params[i].rhs.imag.constant+"j";
-        newNode = new datamodel.Node(id, value); 
-        newNode.outgoingEdges.push(new datamodel.Edge("1", id, termsoflhs[i].toString()));
-        nodes.push(newNode);
-      }
+      var value = params[i].rhs.imag.constant+"j";
+      newNode = new datamodel.Node(id, value); 
+      newNode.outgoingEdges.push(new datamodel.Edge("1", id, termsoflhs[i].toString()));
+      nodes.push(newNode);
     }
 
     if (params[i].rhs.real.constant !== null) {
       var id = "y2"+i;
-      if (params[i].rhs.real.constant.toString() !== "0") {
-        newNode = new datamodel.Node(id, params[i].rhs.real.constant.toString()); 
-        newNode.outgoingEdges.push(new datamodel.Edge("1", id, termsoflhs[i].toString()));
-        nodes.push(newNode);
-      }
+      newNode = new datamodel.Node(id, params[i].rhs.real.constant.toString()); 
+      newNode.outgoingEdges.push(new datamodel.Edge("1", id, termsoflhs[i].toString()));
+      nodes.push(newNode);
     }
   }
 
