@@ -17,8 +17,8 @@ const DEBUG = 0;
 
 
 const Expression = function (exp) {
-  this.imag = { terms: [], constant: 0 };   /* List of Terms */
-  this.real = { terms: [], constant: 0 };   /* List of Terms */
+  this.imag = { terms: [], constant: null };   /* List of Terms */
+  this.real = { terms: [], constant: null };   /* List of Terms */
 
   if ( typeof exp === 'string' ) {
     const tokens = tokenize(exp);
