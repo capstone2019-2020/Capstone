@@ -3,12 +3,14 @@ const bodyParser = require('body-parser');	// pull info from HTML POST (express4
 const m1 = require("./m1.js");
 const circuit = require("./circuit.js");
 const algebra = require('algebra.js');
+const netlist = require('./netlist.js');
 const app = express();
 const path = require('path');
+const fileupload = require('express-fileupload');
 const router = express.Router();
 const port = process.env.PORT || 3000;
 const equations = [];
-let nodes, startNode, endNode, masonsdata;
+let nodes, startNode, endNode, masonsdata, circuit;
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -19,10 +21,37 @@ app.use(function(req, res, next) {
 var urlencodedParser = bodyParser.urlencoded({ extended: false});
 app.use(express.static('public'));
 app.use(bodyParser.json());
+app.use(fileupload());
 
 // app.get('/', (req, res) => {
 //     res.sendFile(path.join(__dirname+ '/index.html'));
 // });
+
+// Receives the file and put list into netlist 
+app.post("/input-file", (req, res) => {
+    let stuff = req.body.contents;
+    console.log(stuff);
+
+    c = netlist.nlConsumeArr(stuff);
+    console.log(c);
+    if (!c) {
+        return res.status(400).send("nlConsume Missing");
+    }
+
+    circuit = circuitjs.createCircuit(c);
+    console.log(circuit);
+    tempEqns = circuit.nodalAnalysis();
+
+    if(!circuit) {
+        return res.status(400).send("Create circuit missing");
+    }
+
+    if (!req.body.contents) {
+        return res.status(400).send("Missing contents of file");
+    }
+    // Read the netlist file and save the content 
+    return res.status(200).send(circuit);
+});
 
 // Receive user request and parse into the eqns
 // Saves the eqns into an array named eqns
