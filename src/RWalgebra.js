@@ -116,7 +116,8 @@ const computeConstant = (terms, _imag) => {
 };
 
 const filterOutConstantTerms = (terms, _imag) => {
-  return terms.filter(t => (t.variables.length || typeof t.fraction.denom !== 'number') && t.imag === _imag && t.coefficient !== 0 );
+  return terms.filter(t => (t.variables.length || typeof t.fraction.denom !== 'number')
+    && t.imag === _imag && t.coefficient !== 0 );
 };
 
 /**
@@ -137,7 +138,7 @@ const simplify = (terms) => {
       f.push(t);
       return;
     }
-    v_names = t.variables.map(v => v.name).join('') + t.imag;
+    v_names = t.variables.map(v => v.name).sort().join('') + t.imag;
     if (!vars[v_names])
       vars[v_names] = t;
     else  { // need to combine variables
@@ -238,7 +239,15 @@ const multiplyTerms = (op1, op2) => {
   return result;
 };
 
-// TODO if imaginary number in denominator, multiply by conjugate of denominator
+Expression.prototype.conjugate = function() {
+  let conjugate = this.copy();
+  conjugate.imag.constant *= -1;
+  conjugate.imag.terms.forEach(t => {
+    t.coefficient *= -1;
+  });
+  return conjugate;
+};
+
 const divideTerms = (op1, op2) => {
   /* Case 1: term / term */
   if (op1.length === 1 && op2.length === 1) {
@@ -248,39 +257,86 @@ const divideTerms = (op1, op2) => {
       return op1;
     }
 
+
+    // multiply denominator of op1 and op2
     op1[0].fraction.denom = (new Expression(op2)).multiply(op1[0].fraction.denom);
+
+    /*
+     * If the divisor (op2) is imaginary, must multiply by the conjugate of the
+     * denominator of op1 so that there are no 'j's' in the denominator
+     */
+    if (op2[0].imag) {
+      const conjugate = op1[0].fraction.denom.conjugate();
+      op1[0].fraction.denom.multiply(conjugate);
+      op1 = multiplyTerms(op1, convertToTerms(conjugate));
+    }
     return op1;
   }
 
   /* Case 2: multiple terms / term */
   else if (op1.length > 1 && op2.length === 1) {
     let _const = computeConstant(op2, false); // term is a constant
+    let _op1 = []; // final result
     op1.forEach( t => {
       if (_const !== null) {
         t.coefficient = t.coefficient /_const;
+        _op1.push(t);
       } else {
         if (typeof t.fraction.denom === 'number')
           t.fraction.denom = new Expression(op2);
         else
           t.fraction.denom.multiply(new Expression(op2));
+
+        // If term is imaginary - multiply top and bottom by conjugate (term * -1)
+        if (op2[0].imag) {
+          const conjugate = t.fraction.denom.conjugate();
+          t.fraction.denom.multiply(conjugate);
+          let terms = multiplyTerms([t], convertToTerms(conjugate));
+          _op1 = _op1.concat(terms);
+        } else {
+          _op1.push(t);
+        }
       }
     });
-    return op1;
+    return _op1;
   }
 
   /* Case 3: term / multiple terms */
   else if (op1.length === 1 && op2.length > 1) {
+    let denom = new Expression(op2);
+    op1[0].fraction.denom = denom.multiply(op1[0].fraction.denom);
 
-    op1[0].fraction.denom = (new Expression(op2)).multiply(op1[0].fraction.denom);
+    // If the denominator expression contains an imaginary term, must multiply top and bottom by conjugate
+    if ((denom.imag.constant !== 0 && denom.imag.constant !== null) || denom.imag.terms.length) {
+      const conjugate = denom.conjugate();
+      op1[0].fraction.denom = denom.multiply(conjugate);
+      op1 = multiplyTerms(op1, convertToTerms(conjugate));
+    }
     return op1;
   }
 
   /* Case 4: multiple terms / multiple terms */
   else if (op1.length > 1 && op2.length > 1) {
+    let _op1 = []; // final result
     op1.forEach( t => {
       t.fraction.denom = (new Expression(op2)).multiply(t.fraction.denom);
+
+      /*
+       * If any of the terms in the denominator expression contain
+       * imaginary numbers, must multiply top and bottom by conjugate
+       */
+      let denom = t.fraction.denom;
+      if ((denom.imag.constant !== 0 && denom.imag.constant !== null) || denom.imag.terms.length) {
+        const conjugate = denom.conjugate();
+        t.fraction.denom.multiply(conjugate);
+        let terms = multiplyTerms([t], convertToTerms(conjugate));
+        _op1 = _op1.concat(terms);
+      } else {
+        _op1.push(t);
+      }
+
     });
-    return op1;
+    return _op1;
   }
 };
 
@@ -409,7 +465,7 @@ Expression.prototype.multiply = function(op) {
     }
     terms_2 = convertToTerms(op);
   }
-  const result = multiplyTerms(terms_1, terms_2);
+  const result = simplify(multiplyTerms(terms_1, terms_2));
   this.termsToExpression(result);
   return this;
 };
