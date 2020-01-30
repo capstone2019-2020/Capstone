@@ -38,7 +38,12 @@ app.post("/input-file", (req, res) => {
     circuit = circuitjs.createCircuit(c);
     console.log(circuit);
     let tempEqns = circuit.nodalAnalysis();
-    // tempEqns.shorCircuitCurrent.ForEach((eqns) => equations.push(algebra.parse(eqns)));
+    tempEqns.currentEquations.forEach((eqns) => eqns.forEach((second) =>
+    second.forEach((third) =>
+    {
+        console.log(third.toString());
+        equations.push(algebra.parse(third.toString()));
+    })));
 
     if(!circuit) {
         return res.status(400).send("Create circuit missing");
