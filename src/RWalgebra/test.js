@@ -4,7 +4,7 @@ const { tokenize } = require('../token.js');
 
 function main() {
   const exp = 'x2 - 3*y - (4*z / 12 - 17) + y - 4.5j + (4*x_3 - 2)/(5-12*some_var) + sin(x_3)';
-  const simple = 1;
+  const simple = 100;
   const no_vars = '5 + 7 * 9 - 10/10 +37 * 0.5';
   const add_test = 'x1 + 5 + 7 + x_7';
   const sub_test = 'x1 + 5 - 7 + x_7 - test + 8.7 - x8';
@@ -37,11 +37,9 @@ function main() {
   else if (test_type === 'imag')
     ex = new Expression(imaginary);
 
-  const conjugate = ex.conjugate();
-  ex.divide('R*C*wj + 1');
+  ex.divide('wj + 30');
   console.log(JSON.stringify(ex));
-  console.log(ex.eval({x:1}).toString());
-  console.log(ex.toString());
+  console.log(ex.magnitude());
 
   // ex.subtract('x_8j + 9j + (-9) -(8 - (-8)*j)');
   // ex.divide(5);

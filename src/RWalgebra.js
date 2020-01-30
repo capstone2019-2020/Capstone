@@ -8,6 +8,8 @@ const MULT = '*';
 const DIV = '/';
 const POW = '^';
 const EQUAL = '=';
+const SQRT = 'sqrt';
+const LOG_10 = 'log10';
 const IMAG_NUM = 'j';
 const SUPPORTED_FUNCS = ['sin', 'cos', 'tan', 'log'];
 const SUPPORTED_OPS = [ADD, SUB, MULT, DIV, POW];
@@ -517,6 +519,31 @@ Expression.prototype.eval = function(sub) {
     return result.real.constant;
   else
     return result;
+};
+
+Expression.prototype.phase = function() {
+
+};
+
+/**
+ * Returns the magnitude of the expression object in dB
+ * Formula: 20 * log10 (sqrt(real^2 + imag^2))
+ *
+ * @returns {string}
+ */
+Expression.prototype.magnitude = function() {
+  const copy = this.copy();
+  const terms = convertToTerms(copy);
+  const real = terms.filter(t => !t.imag);
+  const imag = terms.filter(t => t.imag);
+  imag.forEach( t => t.imag = false );
+  const real_squared = multiplyTerms(real, real); // compute a^2
+  const imag_squared = multiplyTerms(imag, imag); // compuate b^2
+  const sum = new Expression(addTerms(real_squared, imag_squared));
+
+  /* |T(jw)| = 20 * log10 ( sqrt(real^2 + imag^2)) */
+  let mag_func = `20 * ${LOG_10} ( ${SQRT}( ${sum.toString()} ))`;
+  return mag_func;
 };
 
 Expression.prototype.toString = function () {

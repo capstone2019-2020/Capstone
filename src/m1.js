@@ -45,17 +45,16 @@ function computeMasons(nodes, start, end) {
    * instead of an expression object as the math library does not currently
    * support functions
    */
-  // let loopGain = new Expression(1);
-  // loopGain.subtract(denom);
-  // const bodePhase = loopGain.phase();
-  // const bodeMag = loopGain.magnitude();
+  let transferFunc = numer.copy().divide(denom.copy());
+  const bodePhase = transferFunc.phase();
+  const bodeMag = transferFunc.magnitude();
 
   return {n: numer, // Expression
-          d: denom//, // Expression
-          // bode: {
-          //   phase: bodePhase, // String
-          //   magnitude: bodeMag // String
-          // }
+          d: denom, // Expression
+          bode: {
+            phase: bodePhase, // String
+            magnitude: bodeMag // String
+          }
           };
 }
 
