@@ -40,6 +40,7 @@ function main() {
   ex.divide('wj + 30');
   console.log(JSON.stringify(ex));
   console.log(ex.magnitude());
+  console.log(ex.phase());
 
   // ex.subtract('x_8j + 9j + (-9) -(8 - (-8)*j)');
   // ex.divide(5);

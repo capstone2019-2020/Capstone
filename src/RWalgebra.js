@@ -10,6 +10,7 @@ const POW = '^';
 const EQUAL = '=';
 const SQRT = 'sqrt';
 const LOG_10 = 'log10';
+const ATAN = 'atan'
 const IMAG_NUM = 'j';
 const SUPPORTED_FUNCS = ['sin', 'cos', 'tan', 'log'];
 const SUPPORTED_OPS = [ADD, SUB, MULT, DIV, POW];
@@ -521,12 +522,33 @@ Expression.prototype.eval = function(sub) {
     return result;
 };
 
+/**
+ * Returns the phase of the function of the expression object in degrees
+ * Conversion from rad to deg:
+ *    x * (180 / pi)
+ * Phase formula:
+ *    tan_inverse(imag / real) * (180 / pi)
+ */
 Expression.prototype.phase = function() {
+  const copy = this.copy();
+  const terms = convertToTerms(copy);
+  const real_terms = terms.filter(t => !t.imag);
+  const imag_terms = terms.filter(t => t.imag);
+  imag_terms.forEach( t => t.imag = false );
 
+  /* Special cases: real = 0 or imag = 0 */
+  if (!real_terms.length)
+    return 90;
+  if (!imag_terms.length)
+    return 0;
+
+  const imag = new Expression(imag_terms);
+  const real = new Expression(real_terms);
+  return `atan((${imag.toString()}) / (${real.toString()})) * 180 / pi`;
 };
 
 /**
- * Returns the magnitude of the expression object in dB
+ * Returns the magnitude function of the expression object in dB
  * Formula: 20 * log10 (sqrt(real^2 + imag^2))
  *
  * @returns {string}
@@ -542,8 +564,7 @@ Expression.prototype.magnitude = function() {
   const sum = new Expression(addTerms(real_squared, imag_squared));
 
   /* |T(jw)| = 20 * log10 ( sqrt(real^2 + imag^2)) */
-  let mag_func = `20 * ${LOG_10} ( ${SQRT}( ${sum.toString()} ))`;
-  return mag_func;
+  return `20 * ${LOG_10} ( ${SQRT}( ${sum.toString()} ))`;
 };
 
 Expression.prototype.toString = function () {
