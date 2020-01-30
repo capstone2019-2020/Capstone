@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');	// pull info from HTML POST (express4)
 const m1 = require("./m1.js");
-const circuit = require("./circuit.js");
+const circuitjs = require("./circuit.js");
 const algebra = require('algebra.js');
 const netlist = require('./netlist.js');
 const app = express();
