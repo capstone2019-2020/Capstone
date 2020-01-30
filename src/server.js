@@ -1,11 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');	// pull info from HTML POST (express4)
 const m1 = require("./m1.js");
-const circuitjs = require("./circuit.js");
-const algebra = require('algebra.js');
+const circuitjs = require('./circuit.js');
+const algebra = require('./RWalgebra.js');
 const netlist = require('./netlist.js');
 const app = express();
-const path = require('path');
+// const path = require('path');
 const fileupload = require('express-fileupload');
 const router = express.Router();
 const port = process.env.PORT || 3000;
@@ -23,24 +23,22 @@ app.use(express.static('public'));
 app.use(bodyParser.json());
 app.use(fileupload());
 
-// app.get('/', (req, res) => {
-//     res.sendFile(path.join(__dirname+ '/index.html'));
-// });
-
 // Receives the file and put list into netlist 
 app.post("/input-file", (req, res) => {
     let stuff = req.body.contents;
     console.log(stuff);
 
     c = netlist.nlConsumeArr(stuff);
-    console.log(c);
+    c.forEach((eq) => console.log(eq));
+
     if (!c) {
         return res.status(400).send("nlConsume Missing");
     }
 
     circuit = circuitjs.createCircuit(c);
     console.log(circuit);
-    tempEqns = circuit.nodalAnalysis();
+    let tempEqns = circuit.nodalAnalysis();
+    // tempEqns.shorCircuitCurrent.ForEach((eqns) => equations.push(algebra.parse(eqns)));
 
     if(!circuit) {
         return res.status(400).send("Create circuit missing");
@@ -50,7 +48,15 @@ app.post("/input-file", (req, res) => {
         return res.status(400).send("Missing contents of file");
     }
     // Read the netlist file and save the content 
-    return res.status(200).send(circuit);
+    return res.status(200).send(tempEqns);
+});
+
+// Circuit analysis
+app.get("/circuit-analysis", (req, res) => {
+    let tempEqns = circuit.nodalAnalysis();
+    // tempEqns.forEach((eqns) => equations.push(algebra.parse(eqns.shorCircuitCurrent.ForEach(temp))));
+    tempEqns.shorCircuitCurrent.ForEach((eqns) => equations.push(algebra.parse(eqns)));
+    return res.status(200).send(tempEqns);
 });
 
 // Receive user request and parse into the eqns
@@ -58,7 +64,6 @@ app.post("/input-file", (req, res) => {
 // Also saves the start and end node information
 app.post("/input-form", (req, res) => {
     let eqns = req.body.eqns;
-    console.log(req.body);
     startNode = req.body.start;
     endNode = req.body.end;
 
@@ -73,9 +78,6 @@ app.post("/input-form", (req, res) => {
     }
 
     eqns.forEach((eq) => equations.push(algebra.parse(eq)));
-    res.set({
-
-    });
     return res.status(200).send(eqns);
 });
 
@@ -123,9 +125,6 @@ app.get("/computeMasons", (req, res) => {
     res.status(200).send({n: newNumer.toString(), d: newDenom.toString()});
 });
 
-app.get("/nodalAnalysis", (req, res) => {
-
-});
 
 // add router
 app.use('/', router);
