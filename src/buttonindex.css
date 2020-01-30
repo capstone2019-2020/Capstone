@@ -1,0 +1,44 @@
+body {
+    text-align: center;
+    font-family: 'Nunito Sans', serif;
+    background-color: lightblue;
+    width: 100%;
+    height: 100%;
+} 
+
+ /* Button Drop Area */
+.file-box {
+    display: inline-block;
+    background-color: white;
+    height: 50%;
+    width: 600px;
+    margin: auto;
+    position: relative;
+}
+
+ #drop-area {
+    border: 2px dashed #ccc;
+    border-radius: 20px;
+    width: 480px;
+    height: 350px;
+    font-family: sans-serif;
+    margin: 10px auto;
+    padding: 20px;
+}
+
+#drop-area.highlight {
+    border-color: blue;
+}
+
+.button {
+    display: inline-block;
+    padding: 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.button:hover {
+    background: #ddd;
+}
+
+
