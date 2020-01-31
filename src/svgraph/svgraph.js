@@ -843,11 +843,9 @@ function render(config, funcs1, funcs2, xlb, xub,
     return;
   }
 
-  if (funcs1.length !== 0 && funcs2.length !== 0) {
-    ORIGIN_X = RIGHT(START_X, x_offset);
-    ORIGIN_Y1 = UP(START_Y, y_offset1);
-    ORIGIN_Y2 = UP(START_Y, y_offset2);
-  }
+  ORIGIN_X = RIGHT(START_X, x_offset);
+  ORIGIN_Y1 = UP(START_Y, y_offset1);
+  ORIGIN_Y2 = UP(START_Y, y_offset2);
 
   let _svg = svg('wrapper');
 
@@ -921,11 +919,8 @@ function init() {
   let ygrid1=10, ygrid2=10;
   let xgrid = 15;
   let sample_amt1, sample_amt2, fpoints1, fpoints2;
-
-  const test = [
-    'f(w) = 20 * log10 ( sqrt( ((9000000) / (w*w*w*w + 1800*w*w + 810000)) + ((10000) / (w*w*w*w + 1800*w*w + 810000))*w*w ))',
-    'f(w) = atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi'
-  ];
+  let axis1_funcs, axis2_funcs;
+  console.log('hi there');
 
   /* =========== first time render =========== */
   ({
@@ -1132,11 +1127,14 @@ function init() {
 
   return {
     update(fphase, fmag) {
+      axis1_funcs = [fmag];
+      axis2_funcs = [fphase];
+
       ({
         xlb, xub, ylb1, yub1, ylb2, yub2,
         xgrid, ygrid1, ygrid2,
         sample_amt1, sample_amt2, fpoints1, fpoints2
-      } = render(undefined, [fphase], [fmag],
+      } = render(undefined, [fmag], [fphase],
         xlb, xub, ylb1, yub1, ylb2, yub2,
         xgrid, ygrid1, ygrid2));
 
@@ -1146,3 +1144,10 @@ function init() {
     }
   }
 }
+
+const {update} = init();
+const test = [
+  'f(w) = 20 * log10 ( sqrt( ((9000000) / (w*w*w*w + 1800*w*w + 810000)) + ((10000) / (w*w*w*w + 1800*w*w + 810000))*w*w ))',
+  'f(w) = atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi'
+];
+update(test[0], test[1]);
