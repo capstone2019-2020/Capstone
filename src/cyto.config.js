@@ -5,13 +5,14 @@ const style = [ // the stylesheet for the graph
       'width': 15,
       'height': 15,
       'background-color': '#666',
-      'label': 'data(id)'
+      'label': 'data(value)'
     }
   },
   {
     selector: 'label',
     style: {
-      'font-size': 12
+      'font-size': 10,
+      'font-family': 'Verdana, sans-serif'
     }
   },
   {

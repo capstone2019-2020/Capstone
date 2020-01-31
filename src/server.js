@@ -31,7 +31,7 @@ app.post("/input-file", (req, res) => {
     let stuff = req.body.contents;
     // console.log(stuff);
 
-    c = netlist.nlConsumeArr(stuff);
+    c = netlist.nlConsumeArr(stuff.toString().split('\n'));
     // c.forEach((eq) => console.log(eq));
 
     if (!c) {
@@ -109,7 +109,7 @@ app.post("/input-file", (req, res) => {
         return res.status(400).send("Missing contents of file");
     }
 
-    // Read the netlist file and save the content 
+    // Read the netlist file and save the content
     return res.status(200).send(equations);
 });
 

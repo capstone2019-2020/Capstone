@@ -64,8 +64,8 @@ function uploadFile(evt) {
         reader.onload = function (e) {
             contents = e.target.result.split("\r\n");
             preview = document.getElementById('test');
-            alert("Got the file name: " + f.name + "contents: "
-            + contents[0]);
+            // alert("Got the file name: " + f.name + "contents: "
+            // + contents[0]);
             // preview.innerHTML = e.target.result;
 
             fetch(`${SERVER_URI}/input-file`, {
@@ -73,10 +73,10 @@ function uploadFile(evt) {
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({contents})
             })
-            .then(() =>
-                {
-                    // alert("Entered the server");
-            })
+            .then((res) => { return res.json();})
+            .then( (j) => {
+                  setLocalStorage('sfg_equations', JSON.stringify(j));
+              })
             .catch(() => 
                 {
                     alert("Did not enter the server");
@@ -93,5 +93,29 @@ function uploadFile(evt) {
 
 // Generate button
 function sendNext(event) {
-    event.preventDefault();
+    // event.preventDefault();
+    const eqns = getCookie('sfg_equations');
+    console.log(eqns);
+    fetch(`${SERVER_URI}/computeSFG`)
+      .then( (res) => {
+          return res.json();
+      })
+      .then( (j) => {
+          localStorage.clear();
+          setLocalStorage('sfg_nodes', JSON.stringify(j));
+      })
+      .catch((ex) => {
+          console.log(ex);
+        // alert('Failed to computeSFG!')
+    });
+
+}
+
+function setLocalStorage(key, val) {
+    console.log(`Setting cookie: { ${key}=${val} }`);
+    localStorage.setItem(key, val);
+}
+
+function getCookie(key) {
+    return localStorage.getItem(key);
 }

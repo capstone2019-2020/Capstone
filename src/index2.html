@@ -4,12 +4,16 @@
   <meta charset="UTF-8">
   <title>Capstone SFG</title>
   <link rel="stylesheet" type="text/css" href="index2.css"/>
+  <link rel="stylesheet" type="text/css" href="sfgcanvas.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.9.0/cytoscape.min.js"></script>
+
 </head>
-<body>
+<body onload="generateSFG()">
   <div id="header-bar" class="header-bar"></div>
   <div id="main-div" class="main-div">
     <div id="left-div" class="left-div">
       <div id="menu-btn" class="menu-btn"></div>
+      <div id="sfg-canvas" class="sfg-canvas"></div>
     </div>
     <div id="right-div" class="right-div">
       <div id="right-top-panel" class="right-top-panel"></div>
@@ -18,6 +22,8 @@
   </div>
   <div id="footer-bar" class="footer-bar"></div>
 
+  <script type="text/javascript" src="cyto.config.js"></script>
+  <script type="text/javascript" src="sfgenerator.js"></script>
 
 </body>
 </html>
