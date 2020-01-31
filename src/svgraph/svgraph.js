@@ -922,9 +922,9 @@ function init() {
   let xgrid = 15;
   let sample_amt1, sample_amt2, fpoints1, fpoints2;
 
-  const tests = [
-    'f(w) = atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi',
+  const test = [
     'f(w) = 20 * log10 ( sqrt( ((9000000) / (w*w*w*w + 1800*w*w + 810000)) + ((10000) / (w*w*w*w + 1800*w*w + 810000))*w*w ))',
+    'f(w) = atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi'
   ];
 
   /* =========== first time render =========== */
@@ -932,7 +932,7 @@ function init() {
     xlb, xub, ylb1, yub1, ylb2, yub2,
     xgrid, ygrid1, ygrid2,
     sample_amt1, sample_amt2, fpoints1, fpoints2
-  } = render(undefined, [tests[0]], [tests[1]],
+  } = render(undefined, [], [],
     xlb, xub, ylb1, yub1, ylb2, yub2,
     xgrid, ygrid1, ygrid2));
 
