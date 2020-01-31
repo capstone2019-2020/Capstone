@@ -281,7 +281,6 @@ function calculateDenominator(allLoops, nonTouching) {
       denom = denom.subtract(loopGain);
     }
   });
-
   return denom;
 }
 
@@ -294,7 +293,7 @@ function calculateDenominator(allLoops, nonTouching) {
 function calculateLoopGain(edges) {
   let ex = new Expression(1);
   edges.forEach((e) => {
-    ex = ex.multiply(e.weight);
+    ex = ex.multiply(`(${e.weight})`);
   });
 
   if (DEBUG) {

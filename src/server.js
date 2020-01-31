@@ -142,7 +142,9 @@ app.get("/computeSFG", (req, res) => {
 });
 
 // Get the computeMasons eqns
-app.get("/computeMasons", (req, res) => {
+app.post("/computeMasons", (req, res) => {
+    startNode = req.body.start;
+    endNode = req.body.end;
     masonsdata = m1.computeMasons(nodes, startNode, endNode);
 
     let letters = /^[A-Za-z]+$/;
