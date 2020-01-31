@@ -14,7 +14,7 @@ var circuit;
  * Class Attributes: 
  *  id: int
  *  voltage: Expression (initialized empty or with a #)
- *  passiveComponents: array of connected passive components (currently, only Resistor objects)
+ *  passiveComponents: array of connected passive components (resistors, capacitors, inductors)
  *  incomingBranches: not used
  *  outgoingBranches: not used 
  */
@@ -264,39 +264,28 @@ Circuit.prototype.nodalAnalysis = function(){
     return resultSummary;
 };
 
-/**
- * 
- * @param {value of resistance} r 
- * @param {positive node ID} p 
- * @param {negative node ID} n 
- * Class Attributes:
- *  value: Expression (initialized with a #)
- *  pnode: int
- *  nnode: int
- *  current: Expression
- *  currentNumeric: Expression
- */
-function Resistor(r, p, n){
-    this.value = r;
+/*
+* Class Attributes:
+*  value: Expression (initialized with a #)
+*  pnode: int
+*  nnode: int
+*  current: Expression
+*  currentNumeric: Expression
+*/
+function PassiveComponent(v, p, n){
+    this.value = v; // Impedance
     this.pnode = p;
     this.nnode = n;
     this.current = new Expression(); // start off undefined
     this.currentNumeric = new Expression(); // start off undefined
-};
-
-Resistor.prototype.print = function(){
-    console.log(`resistance: ${this.value}`);
-    console.log(`positive node: ${this.pnode}`);
-    console.log(`negative node: ${this.nnode}`);
-    console.log(`current: ${this.current.toString()} Numeric current: ${this.currentNumeric.toString()}`);
-};
+}
 
 /**
  * Find the expression of the current going through Resistor
  * Note it always subtract np from vp and does not handle the direction of current
  * @param {circuit object that Resistor belongs to} circuit 
  */
-Resistor.prototype.ohmsLaw = function(circuitObj){
+PassiveComponent.prototype.ohmsLaw = function(circuitObj){
     const pnode = circuitObj.findNodeById(this.pnode);
     const nnode = circuitObj.findNodeById(this.nnode);
     var vp, np;
@@ -321,6 +310,41 @@ Resistor.prototype.ohmsLaw = function(circuitObj){
     var denom = this.value; // already in Expression form
     this.current = numer.divide(denom); 
 };
+
+PassiveComponent.prototype.print = function(){
+    console.log(`impedance: ${this.value}`);
+    console.log(`positive node: ${this.pnode}`);
+    console.log(`negative node: ${this.nnode}`);
+    console.log(`current: ${this.current.toString()} Numeric current: ${this.currentNumeric.toString()}`);
+};
+
+/**
+ * @param {value of resistance} r 
+ * @param {positive node ID} p 
+ * @param {negative node ID} n 
+ * Extends PassiveComponent Class
+ */
+function Resistor(r, p, n){
+    PassiveComponent.call(this, r, p, n);
+};
+
+Resistor.prototype = new PassiveComponent();
+Resistor.prototype.constructor = Resistor;
+
+function Capacitor(c, p, n){
+    PassiveComponent.call(this, c, p, n);
+}
+
+Capacitor.prototype = new PassiveComponent();
+Capacitor.prototype.constructor = Capacitor;
+
+
+function Inductor(l, p, n){
+    PassiveComponent.call(this, l, p, n);
+}
+
+Inductor.prototype = new PassiveComponent();
+Inductor.prototype.constructor = Inductor;
 
 /**
  * 
@@ -455,11 +479,36 @@ function createCircuit(components){
         }
         else if (c.type == 'R'){
             r = new Resistor(new Expression(c.value), c.pnode, c.nnode);
-            //r.ohmsLaw(circuit);
             pnode = circuit.findNodeById(c.pnode);
             nnode = circuit.findNodeById(c.nnode);
             pnode.passiveComponents.push(r);
             nnode.passiveComponents.push(r);
+        }
+
+        else if (c.type == 'C'){
+            var impedance = new Expression('(-1) * j * w');
+            c = new Capacitor(impedance.multiply(c.value), c.pnode, c.nnode);
+            pnode = circuit.findNodeById(c.pnode);
+            nnode = circuit.findNodeById(c.nnode);
+            pnode.passiveComponents.push(c);
+            nnode.passiveComponents.push(c);
+        }
+
+        else if (c.type == 'L'){
+            var impedance = new Expression('j * w');
+            l = new Inductor(impedance.multiply(c.value), c.pnode, c.nnode);
+            pnode = circuit.findNodeById(c.pnode);
+            nnode = circuit.findNodeById(c.nnode);
+            pnode.passiveComponents.push(l);
+            nnode.passiveComponents.push(l);
+        }
+
+        else if (c.type == 'E'){ // Dependent voltage source
+
+        }
+
+        else if (c.type == 'G'){
+
         }
     });
 
@@ -486,23 +535,17 @@ AnalysisSummary.prototype.addSummary= function(id, dpi, isc, eqs){
     this.currentEquations.push(eqs);
 };
 
-//(function main(){
-//    const voltage_div = 'test/netlist_ann1.txt'
-//    const var_simple = 'test/netlist_ann2.txt'
-//    const curr_src = 'test/netlist_ann_csrc.txt'
-//
-//    var c = [
-//        { id: 'I1', type: 'I', pnode: 1, nnode: 0, value: '0.003'  },
-//        { id: 'R1', type: 'R', pnode: 1, nnode: 0, value: '4000'  },
-//        { id: 'R2', type: 'R', pnode: 1, nnode: 2, value: '5600'  },
-//        { id: 'I2', type: 'I', pnode: 0, nnode: 2, value: '0.002'  }
-//    ];
-//
-//    c = nl.nlConsume(curr_src);
-//    circuit = createCircuit(c);
-//
-//    console.log(JSON.stringify(circuit.nodalAnalysis()));
-// })();
+(function main(){
+   const voltage_div = 'test/netlist_ann1.txt'
+   const var_simple = 'test/netlist_ann2.txt'
+   const curr_src = 'test/netlist_ann_csrc.txt'
+   const rc = 'test/netlist_ann_rc.txt'
+
+   c = nl.nlConsume(rc);
+   circuit = createCircuit(c);
+
+   console.log(JSON.stringify(circuit.nodalAnalysis()));
+})();
 
 exports.createCircuit = createCircuit;
 exports.setCircuit = (c) => {
