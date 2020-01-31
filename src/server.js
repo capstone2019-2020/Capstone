@@ -153,6 +153,10 @@ app.post("/computeMasons", (req, res) => {
     // Changing into format that can be parsed by algebra.js
     tempdenom = masonsdata.d.toString().split("");
     tempnumer = masonsdata.n.toString().split("");
+    bp = masonsdata.phase;
+    bm = masonsdata.magnitude;
+
+    console.log(`Bode Phase is: ${bp}, bode magnitude: ${bm}`);
 
     // Checking the denominators
     for (let i = 0; i < tempdenom.length-1; i++) {
@@ -178,14 +182,8 @@ app.post("/computeMasons", (req, res) => {
     newNumer = newNumer+tempnumer[tempnumer.length-1];
     newDenom = newDenom+tempdenom[tempdenom.length-1];
 
-    res.status(200).send({n: newNumer.toString(), d: newDenom.toString()});
+    res.status(200).send({n: newNumer.toString(), d: newDenom.toString(), bodePhase: bp, bodeMag: bm});
 });
-
-// // Frequency equation data
-// app.post("/svg-graph", (req, res) => {
-
-//     res.status(200).send({});
-// });
 
 // add router
 app.use('/', router);
