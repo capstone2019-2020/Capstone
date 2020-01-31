@@ -109,6 +109,7 @@ function simulate() {
     })
     .then((j) => {
       setLocalStorage('transfer_func', JSON.stringify(j));
+      init(`f(w) = ${j.bode.magnitude}`, j.bode.phase === 0 ? null : `f(w) = ${j.bode.phase}`);
       console.log(j);
     });
 

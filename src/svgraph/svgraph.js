@@ -787,17 +787,25 @@ function render(config, funcs1, funcs2, xlb, xub,
     DEBUG(`========END CONFIG==========`);
   }
 
-  ({
-    fpoints: fpoints1, sample_amt: sample_amt1,
-    xlb, xub, ylb: ylb1, yub: yub1
-  } = eval(funcs1, xgrid, xlb, xub, ylb1, yub1,
-    !DEFINED(config)));
+  if (funcs1.length !== 0) {
+    ({
+      fpoints: fpoints1, sample_amt: sample_amt1,
+      xlb, xub, ylb: ylb1, yub: yub1
+    } = eval(funcs1, xgrid, xlb, xub, ylb1, yub1,
+      !DEFINED(config)));
+  } else {
+    fpoints1 = [];
+  }
 
-  ({
-    fpoints: fpoints2, sample_amt: sample_amt2,
-    xlb, xub, ylb: ylb2, yub: yub2
-  } = eval(funcs2, xgrid, xlb, xub, ylb2, yub2,
-    !DEFINED(config)));
+  if (funcs2.length !== 0) {
+    ({
+      fpoints: fpoints2, sample_amt: sample_amt2,
+      xlb, xub, ylb: ylb2, yub: yub2
+    } = eval(funcs2, xgrid, xlb, xub, ylb2, yub2,
+      !DEFINED(config)));
+  } else {
+    fpoints2 = [];
+  }
 
   let x_offset, y_offset1, y_offset2;
   try {
@@ -808,21 +816,24 @@ function render(config, funcs1, funcs2, xlb, xub,
       parts: xgrid
     } = init_plot(xlb, xub, LENGTH_X, xgrid,
       !DEFINED(config)));
-    ({
-      lb: ylb1,
-      ub: yub1,
-      offset: y_offset1,
-      parts: ygrid1
-    } = init_plot(ylb1, yub1, LENGTH_Y, ygrid1,
-      !DEFINED(config)));
-    ({
-      lb: ylb2,
-      ub: yub2,
-      offset: y_offset2,
-      parts: ygrid2
-    } = init_plot(ylb2, yub2, LENGTH_Y, ygrid2,
-      !DEFINED(config), y_offset1));
-
+    if (funcs1.length !== 0) {
+      ({
+        lb: ylb1,
+        ub: yub1,
+        offset: y_offset1,
+        parts: ygrid1
+      } = init_plot(ylb1, yub1, LENGTH_Y, ygrid1,
+        !DEFINED(config)));
+    }
+    if (funcs2.length !== 0) {
+      ({
+        lb: ylb2,
+        ub: yub2,
+        offset: y_offset2,
+        parts: ygrid2
+      } = init_plot(ylb2, yub2, LENGTH_Y, ygrid2,
+        !DEFINED(config), y_offset1));
+    }
     let wrapper = ELEM('wrapper');
     if (wrapper) {
       Svgraph().removeChild(ELEM('wrapper'));
@@ -907,13 +918,23 @@ function init(fmag, fphase) {
   let ygrid1=10, ygrid2=10;
   let xgrid = 15;
   let sample_amt1, sample_amt2, fpoints1, fpoints2;
+  let axis1_funcs = [];
+  let axis2_funcs = [];
+
+  if (fmag !== null) {
+    axis1_funcs.push(fmag);
+  }
+  if (fphase !== null) {
+    axis2_funcs.push(fphase);
+  }
+  console.log(axis1_funcs, axis2_funcs);
 
   /* =========== first time render =========== */
   ({
     xlb, xub, ylb1, yub1, ylb2, yub2,
     xgrid, ygrid1, ygrid2,
     sample_amt1, sample_amt2, fpoints1, fpoints2
-  } = render(undefined, [fmag], [fphase],
+  } = render(undefined, axis1_funcs, axis2_funcs,
     xlb, xub, ylb1, yub1, ylb2, yub2,
     xgrid, ygrid1, ygrid2));
 
