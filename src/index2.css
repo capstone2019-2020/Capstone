@@ -58,6 +58,7 @@
 }
 
 .menu-btn {
+  cursor: pointer;
   background-color: lightgray;
   position: absolute;
   float: left;
