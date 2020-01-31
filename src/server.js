@@ -30,7 +30,11 @@ app.use(fileupload());
 app.post("/input-file", (req, res) => {
     let stuff = req.body.contents;
 
-    c = netlist.nlConsumeArr(stuff.toString().split('\n'));
+    if (stuff[0].search('\n') !== -1) {
+      c = netlist.nlConsumeArr(stuff.toString().split('\n'));
+    } else {
+      c = netlist.nlConsumeArr(stuff);
+    }
     // c.forEach((eq) => console.log(eq));
 
     if (!c) {
