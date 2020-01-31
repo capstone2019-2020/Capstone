@@ -787,17 +787,25 @@ function render(config, funcs1, funcs2, xlb, xub,
     DEBUG(`========END CONFIG==========`);
   }
 
-  ({
-    fpoints: fpoints1, sample_amt: sample_amt1,
-    xlb, xub, ylb: ylb1, yub: yub1
-  } = eval(funcs1, xgrid, xlb, xub, ylb1, yub1,
-    !DEFINED(config)));
+  if (funcs1.length !== 0) {
+    ({
+      fpoints: fpoints1, sample_amt: sample_amt1,
+      xlb, xub, ylb: ylb1, yub: yub1
+    } = eval(funcs1, xgrid, xlb, xub, ylb1, yub1,
+      !DEFINED(config)));
+  } else {
+    fpoints1 = [];
+  }
 
-  ({
-    fpoints: fpoints2, sample_amt: sample_amt2,
-    xlb, xub, ylb: ylb2, yub: yub2
-  } = eval(funcs2, xgrid, xlb, xub, ylb2, yub2,
-    !DEFINED(config)));
+  if (funcs2.length !== 0) {
+    ({
+      fpoints: fpoints2, sample_amt: sample_amt2,
+      xlb, xub, ylb: ylb2, yub: yub2
+    } = eval(funcs2, xgrid, xlb, xub, ylb2, yub2,
+      !DEFINED(config)));
+  } else {
+    fpoints2 = [];
+  }
 
   let x_offset, y_offset1, y_offset2;
   try {
@@ -808,20 +816,24 @@ function render(config, funcs1, funcs2, xlb, xub,
       parts: xgrid
     } = init_plot(xlb, xub, LENGTH_X, xgrid,
       !DEFINED(config)));
-    ({
-      lb: ylb1,
-      ub: yub1,
-      offset: y_offset1,
-      parts: ygrid1
-    } = init_plot(ylb1, yub1, LENGTH_Y, ygrid1,
-      !DEFINED(config)));
-    ({
-      lb: ylb2,
-      ub: yub2,
-      offset: y_offset2,
-      parts: ygrid2
-    } = init_plot(ylb2, yub2, LENGTH_Y, ygrid2,
-      !DEFINED(config), y_offset1));
+    if (funcs1.length !== 0) {
+      ({
+        lb: ylb1,
+        ub: yub1,
+        offset: y_offset1,
+        parts: ygrid1
+      } = init_plot(ylb1, yub1, LENGTH_Y, ygrid1,
+        !DEFINED(config)));
+    }
+    if (funcs2.length !== 0) {
+      ({
+        lb: ylb2,
+        ub: yub2,
+        offset: y_offset2,
+        parts: ygrid2
+      } = init_plot(ylb2, yub2, LENGTH_Y, ygrid2,
+        !DEFINED(config), y_offset1));
+    }
 
     let wrapper = ELEM('wrapper');
     if (wrapper) {
@@ -831,9 +843,11 @@ function render(config, funcs1, funcs2, xlb, xub,
     return;
   }
 
-  ORIGIN_X = RIGHT(START_X, x_offset);
-  ORIGIN_Y1 = UP(START_Y, y_offset1);
-  ORIGIN_Y2 = UP(START_Y, y_offset2);
+  if (funcs1.length !== 0 && funcs2.length !== 0) {
+    ORIGIN_X = RIGHT(START_X, x_offset);
+    ORIGIN_Y1 = UP(START_Y, y_offset1);
+    ORIGIN_Y2 = UP(START_Y, y_offset2);
+  }
 
   let _svg = svg('wrapper');
 
@@ -908,19 +922,9 @@ function init() {
   let xgrid = 15;
   let sample_amt1, sample_amt2, fpoints1, fpoints2;
 
-  const axis1_funcs = [
-    // 'f(x) = sin(x)*x',
-    // 'f(x) = x',
+  const tests = [
+    'f(w) = atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi',
     'f(w) = 20 * log10 ( sqrt( ((9000000) / (w*w*w*w + 1800*w*w + 810000)) + ((10000) / (w*w*w*w + 1800*w*w + 810000))*w*w ))',
-    // 'f(x) = -x'
-  ];
-
-  const axis2_funcs = [
-    // 'f(x) = cos(x)',
-    // 'f(x) = log(x)',
-    'f(w) = atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi'
-    // 'f(x) = x^0.5',
-    // 'f(x) = sin(x)*abs(x)+1'
   ];
 
   /* =========== first time render =========== */
@@ -928,13 +932,10 @@ function init() {
     xlb, xub, ylb1, yub1, ylb2, yub2,
     xgrid, ygrid1, ygrid2,
     sample_amt1, sample_amt2, fpoints1, fpoints2
-  } = render(undefined, axis1_funcs, axis2_funcs,
+  } = render(undefined, [tests[0]], [tests[1]],
     xlb, xub, ylb1, yub1, ylb2, yub2,
     xgrid, ygrid1, ygrid2));
 
-  Svgraph().appendChild(g('legend',
-    ...legend([...fpoints1, ...fpoints2])
-  ));
 
   /*
    * This event is triggered upon every mouse move action
@@ -1129,4 +1130,20 @@ function init() {
       intervalId = 0;
     }
   });
+
+  return {
+    update(fphase, fmag) {
+      ({
+        xlb, xub, ylb1, yub1, ylb2, yub2,
+        xgrid, ygrid1, ygrid2,
+        sample_amt1, sample_amt2, fpoints1, fpoints2
+      } = render(undefined, [fphase], [fmag],
+        xlb, xub, ylb1, yub1, ylb2, yub2,
+        xgrid, ygrid1, ygrid2));
+
+      Svgraph().appendChild(g('legend',
+        ...legend([...fpoints1, ...fpoints2])
+      ));
+    }
+  }
 }
