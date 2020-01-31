@@ -54,6 +54,9 @@ function dfsFindLoops(nodes, curr, startId, visited, stack, cycles) {
     edge = edges[i];
     v = nodes.find(x => x.id === edge.endNode);
 
+    if (!v)
+      continue;
+
     // Found a cycle
     if (v.id === startId) {
       stack.push(edge);

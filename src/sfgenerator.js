@@ -1,7 +1,5 @@
 const DEFAULT_NODE_CLR = '#666';
 const SELECTED_NODE_CLR = 'tomato';
-const SERVER_URI = 'http://localhost:3000';
-
 
 let clickedNodes = null;
 let startNode = null;
@@ -107,11 +105,11 @@ function simulate() {
     body: JSON.stringify({start: startNode, end: endNode})
   })
     .then((res) => {
-      console.log(res.json())
       return res.json();
     })
     .then((j) => {
-      console.log(JSON.stringify(j));
-    })
+      setLocalStorage('transfer_func', JSON.stringify(j));
+      console.log(j);
+    });
 
 }
