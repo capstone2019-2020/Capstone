@@ -5,11 +5,14 @@ const circuitjs = require('./circuit.js');
 const algebra = require('./RWalgebra.js');
 const netlist = require('./netlist.js');
 const app = express();
+const Expression = algebra.Expression;
+const Equation = algebra.Equation;
 // const path = require('path');
 const fileupload = require('express-fileupload');
 const router = express.Router();
 const port = process.env.PORT || 3000;
 const equations = [];
+// const equations;
 let nodes, startNode, endNode, masonsdata, circuit;
 
 app.use(function(req, res, next) {
@@ -37,13 +40,30 @@ app.post("/input-file", (req, res) => {
 
     circuit = circuitjs.createCircuit(c);
     console.log(circuit);
-    let tempEqns = circuit.nodalAnalysis();
-    tempEqns.currentEquations.forEach((eqns) => eqns.forEach((second) =>
-    second.forEach((third) =>
-    {
-        console.log(third.toString());
-        equations.push(algebra.parse(third.toString()));
-    })));
+    circuit.nodes.forEach((eq) => {
+        console.log(`ID = ${eq.id}, voltage = ${eq.voltage.toString()},  passive: ${eq.passiveComponents.forEach((l) => console.log(l))}
+         incoming Branches: ${eq.incomingBranches.forEach((e) => console.log(e))}`);
+     });
+    circuit.unknownVnodes.forEach((eq) => console.log(`Unknown V Nodes :${eq}`));
+    console.log(`${circuit.numVsrc}`);
+    
+    let temp = circuit.nodalAnalysis();
+    temp.currentEquations.forEach((first) => 
+        first.forEach((second) => second.forEach((eqns) => 
+            {
+                console.log(eqns.toString());
+                equations.push(algebra.parse(eqns.toString()));
+            }
+        ))
+    );
+
+    for (var i = 0; i < temp.dpi.length; i++) {
+        let lhs = new Expression(`V${temp.nodeId[i]}`);
+        let rhs = temp.dpi[i].multiply(temp.shorCircuitCurrent[i]);  
+        let tempEqn = new Equation(lhs, rhs);
+        console.log(tempEqn.toString());
+        equations.push(algebra.parse(tempEqn.toString()));
+    }
 
     if(!circuit) {
         return res.status(400).send("Create circuit missing");
@@ -52,16 +72,9 @@ app.post("/input-file", (req, res) => {
     if (!req.body.contents) {
         return res.status(400).send("Missing contents of file");
     }
-    // Read the netlist file and save the content 
-    return res.status(200).send(tempEqns);
-});
 
-// Circuit analysis
-app.get("/circuit-analysis", (req, res) => {
-    let tempEqns = circuit.nodalAnalysis();
-    // tempEqns.forEach((eqns) => equations.push(algebra.parse(eqns.shorCircuitCurrent.ForEach(temp))));
-    tempEqns.shorCircuitCurrent.ForEach((eqns) => equations.push(algebra.parse(eqns)));
-    return res.status(200).send(tempEqns);
+    // Read the netlist file and save the content 
+    return res.status(200).send(equations);
 });
 
 // Receive user request and parse into the eqns
@@ -130,6 +143,11 @@ app.get("/computeMasons", (req, res) => {
     res.status(200).send({n: newNumer.toString(), d: newDenom.toString()});
 });
 
+// // Frequency equation data
+// app.post("/svg-graph", (req, res) => {
+
+//     res.status(200).send({});
+// });
 
 // add router
 app.use('/', router);
