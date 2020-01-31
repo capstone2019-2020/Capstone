@@ -908,6 +908,8 @@ function init() {
   let xgrid = 15;
   let sample_amt1, sample_amt2, fpoints1, fpoints2;
 
+  console.log("hiiiiiiiiiiiii");
+
   const axis1_funcs = [
     // 'f(x) = sin(x)*x',
     // 'f(x) = x',
