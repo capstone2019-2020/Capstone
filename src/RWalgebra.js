@@ -8,6 +8,9 @@ const MULT = '*';
 const DIV = '/';
 const POW = '^';
 const EQUAL = '=';
+const SQRT = 'sqrt';
+const LOG_10 = 'log10';
+const ATAN = 'atan'
 const IMAG_NUM = 'j';
 const SUPPORTED_FUNCS = ['sin', 'cos', 'tan', 'log'];
 const SUPPORTED_OPS = [ADD, SUB, MULT, DIV, POW];
@@ -116,7 +119,8 @@ const computeConstant = (terms, _imag) => {
 };
 
 const filterOutConstantTerms = (terms, _imag) => {
-  return terms.filter(t => (t.variables.length || typeof t.fraction.denom !== 'number') && t.imag === _imag && t.coefficient !== 0 );
+  return terms.filter(t => (t.variables.length || typeof t.fraction.denom !== 'number')
+    && t.imag === _imag && t.coefficient !== 0 );
 };
 
 /**
@@ -137,7 +141,7 @@ const simplify = (terms) => {
       f.push(t);
       return;
     }
-    v_names = t.variables.map(v => v.name).join('') + t.imag;
+    v_names = t.variables.map(v => v.name).sort().join('') + t.imag;
     if (!vars[v_names])
       vars[v_names] = t;
     else  { // need to combine variables
@@ -238,7 +242,15 @@ const multiplyTerms = (op1, op2) => {
   return result;
 };
 
-// TODO if imaginary number in denominator, multiply by conjugate of denominator
+Expression.prototype.conjugate = function() {
+  let conjugate = this.copy();
+  conjugate.imag.constant *= -1;
+  conjugate.imag.terms.forEach(t => {
+    t.coefficient *= -1;
+  });
+  return conjugate;
+};
+
 const divideTerms = (op1, op2) => {
   /* Case 1: term / term */
   if (op1.length === 1 && op2.length === 1) {
@@ -248,39 +260,86 @@ const divideTerms = (op1, op2) => {
       return op1;
     }
 
+
+    // multiply denominator of op1 and op2
     op1[0].fraction.denom = (new Expression(op2)).multiply(op1[0].fraction.denom);
+
+    /*
+     * If the divisor (op2) is imaginary, must multiply by the conjugate of the
+     * denominator of op1 so that there are no 'j's' in the denominator
+     */
+    if (op2[0].imag) {
+      const conjugate = op1[0].fraction.denom.conjugate();
+      op1[0].fraction.denom.multiply(conjugate);
+      op1 = multiplyTerms(op1, convertToTerms(conjugate));
+    }
     return op1;
   }
 
   /* Case 2: multiple terms / term */
   else if (op1.length > 1 && op2.length === 1) {
     let _const = computeConstant(op2, false); // term is a constant
+    let _op1 = []; // final result
     op1.forEach( t => {
       if (_const !== null) {
         t.coefficient = t.coefficient /_const;
+        _op1.push(t);
       } else {
         if (typeof t.fraction.denom === 'number')
           t.fraction.denom = new Expression(op2);
         else
           t.fraction.denom.multiply(new Expression(op2));
+
+        // If term is imaginary - multiply top and bottom by conjugate (term * -1)
+        if (op2[0].imag) {
+          const conjugate = t.fraction.denom.conjugate();
+          t.fraction.denom.multiply(conjugate);
+          let terms = multiplyTerms([t], convertToTerms(conjugate));
+          _op1 = _op1.concat(terms);
+        } else {
+          _op1.push(t);
+        }
       }
     });
-    return op1;
+    return _op1;
   }
 
   /* Case 3: term / multiple terms */
   else if (op1.length === 1 && op2.length > 1) {
+    let denom = new Expression(op2);
+    op1[0].fraction.denom = denom.multiply(op1[0].fraction.denom);
 
-    op1[0].fraction.denom = (new Expression(op2)).multiply(op1[0].fraction.denom);
+    // If the denominator expression contains an imaginary term, must multiply top and bottom by conjugate
+    if ((denom.imag.constant !== 0 && denom.imag.constant !== null) || denom.imag.terms.length) {
+      const conjugate = denom.conjugate();
+      op1[0].fraction.denom = denom.multiply(conjugate);
+      op1 = multiplyTerms(op1, convertToTerms(conjugate));
+    }
     return op1;
   }
 
   /* Case 4: multiple terms / multiple terms */
   else if (op1.length > 1 && op2.length > 1) {
+    let _op1 = []; // final result
     op1.forEach( t => {
       t.fraction.denom = (new Expression(op2)).multiply(t.fraction.denom);
+
+      /*
+       * If any of the terms in the denominator expression contain
+       * imaginary numbers, must multiply top and bottom by conjugate
+       */
+      let denom = t.fraction.denom;
+      if ((denom.imag.constant !== 0 && denom.imag.constant !== null) || denom.imag.terms.length) {
+        const conjugate = denom.conjugate();
+        t.fraction.denom.multiply(conjugate);
+        let terms = multiplyTerms([t], convertToTerms(conjugate));
+        _op1 = _op1.concat(terms);
+      } else {
+        _op1.push(t);
+      }
+
     });
-    return op1;
+    return _op1;
   }
 };
 
@@ -409,7 +468,7 @@ Expression.prototype.multiply = function(op) {
     }
     terms_2 = convertToTerms(op);
   }
-  const result = multiplyTerms(terms_1, terms_2);
+  const result = simplify(multiplyTerms(terms_1, terms_2));
   this.termsToExpression(result);
   return this;
 };
@@ -461,6 +520,51 @@ Expression.prototype.eval = function(sub) {
     return result.real.constant;
   else
     return result;
+};
+
+/**
+ * Returns the phase of the function of the expression object in degrees
+ * Conversion from rad to deg:
+ *    x * (180 / pi)
+ * Phase formula:
+ *    tan_inverse(imag / real) * (180 / pi)
+ */
+Expression.prototype.phase = function() {
+  const copy = this.copy();
+  const terms = convertToTerms(copy);
+  const real_terms = terms.filter(t => !t.imag);
+  const imag_terms = terms.filter(t => t.imag);
+  imag_terms.forEach( t => t.imag = false );
+
+  /* Special cases: real = 0 or imag = 0 */
+  if (!real_terms.length)
+    return 90;
+  if (!imag_terms.length)
+    return 0;
+
+  const imag = new Expression(imag_terms);
+  const real = new Expression(real_terms);
+  return `atan((${imag.toString()}) / (${real.toString()})) * 180 / pi`;
+};
+
+/**
+ * Returns the magnitude function of the expression object in dB
+ * Formula: 20 * log10 (sqrt(real^2 + imag^2))
+ *
+ * @returns {string}
+ */
+Expression.prototype.magnitude = function() {
+  const copy = this.copy();
+  const terms = convertToTerms(copy);
+  const real = terms.filter(t => !t.imag);
+  const imag = terms.filter(t => t.imag);
+  imag.forEach( t => t.imag = false );
+  const real_squared = multiplyTerms(real, real); // compute a^2
+  const imag_squared = multiplyTerms(imag, imag); // compuate b^2
+  const sum = new Expression(addTerms(real_squared, imag_squared));
+
+  /* |T(jw)| = 20 * log10 ( sqrt(real^2 + imag^2)) */
+  return `20 * ${LOG_10} ( ${SQRT}( ${sum.toString()} ))`;
 };
 
 Expression.prototype.toString = function () {

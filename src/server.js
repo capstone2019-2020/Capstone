@@ -1,15 +1,18 @@
 const express = require('express');
 const bodyParser = require('body-parser');	// pull info from HTML POST (express4)
 const m1 = require("./m1.js");
-const circuitjs = require("./circuit.js");
-const algebra = require('algebra.js');
+const circuitjs = require('./circuit.js');
+const algebra = require('./RWalgebra.js');
 const netlist = require('./netlist.js');
 const app = express();
-const path = require('path');
+const Expression = algebra.Expression;
+const Equation = algebra.Equation;
+// const path = require('path');
 const fileupload = require('express-fileupload');
 const router = express.Router();
 const port = process.env.PORT || 3000;
 const equations = [];
+// const equations;
 let nodes, startNode, endNode, masonsdata, circuit;
 
 app.use(function(req, res, next) {
@@ -23,24 +26,80 @@ app.use(express.static('public'));
 app.use(bodyParser.json());
 app.use(fileupload());
 
-// app.get('/', (req, res) => {
-//     res.sendFile(path.join(__dirname+ '/index.html'));
-// });
-
 // Receives the file and put list into netlist 
 app.post("/input-file", (req, res) => {
     let stuff = req.body.contents;
-    console.log(stuff);
+    // console.log(stuff);
 
     c = netlist.nlConsumeArr(stuff);
-    console.log(c);
+    // c.forEach((eq) => console.log(eq));
+
     if (!c) {
         return res.status(400).send("nlConsume Missing");
     }
 
     circuit = circuitjs.createCircuit(c);
-    console.log(circuit);
-    tempEqns = circuit.nodalAnalysis();
+    
+    let temp = circuit.nodalAnalysis();
+    temp.currentEquations.forEach((first) => 
+        first.forEach((second) => second.forEach((eqns) => 
+            {
+                if (eqns.lhs.real.terms.length !== 1 && eqns.lhs.imag.terms.length !== 1) {
+                    let newlhs, location, found = false, finaleqn;
+                    if (eqns.lhs.real.terms.length !== 0) {
+                        newlhs = new Expression(eqns.lhs.real.terms[0].toString());
+                    } else {
+                        newlhs = new Expression(eqns.lhs.imag.terms[0].toString());
+                    }
+                    
+                    // Check if the variable already exits
+                    for (var i = 0; i < equations.length; i++) {
+                        if (equations[i].lhs.real.terms.length !== 0) {
+                            if (equations[i].lhs.real.terms[0].toString() === newlhs.toString()) {
+                                found = true;
+                                location = i;
+                            }
+                        } else {
+                            if (equations[i].lhs.imag.terms[0].toString() === newlhs.toString()) {
+                                found = true;
+                                location = i;
+                            }
+                        }
+                    }
+
+                    // Split the string of the expression 
+                    let strOflhs = eqns.toString().split(newlhs.toString());
+                    strOflhs = strOflhs[1].split("=");
+                    strOflhs = strOflhs[0];
+                    if (strOflhs.toString().substring(0, 2).indexOf('+') != -1) {
+                        strOflhs = strOflhs.substring(3, strOflhs.length);
+                    }
+                    let temprhs = new Expression(strOflhs.toString());
+                    
+                    temprhs.multiply(-1);
+                    if (found === true) {
+                        let replacetemp = equations[location].toString().split('=');
+                        replacetemp = new Expression (replacetemp[1]);
+                        replacetemp.add(temprhs);
+                        finaleqn = newlhs.toString() + " = " + replacetemp;
+                        equations[location] = algebra.parse(finaleqn.toString());
+                    } else {
+                        finaleqn = newlhs.toString() + " = " + temprhs.toString();
+                        equations.push(algebra.parse(finaleqn.toString()));
+                    }
+                } else {
+                    equations.push(algebra.parse(eqns.toString()));
+                }
+            }
+        ))
+    );
+
+    for (var i = 0; i < temp.dpi.length; i++) {
+        let lhs = new Expression(`V${temp.nodeId[i]}`);
+        let rhs = temp.dpi[i].multiply(temp.shorCircuitCurrent[i]);  
+        let tempEqn = new Equation(lhs, rhs);
+        equations.push(algebra.parse(tempEqn.toString()));
+    }
 
     if(!circuit) {
         return res.status(400).send("Create circuit missing");
@@ -49,8 +108,9 @@ app.post("/input-file", (req, res) => {
     if (!req.body.contents) {
         return res.status(400).send("Missing contents of file");
     }
+
     // Read the netlist file and save the content 
-    return res.status(200).send(circuit);
+    return res.status(200).send(equations);
 });
 
 // Receive user request and parse into the eqns
@@ -58,7 +118,6 @@ app.post("/input-file", (req, res) => {
 // Also saves the start and end node information
 app.post("/input-form", (req, res) => {
     let eqns = req.body.eqns;
-    console.log(req.body);
     startNode = req.body.start;
     endNode = req.body.end;
 
@@ -73,9 +132,6 @@ app.post("/input-form", (req, res) => {
     }
 
     eqns.forEach((eq) => equations.push(algebra.parse(eq)));
-    res.set({
-
-    });
     return res.status(200).send(eqns);
 });
 
@@ -123,9 +179,11 @@ app.get("/computeMasons", (req, res) => {
     res.status(200).send({n: newNumer.toString(), d: newDenom.toString()});
 });
 
-app.get("/nodalAnalysis", (req, res) => {
+// // Frequency equation data
+// app.post("/svg-graph", (req, res) => {
 
-});
+//     res.status(200).send({});
+// });
 
 // add router
 app.use('/', router);

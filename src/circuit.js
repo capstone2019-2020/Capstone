@@ -66,7 +66,7 @@ Node.prototype.allCurrentKnown = function(){
     }
 };
 
-Node.prototype.kcl = function(){
+Node.prototype.kcl = function(circuitObj){
     var sum_lhs = new Expression(); // This is what this function will compute
     var sum_rhs = new Expression(0); // sum of current is always 0
     var sum_eq;
@@ -77,7 +77,7 @@ Node.prototype.kcl = function(){
         pComp = this.passiveComponents[i];
 
         if (pComp instanceof Resistor){
-            pComp.ohmsLaw(circuit);
+            pComp.ohmsLaw(circuitObj);
         }
 
         if (pComp.currentNumeric.real.constant != null){
@@ -243,7 +243,7 @@ Circuit.prototype.nodalAnalysis = function(){
         }
     
         // --- Start nodal analysis ---
-        var equations = unknownVnode.kcl();
+        var equations = unknownVnode.kcl(this);
 
         if (equations != undefined){
             equations_at_nodes.push(equations);
@@ -296,9 +296,9 @@ Resistor.prototype.print = function(){
  * Note it always subtract np from vp and does not handle the direction of current
  * @param {circuit object that Resistor belongs to} circuit 
  */
-Resistor.prototype.ohmsLaw = function(circuit){
-    const pnode = circuit.findNodeById(this.pnode);
-    const nnode = circuit.findNodeById(this.nnode);
+Resistor.prototype.ohmsLaw = function(circuitObj){
+    const pnode = circuitObj.findNodeById(this.pnode);
+    const nnode = circuitObj.findNodeById(this.nnode);
     var vp, np;
 
     if (pnode.voltage.real.constant == null){

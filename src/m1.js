@@ -13,19 +13,49 @@ function getEquations() {
   return {};
 }
 
+/**
+ *
+ *
+ * Returns:
+ * 1. numer: numerator of transfer function - Expression Object
+ * 2. denom: denominator of transfer function - Expression Object
+ * 3. bode: Object that contains the bode phase and magnitude equations
+ *    a) phase: STRING - equation for actual bode phase plot
+ *    b) magnitude: STRING - equation for actual bode magnitude plot
+ *
+ * @param nodes
+ * @param start
+ * @param end
+ * @returns {{phase, d: *, magnitude, n: *}}
+ */
 function computeMasons(nodes, start, end) {
-  /* Calculate denominator
-  * 1. Get all loops in the SFG -- DONE
-  * 2. Get all of the nth non-touching loops -- DONE
-  * 3. Generate denominator -- DONE (with some known issues)
-  *   denom = 1 - all loop gains + all 2 non-touching loops - all 3 non-touching loops ...
-  * */
+  /*
+   * Step 1: Calculate numerator and denominator of transfer function separately
+   */
   const allLoops = m1helper.findAllLoops(nodes);
   const nonTouchingLoops = m1helper.findNonTouching(allLoops);
   const denom = m1helper.calculateDenominator(allLoops, nonTouchingLoops);
   const numer = m1helper.calculateNumerator(start, end, nodes);
 
-  return {n: numer, d: denom};
+  /*
+   * Step 2: Calculate the ACTUAL bode phase and magnitude equations
+   *       - Loop Gain = 1 - denom ??
+   *
+   * Note: the phase and magnitude equations will be returned as a STRING
+   * instead of an expression object as the math library does not currently
+   * support functions
+   */
+  let transferFunc = numer.copy().divide(denom.copy());
+  const bodePhase = transferFunc.phase();
+  const bodeMag = transferFunc.magnitude();
+
+  return {n: numer, // Expression
+          d: denom, // Expression
+          bode: {
+            phase: bodePhase, // String
+            magnitude: bodeMag // String
+          }
+          };
 }
 
 /**
