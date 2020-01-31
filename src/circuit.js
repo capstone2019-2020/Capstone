@@ -54,7 +54,7 @@ Node.prototype.allCurrentKnown = function(){
 
         this.passiveComponents.forEach((p) => {
             this.currentSources.forEach((c) => {
-                 ret = resistorInSeriesWithCSrc(p, c);
+                 ret = PassiveComponentInSeriesWithCSrc(p, c);
             });
 
             if (!ret){
@@ -75,10 +75,8 @@ Node.prototype.kcl = function(circuitObj){
 
     for (var i = 0; i < this.passiveComponents.length; i++){
         pComp = this.passiveComponents[i];
-
-        if (pComp instanceof Resistor){
-            pComp.ohmsLaw(circuitObj);
-        }
+        pComp.ohmsLaw(circuitObj);
+        pComp.print(); //DEBUG
 
         if (pComp.currentNumeric.real.constant != null){
             equations.push(new Equation(pComp.currentNumeric, pComp.current));
@@ -109,30 +107,6 @@ Node.prototype.kcl = function(circuitObj){
          current sources in the circuit */
 Node.prototype.computeDpi = function(){
     var inverseSum = new Expression(0); // store (1/R1 + 1/R2 + ... + 1/Rn)
-    /*var allConnectedBranches = this.incomingBranches.concat(this.outgoingBranches);
-    var branchToIgnore;
-    
-    // If current source is zeroed out -> open circuit -> that branch can be ignored
-    this.currentSources.forEach ((c) => {
-        if (c.pnode == this.id){
-            branchToIgnore = allConnectedBranches.indexOf(c.nnode);
-        }
-        else if (c.nnode == this.id){
-            branchToIgnore = allConnectedBranches.indexOf(c.pnode);
-        }
-
-        // Something is wrong if the other side node of current source is not in allConnectedBranches
-        assert(branchToIgnore != -1); 
-        allConnectedBranches.splice(branchToIgnore, 1);
-    });
-
-    this.passiveComponents.forEach ((r) => {
-        if ((r.pnode == this.id && allConnectedBranches.includes(r.nnode) != -1) ||
-            (r.nnode == this.id && allConnectedBranches.includes(r.pnode) != -1)) {
-                inverseSum += math.inv(r.value);
-        }
-    });
-    */
    this.passiveComponents.forEach ((r) => {
     if (r.currentNumeric.real.constant == null){
             inverseSum.add(r.value.inverse());
@@ -331,6 +305,12 @@ function Resistor(r, p, n){
 Resistor.prototype = new PassiveComponent();
 Resistor.prototype.constructor = Resistor;
 
+/**
+ * @param {value of capacitance} c 
+ * @param {positive node ID} p 
+ * @param {negative node ID} n 
+ * Extends PassiveComponent Class
+ */
 function Capacitor(c, p, n){
     PassiveComponent.call(this, c, p, n);
 }
@@ -338,7 +318,12 @@ function Capacitor(c, p, n){
 Capacitor.prototype = new PassiveComponent();
 Capacitor.prototype.constructor = Capacitor;
 
-
+/**
+ * @param {value of inductance} l 
+ * @param {positive node ID} p 
+ * @param {negative node ID} n 
+ * Extends PassiveComponent Class
+ */
 function Inductor(l, p, n){
     PassiveComponent.call(this, l, p, n);
 }
@@ -352,14 +337,16 @@ Inductor.prototype.constructor = Inductor;
  * @param {positive node ID} p 
  * @param {Negative node ID} n
  * Class Attributes:
- *  value: Expression (initialized with a #)
+ *  value: Expression (initialized with a constant only if dependent = false)
  *  pnode: int
  *  nnode: int
+ *  dependent: boolean (true if dependent source, false if independent)
  */
-function CurrentSource(i, p, n){
+function CurrentSource(i, p, n, dependency){
     this.value = i;
     this.pnode = p;
     this.nnode = n;
+    this.dependent = dependency;
 };
 
 CurrentSource.prototype.print = function(){
@@ -369,26 +356,26 @@ CurrentSource.prototype.print = function(){
 };
 
 /**
- * Determine whether r and csrc are in parallel and return a boolean value
+ * Determine whether r/c/l and csrc are in parallel and return a boolean value
  * If they are in parallel, update Resistor.currentNumeric
- * @param {Resistor object under the subject} r 
+ * @param {PassiveComponent object under the subject} p 
  * @param {CurrentSource object under the subject} csrc 
  */
-function resistorInSeriesWithCSrc(r, csrc){
-    if (r.pnode == csrc.pnode){
-        r.currentNumeric = new Expression(-1 * csrc.value);
+function PassiveComponentInSeriesWithCSrc(p, csrc){
+    if (p.pnode == csrc.pnode){
+        p.currentNumeric = new Expression(-1 * csrc.value);
         return true;
     }
-    else if (r.pnode == csrc.nnode){
-        r.currentNumeric = new Expression(csrc.value);
+    else if (p.pnode == csrc.nnode){
+        p.currentNumeric = new Expression(csrc.value);
         return true;
     }
-    else if (r.nnode == csrc.pnode){
-        r.currentNumeric = new Expression(csrc.value);
+    else if (p.nnode == csrc.pnode){
+        p.currentNumeric = new Expression(csrc.value);
         return true;
     }
-    else if (r.nnode == csrc.nnode){
-        r.currentNumeric = new Expression(-1 * csrc.value);
+    else if (p.nnode == csrc.nnode){
+        p.currentNumeric = new Expression(-1 * csrc.value);
         return true;
     }
     else {
@@ -486,8 +473,8 @@ function createCircuit(components){
         }
 
         else if (c.type == 'C'){
-            var impedance = new Expression('(-1) * j * w');
-            c = new Capacitor(impedance.multiply(c.value), c.pnode, c.nnode);
+            var reactance = new Expression(`j * w * ${c.value}`);
+            c = new Capacitor(new Expression(1).divide(reactance), c.pnode, c.nnode);
             pnode = circuit.findNodeById(c.pnode);
             nnode = circuit.findNodeById(c.nnode);
             pnode.passiveComponents.push(c);
@@ -543,8 +530,8 @@ AnalysisSummary.prototype.addSummary= function(id, dpi, isc, eqs){
 
    c = nl.nlConsume(rc);
    circuit = createCircuit(c);
-
-   console.log(JSON.stringify(circuit.nodalAnalysis()));
+   circuit.nodalAnalysis();
+//    console.log(JSON.stringify(circuit.nodalAnalysis()));
 })();
 
 exports.createCircuit = createCircuit;
