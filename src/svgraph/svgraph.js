@@ -202,7 +202,7 @@ function __vec(x, y) {
 
 function __ns(elem, config={}, ...children) {
   Object.keys(config).forEach(k =>
-      elem.setAttribute(k, config[k])
+    elem.setAttribute(k, config[k])
   );
 
   if (children) {
@@ -310,7 +310,7 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
         __vec(x_coord, DOWN(ORIGIN_Y1, 5)),
         __vec(x_coord, UP(ORIGIN_Y1, 5)),
         {stroke: 'black'}
-        )
+      )
     );
     xval = lb+SCALE(part_val, i);
     xval = Math.abs(xval) < 1 ? FIXED(xval, 1) : ROUND(xval);
@@ -340,7 +340,7 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
 
   return [
     text(__vec(
-        RIGHT(START_X, HALF(lenx)), DOWN(START_Y, 50)
+      RIGHT(START_X, HALF(lenx)), DOWN(START_Y, 50)
       ), label, {'text-anchor': 'end'}
     ),
     line(
@@ -413,8 +413,8 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
 
   return [
     text(__vec(
-        LEFT(START_X, 60),
-        UP(START_Y, DOWN(HALF(leny),40))
+      LEFT(START_X, 60),
+      UP(START_Y, DOWN(HALF(leny),40))
       ),
       label, {
         style: CSS({
@@ -477,8 +477,8 @@ function legend(fpoints) {
     for (j=i; j<_i; j++) {
       _fpoint = fpoints[j];
       color_elems.push(rect(__vec(
-          RIGHT(START_X, width+inc_width),
-          DOWN(10, 10+20*(j-i))
+        RIGHT(START_X, width+inc_width),
+        DOWN(10, 10+20*(j-i))
         ), 30, fontsize, {
           fill: _fpoint.color,
           stroke: 'black'
@@ -525,7 +525,7 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
   INFO(`====BEFORE=====`);
   INFO(`parts: ${parts} -> (l=${l_parts}, u=${u_parts})`);
   INFO(`lb: ${lb}, ub: ${ub}`);
-  
+
   /*
    * This is the most important part:
    *
@@ -569,7 +569,7 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
   INFO(`partition: ${partition}`);
   INFO(`lparts: ${l_parts}, uparts: ${u_parts}`);
   INFO('=======AFTER========');
-  
+
   if (parts === Infinity) {
     ERROR('error: parts is infinity');
     throw new Error('No matched parts');
@@ -787,25 +787,17 @@ function render(config, funcs1, funcs2, xlb, xub,
     DEBUG(`========END CONFIG==========`);
   }
 
-  if (funcs1.length !== 0) {
-    ({
-      fpoints: fpoints1, sample_amt: sample_amt1,
-      xlb, xub, ylb: ylb1, yub: yub1
-    } = eval(funcs1, xgrid, xlb, xub, ylb1, yub1,
-      !DEFINED(config)));
-  } else {
-    fpoints1 = [];
-  }
+  ({
+    fpoints: fpoints1, sample_amt: sample_amt1,
+    xlb, xub, ylb: ylb1, yub: yub1
+  } = eval(funcs1, xgrid, xlb, xub, ylb1, yub1,
+    !DEFINED(config)));
 
-  if (funcs2.length !== 0) {
-    ({
-      fpoints: fpoints2, sample_amt: sample_amt2,
-      xlb, xub, ylb: ylb2, yub: yub2
-    } = eval(funcs2, xgrid, xlb, xub, ylb2, yub2,
-      !DEFINED(config)));
-  } else {
-    fpoints2 = [];
-  }
+  ({
+    fpoints: fpoints2, sample_amt: sample_amt2,
+    xlb, xub, ylb: ylb2, yub: yub2
+  } = eval(funcs2, xgrid, xlb, xub, ylb2, yub2,
+    !DEFINED(config)));
 
   let x_offset, y_offset1, y_offset2;
   try {
@@ -816,24 +808,20 @@ function render(config, funcs1, funcs2, xlb, xub,
       parts: xgrid
     } = init_plot(xlb, xub, LENGTH_X, xgrid,
       !DEFINED(config)));
-    if (funcs1.length !== 0) {
-      ({
-        lb: ylb1,
-        ub: yub1,
-        offset: y_offset1,
-        parts: ygrid1
-      } = init_plot(ylb1, yub1, LENGTH_Y, ygrid1,
-        !DEFINED(config)));
-    }
-    if (funcs2.length !== 0) {
-      ({
-        lb: ylb2,
-        ub: yub2,
-        offset: y_offset2,
-        parts: ygrid2
-      } = init_plot(ylb2, yub2, LENGTH_Y, ygrid2,
-        !DEFINED(config), y_offset1));
-    }
+    ({
+      lb: ylb1,
+      ub: yub1,
+      offset: y_offset1,
+      parts: ygrid1
+    } = init_plot(ylb1, yub1, LENGTH_Y, ygrid1,
+      !DEFINED(config)));
+    ({
+      lb: ylb2,
+      ub: yub2,
+      offset: y_offset2,
+      parts: ygrid2
+    } = init_plot(ylb2, yub2, LENGTH_Y, ygrid2,
+      !DEFINED(config), y_offset1));
 
     let wrapper = ELEM('wrapper');
     if (wrapper) {
@@ -902,7 +890,7 @@ function render(config, funcs1, funcs2, xlb, xub,
   };
 }
 
-function init() {
+function init(fmag, fphase) {
   /*
    * These variables are the core rendering components:
    * [x/y]lb    : Lower-bound value for x/y-axis (actual)
@@ -919,17 +907,19 @@ function init() {
   let ygrid1=10, ygrid2=10;
   let xgrid = 15;
   let sample_amt1, sample_amt2, fpoints1, fpoints2;
-  let axis1_funcs, axis2_funcs;
-  console.log('hi there');
 
   /* =========== first time render =========== */
   ({
     xlb, xub, ylb1, yub1, ylb2, yub2,
     xgrid, ygrid1, ygrid2,
     sample_amt1, sample_amt2, fpoints1, fpoints2
-  } = render(undefined, [], [],
+  } = render(undefined, [fmag], [fphase],
     xlb, xub, ylb1, yub1, ylb2, yub2,
     xgrid, ygrid1, ygrid2));
+
+  Svgraph().appendChild(g('legend',
+    ...legend([...fpoints1, ...fpoints2])
+  ));
 
   /*
    * This event is triggered upon every mouse move action
@@ -1124,30 +1114,4 @@ function init() {
       intervalId = 0;
     }
   });
-
-  return {
-    update(fphase, fmag) {
-      axis1_funcs = [fmag];
-      axis2_funcs = [fphase];
-
-      ({
-        xlb, xub, ylb1, yub1, ylb2, yub2,
-        xgrid, ygrid1, ygrid2,
-        sample_amt1, sample_amt2, fpoints1, fpoints2
-      } = render(undefined, [fmag], [fphase],
-        xlb, xub, ylb1, yub1, ylb2, yub2,
-        xgrid, ygrid1, ygrid2));
-
-      Svgraph().appendChild(g('legend',
-        ...legend([...fpoints1, ...fpoints2])
-      ));
-    }
-  }
 }
-
-const {update} = init();
-const test = [
-  'f(w) = 20 * log10 ( sqrt( ((9000000) / (w*w*w*w + 1800*w*w + 810000)) + ((10000) / (w*w*w*w + 1800*w*w + 810000))*w*w ))',
-  'f(w) = atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi'
-];
-update(test[0], test[1]);
