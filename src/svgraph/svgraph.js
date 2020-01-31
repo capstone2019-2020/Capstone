@@ -2,6 +2,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const MIN_XGRID = 8, MIN_YGRID = 8, MIN_X = 1, MIN_Y = 1;
 const MAX_XGRID = 15, MAX_YGRID = 15;
+const MAX_LOG_XGRID = 5;
 const SAMPLE_RATE = 10, SAMPLE_INTERVAL = 50; /* ms */
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
 const GRID_MODE = false;
@@ -40,6 +41,7 @@ const RAND = (min, max) => Math.floor(Math.random() * (max - min) ) + min;
 const RGB = (r, g, b) => `rgb(${r},${g},${b})`;
 const DEFINED = (v) => (typeof v !== 'undefined') && (v !== null);
 const INFINITY = (v) => Math.abs(v) === Infinity;
+const RANGE = (n, l, u) => n >= l && n < u;
 
 /* loggers */
 const __LOG = (l, msg, ...p) => {
@@ -312,6 +314,9 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
     );
     xval = lb+SCALE(part_val, i);
     xval = Math.abs(xval) < 1 ? FIXED(xval, 1) : ROUND(xval);
+    if (SEMI_LOG_MODE) {
+      xval = `10e+${xval}`;
+    }
     partitions.push(
       text(
         __vec(RIGHT(x_coord, 5), DOWN(ORIGIN_Y1, 20)),
@@ -582,7 +587,6 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
         let p = __ROUND(
           RATIO(offset-seed_offset, px_per_partition)
         );
-        console.log(seed_offset, offset, p);
         new_ub+=(p*partition);
         new_lb+=(p*partition);
       }
@@ -596,7 +600,7 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
 }
 
 function eval_log(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
-  let sample_amt = 10;
+  let sample_amt = 1;
 
   /*
    * Here is the log-scale conversion -> we need to evaluate
@@ -648,7 +652,7 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
    * xub: upper bound log(x)
    */
   xlb = 0;
-  xub = xgrid;
+  xub = MIN(xgrid, MAX_LOG_XGRID);
 
   let points;
   const parser = math.parser();
@@ -714,7 +718,7 @@ function eval(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
    * SAMPLE_RATE=1 (1 sample per grid piece), and # of
    * grid pieces in x is 4, then:
    *
-   * sample_amt = 2-(-2) / (4*1) = 4
+   * sample_amt = 2-(-2) / (4*1) = 1
    *
    * In other words: 1 sample per grid piece So we would
    * sample at x = {-2, -1, 0, 1, 2}
@@ -862,7 +866,7 @@ function render(config, funcs1, funcs2, xlb, xub,
       lb: ylb1,
       ub: yub1,
       parts: ygrid1,
-      label: '',
+      label: '|f(jw)| (dB)',
       grid: GRID_MODE
     })),
     g('y-axis-2', ...yaxis({
@@ -872,7 +876,7 @@ function render(config, funcs1, funcs2, xlb, xub,
       lb: ylb2,
       ub: yub2,
       parts: ygrid2,
-      label: '',
+      label: '<f(jw) (deg)',
       grid: GRID_MODE
     })),
   );
@@ -906,13 +910,15 @@ function init() {
 
   const axis1_funcs = [
     // 'f(x) = sin(x)*x',
-    'f(x) = x',
+    // 'f(x) = x',
+    'f(w) = 20 * log10 ( sqrt( ((9000000) / (w*w*w*w + 1800*w*w + 810000)) + ((10000) / (w*w*w*w + 1800*w*w + 810000))*w*w ))',
     // 'f(x) = -x'
   ];
 
   const axis2_funcs = [
     // 'f(x) = cos(x)',
-    'f(x) = log(x)',
+    // 'f(x) = log(x)',
+    'f(w) = atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi'
     // 'f(x) = x^0.5',
     // 'f(x) = sin(x)*abs(x)+1'
   ];
@@ -952,7 +958,47 @@ function init() {
      */
     const tracer_guide = (id, fpoints, ORIGIN, ylb, yub,
                           sample_amt) => {
-      let idx = RATIO(__X(X, xlb, xub)-xlb, sample_amt);
+      let idx;
+      if (!SEMI_LOG_MODE) {
+        idx = RATIO(__X(X, xlb, xub) - xlb, sample_amt);
+      } else {
+        let _x, _base, _d, _add=0;
+
+        _x = __X(X, xlb, xub);
+        _base = Math.floor(_x);
+        _d = _x - _base;
+
+        /*
+         * Same ranges used in eval_log(), see that for
+         * more detailed explanation.
+         */
+        if (RANGE(_d, 0, 0.301))
+          _add = 1;
+        else if (RANGE(_d, 0.301, 0.477))
+          _add = 2;
+        else if (RANGE(_d, 0.477, 0.602))
+          _add = 3;
+        else if (RANGE(_d, 0.602, 0.699))
+          _add = 4;
+        else if (RANGE(_d, 0.699, 0.778))
+          _add = 5;
+        else if (RANGE(_d, 0.778, 0.845))
+          _add = 6;
+        else if (RANGE(_d, 0.845, 0.903))
+          _add = 7;
+        else if (RANGE(_d, 0.903, 0.945))
+          _add = 8;
+        else if (RANGE(_d, 0.945, 1))
+          _add = 9;
+
+        /*
+         * The *9 is because there are 9 values stored per
+         * grid interval. So the formula comes down to:
+         * idx = (# spaces in interval)*(# intervals) + (offset spaces)
+         */
+        idx = 9*_base + _add;
+      }
+
       if (FIXED(idx%1, 1) === '0.0') {
         idx = Math.floor(idx);
 
