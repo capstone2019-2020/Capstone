@@ -4,6 +4,7 @@
   "description": "",
   "main": "main.js",
   "scripts": {
+    "start": "nodemon src/server.js",
     "clean": "rm -f *.debug *.results",
     "test_m1": "npm run clean && env M1_LOG_LEVEL=error mocha test/m1/m1.js > m1.results || true && env M1_LOG_LEVEL=debug mocha test/m1/m1.js > m1.debug || true && echo Done, check m1.results for test results, check m1.debug for verbose logs",
     "test_m3": "npm run clean && env mocha test/m3/m3.js > m3.results || true && env M3_LOG_LEVEL=1 mocha test/m3/m3.js > m3.debug || true && echo Done, check m3.results for test results, check m3.debug for verbose logs",
@@ -27,6 +28,7 @@
   },
   "dependencies": {
     "express": "^4.17.1",
+    "express-fileupload": "^1.1.6",
     "uuid": "^3.3.3"
   }
 }

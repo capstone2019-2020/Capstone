@@ -2,9 +2,10 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 
 const MIN_XGRID = 8, MIN_YGRID = 8, MIN_X = 1, MIN_Y = 1;
 const MAX_XGRID = 15, MAX_YGRID = 15;
-const SAMPLE_RATE = 50, SAMPLE_INTERVAL = 150; /* ms */
+const SAMPLE_RATE = 10, SAMPLE_INTERVAL = 50; /* ms */
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
 const GRID_MODE = false;
+const SEMI_LOG_MODE = true;
 const START_X = 100, START_Y = 470;
 const LENGTH_X = 600, LENGTH_Y = 400;
 let ORIGIN_X = 100, ORIGIN_Y1 = 450, ORIGIN_Y2 = 450; /* These change depending on graph */
@@ -594,9 +595,133 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
   }
 }
 
+function eval_log(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
+  let sample_amt = 10;
+
+  /*
+   * Here is the log-scale conversion -> we need to evaluate
+   * each function at f(x) for x = {1,2,3,..,10,20,30,..,},
+   * then plot it on a log axis with the mapping described
+   * as below:
+   *
+   * x | log(x)  x  | log(x)   x   | log(x)
+   * ----------------------------------------
+   * 1 |   0     10 |    1    100 |    2
+   * 2 |  0.301  20 |  1.301  200 |  2.301
+   * 3 |  0.477  30 |  1.477  300 |  2.477
+   * 4 |  0.602  40 |  1.602  400 |  2.602
+   * 5 |  0.699  50 |  1.699  500 |  2.699
+   * 6 |  0.778  60 |  1.778  600 |  2.778
+   * 7 |  0.845  70 |  1.845  700 |  2.845
+   * 8 |  0.903  80 |  1.903  800 |  2.903
+   * 9 |  0.954  90 |  1.954  900 |  2.954
+   *
+   * The pattern is clear: each decade in increase for
+   * x reflects in an increment in log(x).
+   *
+   * We can leverage this pattern to make computing the
+   * samples faster. First, we take only 10 samples per
+   * decade (order of magnitude). While the number of samples
+   * can be modulated depending on values of xlb, xub, it
+   * is sufficient for now to keep it fixed at 10.
+   *
+   * Second, rather than computing log(x) for every x to
+   * determine where along the axis each sample should
+   * be placed, we can, for each decade, add fixed pre-
+   * computed amounts onto the base value of the decade.
+   */
+  let logdist = [
+    0,
+    0.301,
+    0.477,
+    0.602,
+    0.699,
+    0.778,
+    0.845,
+    0.903,
+    0.954
+  ];
+  let fpoints;
+
+  /*
+   * xlb: lower bound log(x)
+   * xub: upper bound log(x)
+   */
+  xlb = 0;
+  xub = xgrid;
+
+  let points;
+  const parser = math.parser();
+  fpoints = funcs.map(f => {
+    parser.evaluate(f);
+
+    points = [];
+    let xval, yval, x_base = 1, x_incr = 1;
+    for (xval=xlb; xval<=xub; xval++) {
+      let i, xlog;
+      for (i=0; i<logdist.length; i++) {
+        xlog = xval+logdist[i];
+        yval = parser.evaluate(`f(${x_base+(x_incr*i)})`);
+        if (!isNaN(yval) && !INFINITY(yval)) {
+          yub = MAX(yval, yub);
+          ylb = MIN(yval, ylb);
+
+          points.push(__vec(xlog, yval));
+        } else {
+          points.push(__vec(xlog, NaN));
+        }
+      }
+
+      x_base*=10;
+      x_incr*=10;
+    }
+
+    return {f, points, color: COLOR()};
+  });
+
+  if (ylb < 0) {
+    ylb = is_init ? ylb*1.1 : ylb;
+  } else {
+    ylb = 0;
+  }
+  if (yub > 0) {
+    yub = is_init ? yub*1.1 : yub;
+  } else {
+    yub = 0;
+  }
+
+  return {fpoints, sample_amt,
+    xub, xlb, yub, ylb};
+}
+
 function eval(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
   let sample_amt, fpoints;
 
+  if (SEMI_LOG_MODE) {
+    return eval_log(funcs, xgrid, xlb, xub,
+      ylb, yub, is_init);
+  }
+
+  /*
+   * fpoints  : stores the sample points to plot on the graph.
+   * xub      : x_upper_bound
+   * xlb      : x_lower_bound
+   * xgrid    : how many grid pieces there are
+   * SAMPLE_RATE : number of samples per grid piece
+   *
+   * sample_amt : the interval b/w 2 samples of f(x) e.g.
+   * Say the bounds were from -2 to 2 (xlb=-2, xub=2),
+   * SAMPLE_RATE=1 (1 sample per grid piece), and # of
+   * grid pieces in x is 4, then:
+   *
+   * sample_amt = 2-(-2) / (4*1) = 4
+   *
+   * In other words: 1 sample per grid piece So we would
+   * sample at x = {-2, -1, 0, 1, 2}
+   *
+   * In this function, for each function to be rendered,
+   * calculate the points based on the described params.
+   */
   const parser = math.parser();
   sample_amt = (xub-xlb) / (xgrid*SAMPLE_RATE);
   fpoints = funcs.map(f => {
@@ -786,10 +911,10 @@ function init() {
   ];
 
   const axis2_funcs = [
-    'f(x) = cos(x)',
-    // 'f(x) = log(x)',
+    // 'f(x) = cos(x)',
+    'f(x) = log(x)',
     // 'f(x) = x^0.5',
-    'f(x) = sin(x)*abs(x)+1'
+    // 'f(x) = sin(x)*abs(x)+1'
   ];
 
   /* =========== first time render =========== */
