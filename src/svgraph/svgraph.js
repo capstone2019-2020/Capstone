@@ -936,7 +936,6 @@ function init() {
     xlb, xub, ylb1, yub1, ylb2, yub2,
     xgrid, ygrid1, ygrid2));
 
-
   /*
    * This event is triggered upon every mouse move action
    * within the SVG element. Used to handle all dynamic

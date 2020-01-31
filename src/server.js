@@ -29,9 +29,12 @@ app.use(fileupload());
 // Receives the file and put list into netlist 
 app.post("/input-file", (req, res) => {
     let stuff = req.body.contents;
-    // console.log(stuff);
 
-    c = netlist.nlConsumeArr(stuff.toString().split('\n'));
+    if (stuff[0].search('\n') !== -1) {
+      c = netlist.nlConsumeArr(stuff.toString().split('\n'));
+    } else {
+      c = netlist.nlConsumeArr(stuff);
+    }
     // c.forEach((eq) => console.log(eq));
 
     if (!c) {
@@ -142,7 +145,9 @@ app.get("/computeSFG", (req, res) => {
 });
 
 // Get the computeMasons eqns
-app.get("/computeMasons", (req, res) => {
+app.post("/computeMasons", (req, res) => {
+    startNode = req.body.start;
+    endNode = req.body.end;
     masonsdata = m1.computeMasons(nodes, startNode, endNode);
 
     let letters = /^[A-Za-z]+$/;
@@ -176,7 +181,8 @@ app.get("/computeMasons", (req, res) => {
     newNumer = newNumer+tempnumer[tempnumer.length-1];
     newDenom = newDenom+tempdenom[tempdenom.length-1];
 
-    res.status(200).send({n: newNumer.toString(), d: newDenom.toString()});
+    res.status(200).send({n: newNumer.toString(), d: newDenom.toString(),
+                          bode: { phase: masonsdata.bode.phase, magnitude: masonsdata.bode.magnitude }});
 });
 
 // // Frequency equation data

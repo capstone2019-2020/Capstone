@@ -14,7 +14,7 @@ var circuit;
  * Class Attributes: 
  *  id: int
  *  voltage: Expression (initialized empty or with a #)
- *  passiveComponents: array of connected passive components (currently, only Resistor objects)
+ *  passiveComponents: array of connected passive components (resistors, capacitors, inductors)
  *  incomingBranches: not used
  *  outgoingBranches: not used 
  */
@@ -54,7 +54,7 @@ Node.prototype.allCurrentKnown = function(){
 
         this.passiveComponents.forEach((p) => {
             this.currentSources.forEach((c) => {
-                 ret = resistorInSeriesWithCSrc(p, c);
+                 ret = PassiveComponentInSeriesWithCSrc(p, c);
             });
 
             if (!ret){
@@ -75,10 +75,8 @@ Node.prototype.kcl = function(circuitObj){
 
     for (var i = 0; i < this.passiveComponents.length; i++){
         pComp = this.passiveComponents[i];
-
-        if (pComp instanceof Resistor){
-            pComp.ohmsLaw(circuitObj);
-        }
+        pComp.ohmsLaw(circuitObj);
+        pComp.print(); //DEBUG
 
         if (pComp.currentNumeric.real.constant != null){
             equations.push(new Equation(pComp.currentNumeric, pComp.current));
@@ -109,30 +107,6 @@ Node.prototype.kcl = function(circuitObj){
          current sources in the circuit */
 Node.prototype.computeDpi = function(){
     var inverseSum = new Expression(0); // store (1/R1 + 1/R2 + ... + 1/Rn)
-    /*var allConnectedBranches = this.incomingBranches.concat(this.outgoingBranches);
-    var branchToIgnore;
-    
-    // If current source is zeroed out -> open circuit -> that branch can be ignored
-    this.currentSources.forEach ((c) => {
-        if (c.pnode == this.id){
-            branchToIgnore = allConnectedBranches.indexOf(c.nnode);
-        }
-        else if (c.nnode == this.id){
-            branchToIgnore = allConnectedBranches.indexOf(c.pnode);
-        }
-
-        // Something is wrong if the other side node of current source is not in allConnectedBranches
-        assert(branchToIgnore != -1); 
-        allConnectedBranches.splice(branchToIgnore, 1);
-    });
-
-    this.passiveComponents.forEach ((r) => {
-        if ((r.pnode == this.id && allConnectedBranches.includes(r.nnode) != -1) ||
-            (r.nnode == this.id && allConnectedBranches.includes(r.pnode) != -1)) {
-                inverseSum += math.inv(r.value);
-        }
-    });
-    */
    this.passiveComponents.forEach ((r) => {
     if (r.currentNumeric.real.constant == null){
             inverseSum.add(r.value.inverse());
@@ -264,39 +238,28 @@ Circuit.prototype.nodalAnalysis = function(){
     return resultSummary;
 };
 
-/**
- * 
- * @param {value of resistance} r 
- * @param {positive node ID} p 
- * @param {negative node ID} n 
- * Class Attributes:
- *  value: Expression (initialized with a #)
- *  pnode: int
- *  nnode: int
- *  current: Expression
- *  currentNumeric: Expression
- */
-function Resistor(r, p, n){
-    this.value = r;
+/*
+* Class Attributes:
+*  value: Expression (initialized with a #)
+*  pnode: int
+*  nnode: int
+*  current: Expression
+*  currentNumeric: Expression
+*/
+function PassiveComponent(v, p, n){
+    this.value = v; // Impedance
     this.pnode = p;
     this.nnode = n;
     this.current = new Expression(); // start off undefined
     this.currentNumeric = new Expression(); // start off undefined
-};
-
-Resistor.prototype.print = function(){
-    console.log(`resistance: ${this.value}`);
-    console.log(`positive node: ${this.pnode}`);
-    console.log(`negative node: ${this.nnode}`);
-    console.log(`current: ${this.current.toString()} Numeric current: ${this.currentNumeric.toString()}`);
-};
+}
 
 /**
  * Find the expression of the current going through Resistor
  * Note it always subtract np from vp and does not handle the direction of current
  * @param {circuit object that Resistor belongs to} circuit 
  */
-Resistor.prototype.ohmsLaw = function(circuitObj){
+PassiveComponent.prototype.ohmsLaw = function(circuitObj){
     const pnode = circuitObj.findNodeById(this.pnode);
     const nnode = circuitObj.findNodeById(this.nnode);
     var vp, np;
@@ -322,20 +285,68 @@ Resistor.prototype.ohmsLaw = function(circuitObj){
     this.current = numer.divide(denom); 
 };
 
+PassiveComponent.prototype.print = function(){
+    console.log(`impedance: ${this.value}`);
+    console.log(`positive node: ${this.pnode}`);
+    console.log(`negative node: ${this.nnode}`);
+    console.log(`current: ${this.current.toString()} Numeric current: ${this.currentNumeric.toString()}`);
+};
+
+/**
+ * @param {value of resistance} r 
+ * @param {positive node ID} p 
+ * @param {negative node ID} n 
+ * Extends PassiveComponent Class
+ */
+function Resistor(r, p, n){
+    PassiveComponent.call(this, r, p, n);
+};
+
+Resistor.prototype = new PassiveComponent();
+Resistor.prototype.constructor = Resistor;
+
+/**
+ * @param {value of capacitance} c 
+ * @param {positive node ID} p 
+ * @param {negative node ID} n 
+ * Extends PassiveComponent Class
+ */
+function Capacitor(c, p, n){
+    PassiveComponent.call(this, c, p, n);
+}
+
+Capacitor.prototype = new PassiveComponent();
+Capacitor.prototype.constructor = Capacitor;
+
+/**
+ * @param {value of inductance} l 
+ * @param {positive node ID} p 
+ * @param {negative node ID} n 
+ * Extends PassiveComponent Class
+ */
+function Inductor(l, p, n){
+    PassiveComponent.call(this, l, p, n);
+}
+
+Inductor.prototype = new PassiveComponent();
+Inductor.prototype.constructor = Inductor;
+
 /**
  * 
  * @param {Current value} i 
  * @param {positive node ID} p 
  * @param {Negative node ID} n
  * Class Attributes:
- *  value: Expression (initialized with a #)
+ *  value: Expression (initialized with a constant only if dependent = false)
  *  pnode: int
  *  nnode: int
+ *  dependent: boolean (true if dependent source, false if independent)
  */
-function CurrentSource(i, p, n){
+function CurrentSource(i, p, n, dependency){
     this.value = i;
     this.pnode = p;
     this.nnode = n;
+    this.dependent = dependency;
 };
 
 CurrentSource.prototype.print = function(){
@@ -345,26 +356,26 @@ CurrentSource.prototype.print = function(){
 };
 
 /**
- * Determine whether r and csrc are in parallel and return a boolean value
+ * Determine whether r/c/l and csrc are in parallel and return a boolean value
  * If they are in parallel, update Resistor.currentNumeric
- * @param {Resistor object under the subject} r 
+ * @param {PassiveComponent object under the subject} p 
  * @param {CurrentSource object under the subject} csrc 
  */
-function resistorInSeriesWithCSrc(r, csrc){
-    if (r.pnode == csrc.pnode){
-        r.currentNumeric = new Expression(-1 * csrc.value);
+function PassiveComponentInSeriesWithCSrc(p, csrc){
+    if (p.pnode == csrc.pnode){
+        p.currentNumeric = new Expression(-1 * csrc.value);
         return true;
     }
-    else if (r.pnode == csrc.nnode){
-        r.currentNumeric = new Expression(csrc.value);
+    else if (p.pnode == csrc.nnode){
+        p.currentNumeric = new Expression(csrc.value);
         return true;
     }
-    else if (r.nnode == csrc.pnode){
-        r.currentNumeric = new Expression(csrc.value);
+    else if (p.nnode == csrc.pnode){
+        p.currentNumeric = new Expression(csrc.value);
         return true;
     }
-    else if (r.nnode == csrc.nnode){
-        r.currentNumeric = new Expression(-1 * csrc.value);
+    else if (p.nnode == csrc.nnode){
+        p.currentNumeric = new Expression(-1 * csrc.value);
         return true;
     }
     else {
@@ -455,11 +466,36 @@ function createCircuit(components){
         }
         else if (c.type == 'R'){
             r = new Resistor(new Expression(c.value), c.pnode, c.nnode);
-            //r.ohmsLaw(circuit);
             pnode = circuit.findNodeById(c.pnode);
             nnode = circuit.findNodeById(c.nnode);
             pnode.passiveComponents.push(r);
             nnode.passiveComponents.push(r);
+        }
+
+        else if (c.type == 'C'){
+            var reactance = new Expression(`j * w * ${c.value}`);
+            c = new Capacitor(new Expression(1).divide(reactance), c.pnode, c.nnode);
+            pnode = circuit.findNodeById(c.pnode);
+            nnode = circuit.findNodeById(c.nnode);
+            pnode.passiveComponents.push(c);
+            nnode.passiveComponents.push(c);
+        }
+
+        else if (c.type == 'L'){
+            var impedance = new Expression('j * w');
+            l = new Inductor(impedance.multiply(c.value), c.pnode, c.nnode);
+            pnode = circuit.findNodeById(c.pnode);
+            nnode = circuit.findNodeById(c.nnode);
+            pnode.passiveComponents.push(l);
+            nnode.passiveComponents.push(l);
+        }
+
+        else if (c.type == 'E'){ // Dependent voltage source
+
+        }
+
+        else if (c.type == 'G'){
+
         }
     });
 
@@ -486,23 +522,17 @@ AnalysisSummary.prototype.addSummary= function(id, dpi, isc, eqs){
     this.currentEquations.push(eqs);
 };
 
-//(function main(){
-//    const voltage_div = 'test/netlist_ann1.txt'
-//    const var_simple = 'test/netlist_ann2.txt'
-//    const curr_src = 'test/netlist_ann_csrc.txt'
-//
-//    var c = [
-//        { id: 'I1', type: 'I', pnode: 1, nnode: 0, value: '0.003'  },
-//        { id: 'R1', type: 'R', pnode: 1, nnode: 0, value: '4000'  },
-//        { id: 'R2', type: 'R', pnode: 1, nnode: 2, value: '5600'  },
-//        { id: 'I2', type: 'I', pnode: 0, nnode: 2, value: '0.002'  }
-//    ];
-//
-//    c = nl.nlConsume(curr_src);
-//    circuit = createCircuit(c);
-//
+(function main(){
+   const voltage_div = 'test/netlist_ann1.txt'
+   const var_simple = 'test/netlist_ann2.txt'
+   const curr_src = 'test/netlist_ann_csrc.txt'
+   const rc = 'test/netlist_ann_rc.txt'
+
+   c = nl.nlConsume(rc);
+   circuit = createCircuit(c);
+   circuit.nodalAnalysis();
 //    console.log(JSON.stringify(circuit.nodalAnalysis()));
-// })();
+})();
 
 exports.createCircuit = createCircuit;
 exports.setCircuit = (c) => {

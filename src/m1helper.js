@@ -54,6 +54,9 @@ function dfsFindLoops(nodes, curr, startId, visited, stack, cycles) {
     edge = edges[i];
     v = nodes.find(x => x.id === edge.endNode);
 
+    if (!v)
+      continue;
+
     // Found a cycle
     if (v.id === startId) {
       stack.push(edge);
@@ -281,7 +284,6 @@ function calculateDenominator(allLoops, nonTouching) {
       denom = denom.subtract(loopGain);
     }
   });
-
   return denom;
 }
 
@@ -294,7 +296,7 @@ function calculateDenominator(allLoops, nonTouching) {
 function calculateLoopGain(edges) {
   let ex = new Expression(1);
   edges.forEach((e) => {
-    ex = ex.multiply(e.weight);
+    ex = ex.multiply(`(${e.weight})`);
   });
 
   if (DEBUG) {

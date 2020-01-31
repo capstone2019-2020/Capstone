@@ -36,4 +36,6 @@ const layout = {
     rows: 3
 };
 
-const cyto = { style, layout };
+const selectionType = 'additive';
+
+const cyto = { style, layout, selectionType };

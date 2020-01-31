@@ -109,6 +109,18 @@ function sendNext(event) {
         // alert('Failed to computeSFG!')
     });
 
+    // const masons = getCookie('sfg_nodes');
+    const transFM = "20 * log10 ( sqrt( ((9000000) / (w*w*w*w + 1800*w*w + 810000)) + ((10000) / (w*w*w*w + 1800*w*w + 810000))*w*w ))";
+    const transFP = "atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi";
+    // console.log(masons);
+    // fetch(`${SERVER_URI}/computeMasons`)
+    //     .then( (res) => {
+    //         return res.json();
+    //     })
+    //     .catch((ex) => {
+    //         console.log(ex);
+    //         alert('Failed to computeMasons!')
+    //     });
 }
 
 function setLocalStorage(key, val) {
@@ -119,3 +131,4 @@ function setLocalStorage(key, val) {
 function getCookie(key) {
     return localStorage.getItem(key);
 }
+
