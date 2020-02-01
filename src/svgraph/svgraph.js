@@ -675,7 +675,6 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
   let points;
   const parser = math.parser();
   fpoints = funcs.map(f => {
-    console.log(f);
     parser.evaluate(f);
 
     points = [];
@@ -836,7 +835,6 @@ function render(config, funcs1, funcs2, xlb, xub,
     } = init_plot(xlb, xub, LENGTH_X, xgrid,
       !DEFINED(config)));
     if (funcs1.length !== 0) {
-      console.log(funcs1);
       ({
         lb: ylb1,
         ub: yub1,
@@ -846,7 +844,6 @@ function render(config, funcs1, funcs2, xlb, xub,
         !DEFINED(config)));
     }
     if (funcs2.length !== 0) {
-      console.log(funcs2);
       ({
         lb: ylb2,
         ub: yub2,
@@ -925,7 +922,7 @@ function render(config, funcs1, funcs2, xlb, xub,
   };
 }
 
-function init(fmag, fphase) {
+function init() {
   /*
    * These variables are the core rendering components:
    * [x/y]lb    : Lower-bound value for x/y-axis (actual)
@@ -938,34 +935,24 @@ function init(fmag, fphase) {
    * fpoints    : Main data structure - each elem contains 'y'
    *              values for each sample for each function
    */
-  let xlb=-20, xub=20, ylb1=Infinity, yub1=-Infinity, ylb2=Infinity, yub2=-Infinity;
+  let xlb=-20, xub=20, ylb1=0, yub1=0, ylb2=0, yub2=0;
   let ygrid1=10, ygrid2=10;
   let xgrid = 15;
   let sample_amt1, sample_amt2, fpoints1, fpoints2;
-  fmag = "f(w) = 20 * log10 ( sqrt( ((9000000) / (w*w*w*w + 1800*w*w + 810000)) + ((10000) / (w*w*w*w + 1800*w*w + 810000))*w*w ))";
-  fphase = "f(w) = atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi";
-  let axis1_funcs = [];
-  let axis2_funcs = [];
-
-  if (fmag !== null) {
-    axis1_funcs.push(fmag);
-  }
-  if (fphase !== null) {
-    axis2_funcs.push(fphase);
-  }
+  const axis1_funcs = [], axis2_funcs = [];
 
   /* =========== first time render =========== */
   ({
     xlb, xub, ylb1, yub1, ylb2, yub2,
     xgrid, ygrid1, ygrid2,
     sample_amt1, sample_amt2, fpoints1, fpoints2
-  } = render(undefined, axis1_funcs, axis2_funcs,
+  } = render(undefined, [], [],
     xlb, xub, ylb1, yub1, ylb2, yub2,
     xgrid, ygrid1, ygrid2));
 
-  Svgraph().appendChild(g('legend',
-    ...legend([...fpoints1, ...fpoints2])
-  ));
+  // Svgraph().appendChild(g('legend',
+  //   ...legend([...fpoints1, ...fpoints2])
+  // ));
 
   /*
    * This event is triggered upon every mouse move action
@@ -1049,7 +1036,6 @@ function init(fmag, fphase) {
         fpoints.forEach(({points}, i) => {
           let vec = points[idx];
           if (DEFINED(vec)) {
-            console.log(vec);
             __Tracer(`tracer-${id}-${i}`,
               vec.x, vec.y,
               RATIO(LENGTH_X, xub - xlb),
@@ -1162,4 +1148,32 @@ function init(fmag, fphase) {
       intervalId = 0;
     }
   });
+
+  return {
+    update(fmag, fphase) {
+      fmag = math.simplify(fmag.split('=')[1].trim()).toString();
+      fmag = `f(w) = ${fmag}`;
+      fphase = math.simplify(fphase.split('=')[1].trim()).toString();
+      fphase = `f(w) = ${fphase}`;
+
+      xlb=-20; xub=20; ylb1=0; yub1=0; ylb2=0; yub2=0;
+      ygrid1=10; ygrid2=10;
+      xgrid = 15;
+      axis1_funcs.push(fmag);
+      axis2_funcs.push(fphase);
+
+      /* =========== Update render =========== */
+      ({
+        xlb, xub, ylb1, yub1, ylb2, yub2,
+        xgrid, ygrid1, ygrid2,
+        sample_amt1, sample_amt2, fpoints1, fpoints2
+      } = render(undefined, axis1_funcs, axis2_funcs,
+        xlb, xub, ylb1, yub1, ylb2, yub2,
+        xgrid, ygrid1, ygrid2));
+
+      Svgraph().appendChild(g('legend',
+        ...legend([...fpoints1, ...fpoints2])
+      ));
+    }
+  }
 }

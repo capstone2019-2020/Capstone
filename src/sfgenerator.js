@@ -5,6 +5,12 @@ let clickedNodes = null;
 let startNode = null;
 let endNode = null;
 let cy = null;
+let svgraph = null;
+
+function initSvgraph() {
+  svgraph = init();
+}
+
 /**
  * Function to convert our custom SFG data structure
  * into the Cytoscape data structure
@@ -112,13 +118,8 @@ function simulate() {
       return res.json();
     })
     .then((j) => {
-      const transFM = "20 * log10 ( sqrt( ((9000000) / (w*w*w*w + 1800*w*w + 810000)) + ((10000) / (w*w*w*w + 1800*w*w + 810000))*w*w ))";
-      const transFP = "atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi";
-      j.bode.magnitude = transFM;
-      j.bode.phase = transFP;
       setLocalStorage('transfer_func', JSON.stringify(j));
-      init(`f(w) = ${j.bode.magnitude}`, j.bode.phase === 0 ? null : `f(w) = ${j.bode.phase}`);
-      console.log(j);
+      svgraph.update(`f(w) = ${j.bode.magnitude}`, `f(w) = ${j.bode.phase}`);
     });
 
 }
