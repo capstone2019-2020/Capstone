@@ -1,17 +1,15 @@
 h1 {
   margin: 3% 10% 0 30%;
   padding: 0px;
-  font-family: Calibri, sans-serif;
+  font-family: Nunito Sans, sans-serif;
   font-size: 2.5em;
   color: black;
 }
 
 .sfg-canvas {
-  width: 80%;
-  height: 70%;
-  background-color: white;
-  border: 1px solid #8E8E8E;
-  margin: 5% 20% 0% 10%;
+  width: 100%;
+  height: 100%;
+  display: inline-block;
 }
 
 .simulate-button {
@@ -24,11 +22,43 @@ h1 {
   padding: 2px;
   width: 20%;
   height: 5%;
+  cursor: pointer;
 }
 
 .simulate-button:hover {
   background-color: tomato;
   color: white;
   transition: 0.2s;
+}
 
+.sfg-help-text {
+  font-family: Nunito Sans, sans-serif;
+  margin: 0 35% 0;
+  width: 100%;
+  color: #aaa;
+  font-size: 1em;
+}
+
+.sfg-wrapper {
+  width: 80%;
+  height: 70%;
+  background-color: white;
+  border: 1px solid #8E8E8E;
+  margin: 5% 20% 0% 10%;
+}
+
+#fit-icon {
+  position: absolute;
+  margin: 34.3% -2% 5%;
+  color: #ccc;
+  font-size: 1.5em;
+  cursor: pointer;
+}
+#fit-icon:hover {
+  position: absolute;
+  margin: 34.3% -2% 5%;
+  color: #999;
+  font-size: 1.5em;
+  cursor: pointer;
+  transition: 0.2s;
 }

@@ -2,32 +2,41 @@ const style = [ // the stylesheet for the graph
   {
     selector: 'node',
     style: {
-      'width': 15,
-      'height': 15,
-      'background-color': '#666',
-      'label': 'data(value)'
+      'width': 10,
+      'height': 10,
+      'background-color': 'black',
+      'label': 'data(value)',
+      'text-justification': 'auto',
+      'overlay-opacity': 0,
+      'text-background-color': 'white'
     }
   },
   {
     selector: 'label',
     style: {
       'font-size': 8,
-      'font-family': 'Verdana, sans-serif'
+      'font-family': 'Calibri, sans-serif',
+      'text-background-color': 'white',
+      'text-background-opacity': 1
     }
   },
   {
     selector: 'edge',
     style: {
-      'width': 2,
-      'curve-style': 'bezier',
-      'control-point-distance': '50px',
-      'control-point-weight': '0.7', // '0': curve towards source node, '1': towards target node.
+      'width': 0.5,
+      'curve-style': 'unbundled-bezier',
+      'control-point-distance': '10px -10px -10px',
+      'control-point-weight': '0.1', // '0': curve towards source node, '1': towards target node.
       'edge-distances': 'intersection',
-      'line-color': '#ccc',
-      'target-arrow-color': '#ccc',
-      'target-arrow-shape': 'triangle',
+      'line-color': '#999',
+      'target-arrow-color': '#999',
+      'target-arrow-shape': 'vee',
+      'arrow-scale': 0.5,
       'label': 'data(edgeWeight)',
-      'font-size': 8
+      'font-size': 6,
+      'text-rotation': 'autorotate',
+      'overlay-opacity': 0,
+      'text-background-color': 'white'
     }
   }
 ];
@@ -81,28 +90,28 @@ const layout = {
   boundingBox: undefined,
 
   // Excludes the label when calculating node bounding boxes for the layout algorithm
-  nodeDimensionsIncludeLabels: false,
+  nodeDimensionsIncludeLabels: true,
 
   // Randomize the initial positions of the nodes (true) or use existing positions (false)
   randomize: false,
 
   // Extra spacing between components in non-compound graphs
-  componentSpacing: 50,
+  componentSpacing: 100,
 
   // Node repulsion (non overlapping) multiplier
-  nodeRepulsion: function( node ){ return 2048; },
+  nodeRepulsion: function( node ){ return 4096; },
 
   // Node repulsion (overlapping) multiplier
-  nodeOverlap: 5,
+  nodeOverlap: 10,
 
   // Ideal edge (non nested) length
   idealEdgeLength: function( edge ){ return 40; },
 
   // Divisor to compute edge forces
-  edgeElasticity: function( edge ){ return 32; },
+  edgeElasticity: function( edge ){ return 50; },
 
   // Nesting factor (multiplier) to compute ideal edge length for nested edges
-  nestingFactor: 1.2,
+  nestingFactor: 3,
 
   // Gravity force (constant)
   gravity: 1,
@@ -117,8 +126,11 @@ const layout = {
   coolingFactor: 0.99,
 
   // Lower temperature threshold (below this point the layout will end)
-  minTemp: 1.0
+  minTemp: 1.0,
+
 };
+
+
 
 const selectionType = 'additive';
 

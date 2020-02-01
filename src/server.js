@@ -12,7 +12,6 @@ const fileupload = require('express-fileupload');
 const router = express.Router();
 const port = process.env.PORT || 3000;
 const equations = [];
-// const equations;
 let nodes, startNode, endNode, masonsdata, circuit;
 
 app.use(function(req, res, next) {
@@ -29,20 +28,32 @@ app.use(fileupload());
 // Receives the file and put list into netlist 
 app.post("/input-file", (req, res) => {
     let stuff = req.body.contents;
+    let c;
 
+    // The file content is missing
+    if (!stuff) {
+        return res.status(400).send("Missing Equation");
+    }
+
+    // For the case where \n still remains in the array
     if (stuff[0].search('\n') !== -1) {
       c = netlist.nlConsumeArr(stuff.toString().split('\n'));
     } else {
       c = netlist.nlConsumeArr(stuff);
     }
-    // c.forEach((eq) => console.log(eq));
 
+    // The nlConsume is not working properly
     if (!c) {
         return res.status(400).send("nlConsume Missing");
     }
 
+    // The eqns array is emptied every time the input post is used
+    if (equations.length != 0) {
+        equations.length = 0;
+    }
+
+    // Create circuit
     circuit = circuitjs.createCircuit(c);
-    
     let temp = circuit.nodalAnalysis();
     temp.currentEquations.forEach((first) => 
         first.forEach((second) => second.forEach((eqns) => 
@@ -97,9 +108,12 @@ app.post("/input-file", (req, res) => {
         ))
     );
 
+    // Combine DPI and shortcircuit - ERROR WITH DPI * SHORCIRCUIT
     for (var i = 0; i < temp.dpi.length; i++) {
         let lhs = new Expression(`V${temp.nodeId[i]}`);
-        let rhs = temp.dpi[i].multiply(temp.shorCircuitCurrent[i]);  
+        // console.log(temp.dpi[i].toString());
+        // console.log(temp.shorCircuitCurrent[i]);
+        let rhs = temp.dpi[i].multiply(temp.shorCircuitCurrent[i]);
         let tempEqn = new Equation(lhs, rhs);
         equations.push(algebra.parse(tempEqn.toString()));
     }
@@ -184,12 +198,6 @@ app.post("/computeMasons", (req, res) => {
     res.status(200).send({n: newNumer.toString(), d: newDenom.toString(),
                           bode: { phase: masonsdata.bode.phase, magnitude: masonsdata.bode.magnitude }});
 });
-
-// // Frequency equation data
-// app.post("/svg-graph", (req, res) => {
-
-//     res.status(200).send({});
-// });
 
 // add router
 app.use('/', router);
