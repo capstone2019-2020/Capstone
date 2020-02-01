@@ -1,4 +1,4 @@
-const DEFAULT_NODE_CLR = '#666';
+const DEFAULT_NODE_CLR = 'black';
 const SELECTED_NODE_CLR = 'tomato';
 
 let clickedNodes = null;
@@ -50,11 +50,12 @@ function generateSFG() {
   const sfg = localStorage.getItem('sfg_nodes');
   console.log(sfg);
   const elements = sfgToCyto(JSON.parse(sfg));
+  // cytoscape.use(klay);
   let cy = cytoscape({
     container: document.getElementById('sfg-canvas'), // container to render in
     elements,
     style: cyto.style,
-    layout: cyto.layout,
+    layout: {name: 'cose-bilkent'},
     selectionType: cyto.selectionType
   });
   clickedNodes = [];
@@ -76,6 +77,7 @@ function generateSFG() {
       endNode = null;
       clickedNodes.splice(i, 1);
       document.getElementById('simulate-button').style.display = 'none';
+      document.getElementById('sfg-help-text').style.display = 'inline-block';
 
     }
     /* Case 2: node was not clicked yet and only one element selected */
@@ -90,9 +92,11 @@ function generateSFG() {
       endNode = _idx;
       console.log('setting display = block')
       document.getElementById('simulate-button').style.display = 'inline-block';
+      document.getElementById('sfg-help-text').style.display = 'none';
     }
     console.log(clickedNodes);
   });
+
 }
 
 /**
@@ -108,6 +112,10 @@ function simulate() {
       return res.json();
     })
     .then((j) => {
+      const transFM = "20 * log10 ( sqrt( ((9000000) / (w*w*w*w + 1800*w*w + 810000)) + ((10000) / (w*w*w*w + 1800*w*w + 810000))*w*w ))";
+      const transFP = "atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi";
+      j.bode.magnitude = transFM;
+      j.bode.phase = transFP;
       setLocalStorage('transfer_func', JSON.stringify(j));
       init(`f(w) = ${j.bode.magnitude}`, j.bode.phase === 0 ? null : `f(w) = ${j.bode.phase}`);
       console.log(j);
