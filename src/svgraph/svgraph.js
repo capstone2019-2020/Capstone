@@ -117,13 +117,16 @@ const __Guide = (guideId, vec1, vec2) => {
   }
 };
 
-const __Tracer = (tracerId, ORIGIN, xval, yval, xratio, yratio) => {
+const __Tracer = (tracerId, xval, yval, xratio, yratio, ylb) => {
   const tracer = ELEM(tracerId);
   const tracerRect = ELEM(`${tracerId}-rect`);
   const tracerTxt = ELEM(`${tracerId}-text`);
   const tracerCirc = ELEM(`${tracerId}-circle`);
   const gx = __gX(xval, xratio);
-  const gy = __gY(yval, yratio, ORIGIN);
+  const gy = MAX(
+    MIN(__gY(yval-ylb, yratio, START_Y), START_Y),
+    START_Y-LENGTH_Y
+  );
   const coords = `(${FIXED(xval, 2)}, ${FIXED(yval, 2)})`;
 
   if (!tracer && !isNaN(yval)) {
@@ -263,7 +266,7 @@ function polyline(points, config={}, cb) {
   });
 }
 
-function plot(dp, ORIGIN, x_cratio, y_cratio, color) {
+function plot(dp, x_cratio, y_cratio, color, ylb) {
   let points = '';
   let i;
   let x_coord, y_coord;
@@ -272,10 +275,10 @@ function plot(dp, ORIGIN, x_cratio, y_cratio, color) {
     dp_e = dp[i];
     if (!isNaN(dp_e.y)) {
       x_coord = MIN(__gX(dp_e.x, x_cratio), START_X+LENGTH_X);
-      y_coord = MIN(__gY(dp_e.y, y_cratio, ORIGIN), START_Y);
+      y_coord = MIN(__gY(dp_e.y-ylb, y_cratio, START_Y), START_Y);
 
       points += `${x_coord},${y_coord}`;
-      if (i + 1 !== dp.length) {
+      if (i+1 !== dp.length) {
         points += ' ';
       }
     }
@@ -507,6 +510,13 @@ function legend(fpoints) {
 function init_plot(lb, ub, plot_len, parts,is_init=false,
                    seed_offset=0) {
   INFO(`lb: ${lb}, ub: ${ub}`);
+  if (lb === ub) {
+    return {
+      lb: lb-5, ub: ub+5,
+      offset: seed_offset, parts
+    }
+  }
+
   lb = __ROUND(lb); ub = __ROUND(ub);
   let new_lb = lb, new_ub = ub;
   let abs_lb = Math.abs(new_lb), abs_ub = Math.abs(new_ub);
@@ -568,6 +578,7 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
 
   INFO(`partition: ${partition}`);
   INFO(`lparts: ${l_parts}, uparts: ${u_parts}`);
+  INFO(`new_lb: ${new_lb}, new_ub: ${new_ub}`);
   INFO('=======AFTER========');
 
   if (parts === Infinity) {
@@ -582,17 +593,24 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
     DEBUG(`VALUE: ${val}`);
     if (val === '0.00' || val === '-0.00') {
       offset = OFFSET(plot_len/parts, i);
+      INFO(`current offset: ${offset}`);
 
+      /*
+       * If the offset is seeded from a previous plot, we
+       * adjust the current offset
+       */
       if (seed_offset) {
-        let p = __ROUND(
-          RATIO(offset-seed_offset, px_per_partition)
-        );
+        let p = __ROUND(RATIO(offset-seed_offset,
+          px_per_partition));
+
         new_ub+=(p*partition);
         new_lb+=(p*partition);
+        INFO(`ub: ${new_ub}, lb: ${new_lb}`);
       }
+
       return {
         lb: new_lb, ub: new_ub,
-        offset: seed_offset || offset,
+        offset: offset,
         parts
       }
     }
@@ -657,6 +675,7 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
   let points;
   const parser = math.parser();
   fpoints = funcs.map(f => {
+    console.log(f);
     parser.evaluate(f);
 
     points = [];
@@ -817,6 +836,7 @@ function render(config, funcs1, funcs2, xlb, xub,
     } = init_plot(xlb, xub, LENGTH_X, xgrid,
       !DEFINED(config)));
     if (funcs1.length !== 0) {
+      console.log(funcs1);
       ({
         lb: ylb1,
         ub: yub1,
@@ -826,6 +846,7 @@ function render(config, funcs1, funcs2, xlb, xub,
         !DEFINED(config)));
     }
     if (funcs2.length !== 0) {
+      console.log(funcs2);
       ({
         lb: ylb2,
         ub: yub2,
@@ -844,22 +865,25 @@ function render(config, funcs1, funcs2, xlb, xub,
 
   ORIGIN_X = RIGHT(START_X, x_offset);
   ORIGIN_Y1 = UP(START_Y, y_offset1);
-  ORIGIN_Y2 = UP(START_Y, y_offset2);
+  ORIGIN_Y2 = ORIGIN_Y1;
 
   let _svg = svg('wrapper');
 
+  INFO(`yub1: ${yub1}, ylb1: ${ylb1}`);
   /* plot */
   __ns(_svg,
     undefined,
     ...fpoints1.map(({points, color}) => g(
-      'plot', ...plot(points, ORIGIN_Y1,
+      'plot', ...plot(points,
         RATIO(LENGTH_X, xub-xlb),
-        RATIO(LENGTH_Y, yub1-ylb1), color)
+        RATIO(LENGTH_Y, yub1-ylb1), color,
+        ylb1)
     )),
     ...fpoints2.map(({points, color}) => g(
-      'plot', ...plot(points, ORIGIN_Y2,
+      'plot', ...plot(points,
         RATIO(LENGTH_X, xub-xlb),
-        RATIO(LENGTH_Y, yub2-ylb2), color)
+        RATIO(LENGTH_Y, yub2-ylb2), color,
+        ylb2)
     )),
     g('x-axis', ...xaxis({
       leny: LENGTH_Y,
@@ -914,10 +938,12 @@ function init(fmag, fphase) {
    * fpoints    : Main data structure - each elem contains 'y'
    *              values for each sample for each function
    */
-  let xlb=-20, xub=20, ylb1=0, yub1=0, ylb2=0, yub2=0;
+  let xlb=-20, xub=20, ylb1=Infinity, yub1=-Infinity, ylb2=Infinity, yub2=-Infinity;
   let ygrid1=10, ygrid2=10;
   let xgrid = 15;
   let sample_amt1, sample_amt2, fpoints1, fpoints2;
+  fmag = "f(w) = 20 * log10 ( sqrt( ((9000000) / (w*w*w*w + 1800*w*w + 810000)) + ((10000) / (w*w*w*w + 1800*w*w + 810000))*w*w ))";
+  fphase = "f(w) = atan(((((-100)) / (w*w + 900))*w) / (((3000) / (w*w + 900)))) * 180 / pi";
   let axis1_funcs = [];
   let axis2_funcs = [];
 
@@ -927,7 +953,6 @@ function init(fmag, fphase) {
   if (fphase !== null) {
     axis2_funcs.push(fphase);
   }
-  console.log(axis1_funcs, axis2_funcs);
 
   /* =========== first time render =========== */
   ({
@@ -1024,10 +1049,11 @@ function init(fmag, fphase) {
         fpoints.forEach(({points}, i) => {
           let vec = points[idx];
           if (DEFINED(vec)) {
-            __Tracer(`tracer-${id}-${i}`, ORIGIN,
+            __Tracer(`tracer-${id}-${i}`,
               vec.x, vec.y,
               RATIO(LENGTH_X, xub - xlb),
-              RATIO(LENGTH_Y, yub - ylb)
+              RATIO(LENGTH_Y, yub - ylb),
+              ylb
             );
           }
         });
