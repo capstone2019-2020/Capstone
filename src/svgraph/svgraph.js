@@ -1003,7 +1003,7 @@ function init(fmag, fphase) {
          * Same ranges used in eval_log(), see that for
          * more detailed explanation.
          */
-        if (RANGE(_d, 0, 0.301))
+        if (RANGE(_d, 0.1, 0.301))
           _add = 1;
         else if (RANGE(_d, 0.301, 0.477))
           _add = 2;
@@ -1049,6 +1049,7 @@ function init(fmag, fphase) {
         fpoints.forEach(({points}, i) => {
           let vec = points[idx];
           if (DEFINED(vec)) {
+            console.log(vec);
             __Tracer(`tracer-${id}-${i}`,
               vec.x, vec.y,
               RATIO(LENGTH_X, xub - xlb),
