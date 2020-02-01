@@ -5,6 +5,8 @@
   <title>Capstone SFG</title>
   <link rel="stylesheet" type="text/css" href="index2.css"/>
   <link rel="stylesheet" type="text/css" href="sfgcanvas.css"/>
+  <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+  <link href='https://fonts.googleapis.com/css?family=Nunito Sans' rel='stylesheet'>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.9.0/cytoscape.min.js"></script>
   <script src="https://unpkg.com/layout-base/layout-base.js"></script>
   <script src="https://unpkg.com/cose-base/cose-base.js"></script>
@@ -17,8 +19,12 @@
     <div id="left-div" class="left-div">
       <div id="menu-btn" class="menu-btn" onClick="location.href='./buttonindex.html'"></div>
       <h1 id="sfg-title">Signal Flow Graph</h1>
-      <div id="sfg-canvas" class="sfg-canvas"></div>
-      <button id="simulate-button" class="simulate-button" style="display:none" onClick="simulate()">SIMULATE</button>
+      <div id="sfg-wrapper" class="sfg-wrapper">
+        <div id="sfg-canvas" class="sfg-canvas"></div>
+        <i id="fit-icon" class='fas fa-expand' onClick="sfgFit()" title="Fit to Window"></i>
+      </div>
+
+      <button id="simulate-button" class="simulate-button" style="display:none" onClick="simulate()" title="Generate Transfer Function">SIMULATE</button>
       <div id="sfg-help-text" class="sfg-help-text">Please select a start and end node</div>
     </div>
     <div id="right-div" class="right-div">

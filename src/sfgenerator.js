@@ -4,7 +4,7 @@ const SELECTED_NODE_CLR = 'tomato';
 let clickedNodes = null;
 let startNode = null;
 let endNode = null;
-
+let cy = null;
 /**
  * Function to convert our custom SFG data structure
  * into the Cytoscape data structure
@@ -51,7 +51,7 @@ function generateSFG() {
   console.log(sfg);
   const elements = sfgToCyto(JSON.parse(sfg));
   // cytoscape.use(klay);
-  let cy = cytoscape({
+  cy = cytoscape({
     container: document.getElementById('sfg-canvas'), // container to render in
     elements,
     style: cyto.style,
@@ -121,4 +121,8 @@ function simulate() {
       console.log(j);
     });
 
+}
+
+function sfgFit() {
+  cy.fit();
 }
