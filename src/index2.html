@@ -5,8 +5,10 @@
   <title>Capstone SFG</title>
   <link rel="stylesheet" type="text/css" href="index2.css"/>
   <link rel="stylesheet" type="text/css" href="sfgcanvas.css"/>
-  <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+  <link rel="stylesheet" type="text/css" href="menu.css"/>
   <link href='https://fonts.googleapis.com/css?family=Nunito Sans' rel='stylesheet'>
+
+  <script src='https://kit.fontawesome.com/a076d05399.js'></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.9.0/cytoscape.min.js"></script>
   <script src="https://unpkg.com/layout-base/layout-base.js"></script>
   <script src="https://unpkg.com/cose-base/cose-base.js"></script>
@@ -17,15 +19,29 @@
   <div id="header-bar" class="header-bar"></div>
   <div id="main-div" class="main-div">
     <div id="left-div" class="left-div">
-      <div id="menu-btn" class="menu-btn" onClick="location.href='./buttonindex.html'"></div>
+      <!-- DROPDOWN MENU -->
+      <div class="dropdown">
+        <div id="menu-btn" class="menu-btn" onClick="toggleMenu()"></div>
+        <div id="dropdown-content" class="dropdown-content">
+          <a href="./buttonindex.html" title="Upload a new netlist file">New File</a>
+          <a id="export" class="export" onClick="toggleExportOptions()">Export SFG <i id="export-drop" class="fa fa-caret-down"></i></a>
+          <div id="export-options" class="export-options">
+            <a href="#" onClick="exportSFG('png')">PNG</a>
+            <a href="#" onClick="exportSFG('jpg')">JPG</a>
+          </div>
+        </div>
+      </div>
+
+      <!--  SFG CANVVAS    -->
       <h1 id="sfg-title">Signal Flow Graph</h1>
       <div id="sfg-wrapper" class="sfg-wrapper">
         <div id="sfg-canvas" class="sfg-canvas"></div>
         <i id="fit-icon" class='fas fa-expand' onClick="sfgFit()" title="Fit to Window"></i>
       </div>
-
       <button id="simulate-button" class="simulate-button" style="display:none" onClick="simulate()" title="Generate Transfer Function">SIMULATE</button>
       <div id="sfg-help-text" class="sfg-help-text">Please select a start and end node</div>
+      <a id="downloadsfg"></a>
+
     </div>
     <div id="right-div" class="right-div">
       <div id="right-top-panel" class="right-top-panel">
@@ -40,6 +56,7 @@
 
   <script type="text/javascript" src="cyto.config.js"></script>
   <script type="text/javascript" src="index2.js"></script>
+  <script type="text/javascript" src="menu.js"></script>
   <script type="text/javascript" src="sfgenerator.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/6.2.2/math.min.js"></script>
   <script type="text/javascript" src="./svgraph/svgraph.js"></script>

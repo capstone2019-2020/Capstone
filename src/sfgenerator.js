@@ -127,3 +127,29 @@ function simulate() {
 function sfgFit() {
   cy.fit();
 }
+
+function exportSFG(_type) {
+  let img, type;
+  if (_type === 'png') {
+    img = cy.png({
+      output: 'blob',
+      bg: 'white'});
+
+    type = `image/png`;
+  }
+  else if (_type === 'jpg') {
+    img = cy.jpg({
+      output: 'blob',
+      bg: 'white'
+    });
+    type = `image/jpeg`;
+  }
+
+  const filename = `sfg.${_type}`;
+  let a = document.getElementById("downloadsfg");
+  let file = new Blob([img], { type: type });
+  a.href = URL.createObjectURL(file);
+  a.download = filename;
+  a.click();
+}
+
