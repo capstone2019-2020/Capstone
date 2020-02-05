@@ -1,0 +1,63 @@
+#menu-icon {
+  font-size: 3em;
+  color: white;
+}
+
+#export-drop {
+  margin: 0 0 0 7px;
+}
+
+.export-options {
+  display: none;
+  width: 100%;
+  background-color: #dddd;
+}
+
+.dropdown-content .export-options a:hover {
+  background-color: #ccc;
+  transition: 0.2s;
+}
+
+/* Dropdown button on hover & focus */
+.menu-btn:hover, .menu-btn:focus {
+  background-color: #6f2232;
+  transition: 0.2s;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+  position: relative;
+  display: inline-block;
+  font-family: Nunito Sans, sans-serif;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: #f1f1f1;
+  min-width: 160px;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+  margin: 60px 0 0 10px;
+  cursor: pointer;
+}
+
+/* Links inside the dropdown */
+.dropdown-content a {
+  color: black;
+  padding: 12px 16px;
+  text-decoration: none;
+  display: block;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover {background-color: #ddd}
+
+/* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+.show {display:block;}
+
+.selected-item {
+  background-color: #ccc;
+  color: white;
+}
