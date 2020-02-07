@@ -1,6 +1,6 @@
-const { Expression, parse } = require('../RWalgebra.js');
-const { Variable } = require('../TermVariable.js');
-const { tokenize } = require('../token.js');
+const { Expression, parse } = require('./RWalgebra.js');
+const { Variable } = require('../svgraph/TermVariable.js');
+const { tokenize } = require('./token.js');
 
 function main() {
   const exp = 'x2 - 3*y - (4*z / 12 - 17) + y - 4.5j + (4*x_3 - 2)/(5-12*some_var) + sin(x_3)';

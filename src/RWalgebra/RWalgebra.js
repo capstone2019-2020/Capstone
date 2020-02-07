@@ -1,4 +1,4 @@
-const { Variable, Term } = require('./TermVariable.js');
+const { Variable, Term } = require('../svgraph/TermVariable.js');
 const { TOKEN_TYPES, tokenize } = require ('./token.js');
 const { shuntingYard } = require('./parseHelper.js');
 

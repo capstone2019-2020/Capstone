@@ -1,4 +1,4 @@
-const algebra = require('../../src/RWalgebra.js');
+const algebra = require('../../src/RWalgebra/RWalgebra.js');
 const {validate} = require('jsonschema');
 
 const DEBUG = process.env.M3_LOG_LEVEL;
