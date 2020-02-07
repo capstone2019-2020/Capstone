@@ -1,4 +1,4 @@
-const { Fraction } = require('../RWalgebra/Fraction.js');
+const { Fraction } = require('./Fraction.js');
 const math = require('mathjs');
 
 // Variable Data structure

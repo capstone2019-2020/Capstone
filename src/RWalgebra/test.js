@@ -1,5 +1,5 @@
 const { Expression, parse } = require('./RWalgebra.js');
-const { Variable } = require('../svgraph/TermVariable.js');
+const { Variable } = require('./TermVariable.js');
 const { tokenize } = require('./token.js');
 
 function main() {
