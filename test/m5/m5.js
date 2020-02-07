@@ -2,7 +2,7 @@ const assert = require('assert');
 const math = require('mathjs');
 const fs = require('fs');
 
-const { Expression } = require('../../src/RWalgebra.js');
+const { Expression } = require('../../src/RWalgebra/RWalgebra.js');
 
 const OPS = ['*', '/', '+', '-'];
 const __ROUND = (f) => parseFloat(Math.round(f*100)/100);

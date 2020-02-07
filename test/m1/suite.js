@@ -1,4 +1,4 @@
-const {Equation, Expression} = require('../../src/RWalgebra.js');
+const {Equation, Expression} = require('../../src/RWalgebra/RWalgebra.js');
 const {validate} = require('jsonschema');
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
 const LOG_LEVEL = LOG_LEVELS[process.env.M1_LOG_LEVEL];
