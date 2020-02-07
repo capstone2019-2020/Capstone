@@ -13,20 +13,21 @@ h1 {
 }
 
 .simulate-button {
-  margin: 0 50% 0 42%;
+  margin: 2px 50% 0 42%;
   color: black;
   border: 1px solid #e5e5e5;
   background-color: #cccccc;
-  font-size: 1em;
-  font-family: Calibri, sans-serif;
+  font-size: 0.9em;
+  font-family: Nunito Sans, sans-serif;
   padding: 2px;
   width: 20%;
   height: 5%;
   cursor: pointer;
+  border-radius: 6%;
 }
 
 .simulate-button:hover {
-  background-color: tomato;
+  background-color: #f04b4c;
   color: white;
   transition: 0.2s;
 }

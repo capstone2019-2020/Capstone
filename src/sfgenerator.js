@@ -1,5 +1,5 @@
 const DEFAULT_NODE_CLR = 'black';
-const SELECTED_NODE_CLR = 'tomato';
+const SELECTED_NODE_CLR = '#f04b4c';
 
 let clickedNodes = null;
 let startNode = null;
@@ -124,24 +124,31 @@ function simulate() {
 
 }
 
+/**
+ * Fit SFG to SFG canvas in left panel
+ */
 function sfgFit() {
   cy.fit();
 }
 
+/**
+ * Function to export SFG as either a PNG or JPG image
+ * Upon calling this function, the user will be prompted
+ * to save the image.
+ * Input parameter must be a string:
+ *    "png" OR "jpg"
+ *
+ * @param _type
+ */
 function exportSFG(_type) {
+  const options = { output: 'blob', bg: 'white'};
   let img, type;
   if (_type === 'png') {
-    img = cy.png({
-      output: 'blob',
-      bg: 'white'});
-
+    img = cy.png(options);
     type = `image/png`;
   }
   else if (_type === 'jpg') {
-    img = cy.jpg({
-      output: 'blob',
-      bg: 'white'
-    });
+    img = cy.jpg(options);
     type = `image/jpeg`;
   }
 
