@@ -1,9 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');	// pull info from HTML POST (express4)
-const m1 = require("./m1.js");
-const circuitjs = require('./circuit.js');
+const m1 = require("./nodeJS/m1.js");
+const circuitjs = require('./nodeJS/circuit.js');
 const algebra = require('./RWalgebra/RWalgebra.js');
-const netlist = require('./netlist.js');
+const netlist = require('./nodeJS/netlist.js');
 const app = express();
 const Expression = algebra.Expression;
 const Equation = algebra.Equation;

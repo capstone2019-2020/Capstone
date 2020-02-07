@@ -25,7 +25,7 @@ const algebra = require('../../src/RWalgebra/RWalgebra.js');
  * Each variable can be isolated through taking the inverse matrix.
  */
 describe('computeSFG()', function() {
-  const {computeSFG} = require('../../src/m1');
+  const {computeSFG} = require('../../src/nodeJS/m1');
 
   const alg_equations = equations.map(eq_obj =>
     eq_obj.eqns.map(e => algebra.parse(e))
@@ -116,7 +116,7 @@ describe('computeSFG()', function() {
  * the same result.
  */
 describe('computeMasons()', function() {
-  const {computeMasons} = require('../../src/m1');
+  const {computeMasons} = require('../../src/nodeJS/m1');
 
   const alg_equations = equations.map(eq_obj => ({
     eqns: eq_obj.eqns.map(e => algebra.parse(e)),
@@ -204,7 +204,7 @@ describe('computeMasons()', function() {
  * from computeMasons().
  */
 describe('integration', function() {
-  const {computeSFG, computeMasons} = require('../../src/m1');
+  const {computeSFG, computeMasons} = require('../../src/nodeJS/m1');
   const MAX_SINGLE_EXEC = 300;
   const MAX_TOTAL_EXEC_EASY = 5000;
   const MAX_TOTAL_EXEC_MED = 6000;
