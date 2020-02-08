@@ -66,8 +66,8 @@ def test_perf(f):
 		e = time()
 		y.append(e-s)
 
-	plt.plot(x, y)
-	plt.show()
+	print(x)
+	print(y)
 
 
 if __name__ == "__main__":
