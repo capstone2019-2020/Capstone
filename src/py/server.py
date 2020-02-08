@@ -21,7 +21,7 @@ def threaded_invertlaplace(f, start, INC, end, x, y):
 	return
 
 
-def dequeue(q, sz, d):
+def t_join_arr(q, sz, d):
 	for i in range(0, sz):
 		d.append(q[i])
 
@@ -53,8 +53,8 @@ def _invertlaplace_(f, inc, start, end, num_threads):
 	x = []
 	y = []
 	for _x, _y in zip(l_xq, l_yq):
-		dequeue(_x, _sz, x)
-		dequeue(_y, _sz, y)
+		t_join_arr(_x, _sz, x)
+		t_join_arr(_y, _sz, y)
 
 	print('DONE: num_threads='+str(num_threads))
 
