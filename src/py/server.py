@@ -2,23 +2,28 @@ from mpmath import *
 from sympy.parsing.sympy_parser import parse_expr
 from sympy import N
 import matplotlib.pyplot as plt
-from multiprocessing import (Process, Queue)
+from multiprocessing import (Process, Array)
 from time import time
+from math import ceil
 
 
 def threaded_invertlaplace(f, start, INC, end, x, y):
 	_i = start;
 	_f = lambda t: N(parse_expr(f, local_dict={'t':t}, evaluate=True))
+
+	i = 0
 	while _i < end:
-		print(_i)
-		x.put(_i)
-		y.put(invertlaplace(_f, _i, method='talbot'))
+		x[i] = _i
+		y[i] = invertlaplace(_f, _i, method='stehfest')
 		_i+=INC
+		i+=1
+
+	return
 
 
-def dequeue(q, d):
-	while not q.empty():
-		d.append(q.get(False))
+def dequeue(q, sz, d):
+	for i in range(0, sz):
+		d.append(q[i])
 
 
 def _invertlaplace_(f, inc, start, end, num_threads):
@@ -29,10 +34,11 @@ def _invertlaplace_(f, inc, start, end, num_threads):
 	l_xq = []
 	l_yq = []
 	l_p = []
+	_sz = ceil(PARTITION/inc)
 	for i in range(0, num_threads):
 		_start = start+i*PARTITION
-		_x = Queue()
-		_y = Queue()
+		_x = Array('f', _sz, lock=False)
+		_y = Array('f', _sz, lock=False)
 		l_xq.append(_x)
 		l_yq.append(_y)
 
@@ -47,8 +53,10 @@ def _invertlaplace_(f, inc, start, end, num_threads):
 	x = []
 	y = []
 	for _x, _y in zip(l_xq, l_yq):
-		dequeue(_x, x)
-		dequeue(_y, y)
+		dequeue(_x, _sz, x)
+		dequeue(_y, _sz, y)
+
+	print('DONE: num_threads='+str(num_threads))
 
 
 def test_perf(f):
