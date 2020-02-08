@@ -3,6 +3,7 @@ from sympy.parsing.sympy_parser import parse_expr
 from sympy import N
 import matplotlib.pyplot as plt
 from multiprocessing import (Process, Queue)
+from time import time
 
 
 def threaded_invertlaplace(f, start, INC, end, x, y):
@@ -20,73 +21,54 @@ def dequeue(q, d):
 		d.append(q.get(False))
 
 
-def _invertlaplace_(f):
+def _invertlaplace_(f, inc, start, end, num_threads):
+	PARTITION = (end-start)/num_threads;
 	processes = []
 	_f = lambda t: N(parse_expr(f, local_dict={'t':t}, evaluate=True))
 
-	INC = 0.005
-	PARTITION = INC*100
-	start1 = 0.01
-	x1 = Queue()
-	y1 = Queue()
-	processes.append(Process(
-		target=threaded_invertlaplace,
-		args=(f, start1, INC, start1+PARTITION, x1, y1,)
-	))
+	l_xq = []
+	l_yq = []
+	l_p = []
+	for i in range(0, num_threads):
+		_start = start+i*PARTITION
+		_x = Queue()
+		_y = Queue()
+		l_xq.append(_x)
+		l_yq.append(_y)
 
-	x2 = Queue()
-	y2 = Queue()
-	start2 = start1+PARTITION
-	processes.append(Process(
-		target=threaded_invertlaplace,
-		args=(f, start2, INC, start2+PARTITION, x2, y2,)
-	))
+		l_p.append(Process(
+			target=threaded_invertlaplace,
+			args=(f, _start, inc, _start+PARTITION, _x, _y,)
+		))
 
-	x3 = Queue()
-	y3 = Queue()
-	start3 = start2+PARTITION
-	processes.append(Process(
-		target=threaded_invertlaplace,
-		args=(f, start3, INC, start3+PARTITION, x3, y3)
-	))
-
-	x4 = Queue()
-	y4 = Queue()
-	start4 = start3+PARTITION
-	processes.append(Process(
-		target=threaded_invertlaplace,
-		args=(f, start4, INC, start4+PARTITION, x4, y4)
-	))
-
-	x5 = Queue()
-	y5 = Queue()
-	start5 = start4+PARTITION
-	processes.append(Process(
-		target=threaded_invertlaplace,
-		args=(f, start5, INC, start5+PARTITION, x5, y5)
-	))
-
-	[p.start() for p in processes]
-	[p.join() for p in processes]
+	[p.start() for p in l_p]
+	[p.join() for p in l_p]
 
 	x = []
 	y = []
-	
-	dequeue(x1, x)
-	dequeue(x2, x)
-	dequeue(x3, x)
-	dequeue(x4, x)
-	dequeue(x5, x)
+	for _x, _y in zip(l_xq, l_yq):
+		dequeue(_x, x)
+		dequeue(_y, y)
 
-	dequeue(y1, y)
-	dequeue(y2, y)
-	dequeue(y3, y)
-	dequeue(y4, y)
-	dequeue(y5, y)
+
+def test_perf(f):
+	INC = 0.01
+	START = INC
+	END = START+1
+	MAX_NUM_THREADS = 10
+
+	x = []
+	y = []
+	for n in range(1, 10):
+		x.append(n)
+		s = time()
+		_invertlaplace_(f, INC, START, END, n)
+		e = time()
+		y.append(e-s)
 
 	plt.plot(x, y)
 	plt.show()
 
 
 if __name__ == "__main__":
-	_invertlaplace_('1/(1+0.000001*t)')
+	test_perf('1/(1+0.000001*t)')
