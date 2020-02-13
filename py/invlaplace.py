@@ -8,7 +8,7 @@ from math import ceil
 
 
 def threaded_invertlaplace(f, start, INC, end, x, y):
-	_i = start;
+	_i = start
 	_f = lambda t: N(parse_expr(f, local_dict={'t':t}, evaluate=True))
 
 	i = 0

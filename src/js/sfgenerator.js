@@ -119,7 +119,11 @@ function simulate() {
     })
     .then((j) => {
       setLocalStorage('transfer_func', JSON.stringify(j));
-      svgraph.update(`f(w) = ${j.bode.magnitude}`, `f(w) = ${j.bode.phase}`);
+
+      let mag = math.simplify(j.bode.magnitude).toString();
+      let phase = math.simplify(j.bode.phase).toString();
+
+      svgraph.update([`f(w) = ${mag}`], [`f(w) = ${phase}`]);
     });
 
 }

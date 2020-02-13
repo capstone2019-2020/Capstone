@@ -1133,8 +1133,7 @@ function init() {
         ({
           xlb, xub, ylb1, yub1, ylb2, yub2,
           xgrid, ygrid1, ygrid2,
-          sample_amt1, sample_amt2,
-          fpoints1, fpoints2
+          sample_amt1, sample_amt2, fpoints1, fpoints2
         } = render(c, axis1_funcs, axis2_funcs,
           xlb, xub, ylb1, yub1, ylb2, yub2,
           xgrid, ygrid1, ygrid2));
@@ -1150,24 +1149,17 @@ function init() {
   });
 
   return {
-    update(fmag, fphase) {
-      fmag = math.simplify(fmag.split('=')[1].trim()).toString();
-      fmag = `f(w) = ${fmag}`;
-      fphase = math.simplify(fphase.split('=')[1].trim()).toString();
-      fphase = `f(w) = ${fphase}`;
-
+    update(left_funcs, right_funcs) {
       xlb=-20; xub=20; ylb1=0; yub1=0; ylb2=0; yub2=0;
       ygrid1=10; ygrid2=10;
       xgrid = 15;
-      axis1_funcs.push(fmag);
-      axis2_funcs.push(fphase);
 
       /* =========== Update render =========== */
       ({
         xlb, xub, ylb1, yub1, ylb2, yub2,
         xgrid, ygrid1, ygrid2,
         sample_amt1, sample_amt2, fpoints1, fpoints2
-      } = render(undefined, axis1_funcs, axis2_funcs,
+      } = render(undefined, left_funcs, right_funcs,
         xlb, xub, ylb1, yub1, ylb2, yub2,
         xgrid, ygrid1, ygrid2));
 

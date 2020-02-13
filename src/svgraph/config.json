@@ -1,0 +1,26 @@
+{
+  "x-axis": {
+    "label": "frequency (Hz)",
+    "scale": "log-log",
+    "fixed": true,
+    "lb": -20,
+    "ub": 20,
+    "num-grids": 15
+  },
+  "left-y-axis": {
+    "label": "magnitude (dB)",
+    "scale": "linear",
+    "fixed": false,
+    "lb": null,
+    "ub": null,
+    "num-grids": 10
+  },
+  "right-y-axis": {
+    "label": "phase (degrees)",
+    "scale": "linear",
+    "fixed": true,
+    "lb": -180,
+    "ub": 90,
+    "num-grids": 10
+  }
+}
