@@ -342,11 +342,13 @@ Inductor.prototype.constructor = Inductor;
  *  nnode: int
  *  dependent: boolean (true if dependent source, false if independent)
  */
-function CurrentSource(i, p, n, dependency){
+function CurrentSource(i, p, n, dependency, cp=null, cn=null){
     this.value = i;
     this.pnode = p;
     this.nnode = n;
     this.dependent = dependency;
+    this.controlPnode = cp;
+    this.controlNnode = cn;
 };
 
 CurrentSource.prototype.print = function(){
@@ -458,7 +460,7 @@ function createCircuit(components){
             }
         }
         else if(c.type == 'I'){
-            cSrc  = new CurrentSource(new Expression(c.value), c.pnode, c.nnode);
+            cSrc  = new CurrentSource(new Expression(c.value), c.pnode, c.nnode, false);
             pnode = circuit.findNodeById(c.pnode);
             nnode = circuit.findNodeById(c.nnode);
             pnode.currentSources.push(cSrc);
@@ -490,12 +492,28 @@ function createCircuit(components){
             nnode.passiveComponents.push(l);
         }
 
-        else if (c.type == 'E'){ // Dependent voltage source
+        else if (c.type == 'E'){ // V controlled dependent voltage source
 
         }
 
-        else if (c.type == 'G'){
+        else if (c.type == 'G'){ // V controlled current source
+            cSrc  = new CurrentSource(new Expression(c.value), c.pnode, c.nnode, true, c.ctrlPNode, c.ctrllNnode);
+            pnode = circuit.findNodeById(c.pnode);
+            nnode = circuit.findNodeById(c.nnode);
+            pnode.currentSources.push(cSrc);
+            nnode.currentSources.push(cSrc);
+        }
 
+        else if (c.type == 'H'){ // current controlled voltage source (CCVS)
+
+        }
+
+        else if (Fc.type == 'F'){ // current controlled current source (CCCS)
+            cSrc  = new CurrentSource(new Expression(c.value), c.pnode, c.nnode, true, c.ctrlPNode, c.ctrllNnode);
+            pnode = circuit.findNodeById(c.pnode);
+            nnode = circuit.findNodeById(c.nnode);
+            pnode.currentSources.push(cSrc);
+            nnode.currentSources.push(cSrc);
         }
     });
 
