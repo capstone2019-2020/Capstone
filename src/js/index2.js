@@ -88,12 +88,13 @@ function uploadFile(evt) {
 }
 
 // Generate button
-function sendNext(event) {
+async function sendNext(event) {
     // event.preventDefault();
     const eqns = getCookie('sfg_equations');
     console.log(eqns);
-    fetch(`${SERVER_URI}/computeSFG`)
+    await fetch(`${SERVER_URI}/computeSFG`)
       .then( (res) => {
+          console.log(res);
           return res.json();
       })
       .then( (j) => {
@@ -104,6 +105,7 @@ function sendNext(event) {
           console.log(ex);
         // alert('Failed to computeSFG!')
     });
+    location.href='./index2.html'
 }
 
 function setLocalStorage(key, val) {

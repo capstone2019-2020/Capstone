@@ -540,17 +540,17 @@ AnalysisSummary.prototype.addSummary= function(id, dpi, isc, eqs){
     this.currentEquations.push(eqs);
 };
 
-(function main(){
-   const voltage_div = 'test/netlist_ann1.txt'
-   const var_simple = 'test/netlist_ann2.txt'
-   const curr_src = 'test/netlist_ann_csrc.txt'
-   const rc = 'test/netlist_ann_rc.txt'
-
-   c = nl.nlConsume(rc);
-   circuit = createCircuit(c);
-   circuit.nodalAnalysis();
-//    console.log(JSON.stringify(circuit.nodalAnalysis()));
-})();
+// (function main(){
+//    const voltage_div = 'test/netlist_ann1.txt'
+//    const var_simple = 'test/netlist_ann2.txt'
+//    const curr_src = 'test/netlist_ann_csrc.txt'
+//    const rc = 'test/netlist_ann_rc.txt'
+//
+//    c = nl.nlConsume(rc);
+//    circuit = createCircuit(c);
+//    circuit.nodalAnalysis();
+// //    console.log(JSON.stringify(circuit.nodalAnalysis()));
+// })();
 
 exports.createCircuit = createCircuit;
 exports.setCircuit = (c) => {
