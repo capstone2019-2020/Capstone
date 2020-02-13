@@ -1,5 +1,7 @@
 const DEFAULT_NODE_CLR = 'black';
 const SELECTED_NODE_CLR = '#f04b4c';
+const GHOST_NODE_CLR = '#528aeb';
+const DEFAULT_EDGE_CLR = '#999';
 
 let clickedNodes = null;
 let startNode = null;
@@ -46,10 +48,39 @@ function sfgToCyto(sfg) {
   return {nodes, edges};
 }
 
+function resetEdgeColors() {
+  cy.edges().forEach(e => {
+    e.style('line-color', DEFAULT_EDGE_CLR);
+    e.style('target-arrow-color', DEFAULT_EDGE_CLR);
+  });
+  cy.nodes().forEach( n => {
+    if (!clickedNodes.includes(n.data().id)) {
+      n.style('background-color', DEFAULT_NODE_CLR);
+    }
+  })
+}
+
+/**
+ * Highlight forward paths from node
+ *
+ * @param node
+ */
+function highlightForwardPaths(node) {
+  // reset all edges
+  resetEdgeColors();
+
+  var edges = node.successors();
+  edges.forEach( e => {
+    e.style('background-color', GHOST_NODE_CLR);
+    e.style('line-color', GHOST_NODE_CLR);
+    e.style('target-arrow-color', GHOST_NODE_CLR);
+  });
+}
+
 /**
  * On page load, generate the Cytoscape SFG
  * Assumes that the 'sfg_nodes' localStorage variable
- * was previously set when the user firs uploaded the
+ * was previously set when the user first uploaded the
  * netlist file from the buttonindex.html page
  */
 function generateSFG() {
@@ -74,6 +105,7 @@ function generateSFG() {
     console.log(`idx: ${_idx}`);
     /* Case 1: node was previously selected - deselect */
     if (clickedNodes.includes(_idx)) {
+      resetEdgeColors();
       clickedNode.style('background-color', DEFAULT_NODE_CLR);
 
       let i = clickedNodes.indexOf(_idx);
@@ -82,6 +114,7 @@ function generateSFG() {
       }
       endNode = null;
       clickedNodes.splice(i, 1);
+      highlightForwardPaths(cy.getElementById(startNode));
       document.getElementById('simulate-button').style.display = 'none';
       document.getElementById('sfg-help-text').style.display = 'inline-block';
 
@@ -91,12 +124,16 @@ function generateSFG() {
       clickedNode.style('background-color', SELECTED_NODE_CLR);
       clickedNodes.push(_idx);
       startNode = _idx;
+
+      // highlight all forward paths
+      highlightForwardPaths(clickedNode);
     }
     else if (clickedNodes.length === 1) {
       clickedNode.style('background-color', SELECTED_NODE_CLR);
       clickedNodes.push(_idx);
       endNode = _idx;
-      console.log('setting display = block')
+
+      resetEdgeColors();
       document.getElementById('simulate-button').style.display = 'inline-block';
       document.getElementById('sfg-help-text').style.display = 'none';
     }
