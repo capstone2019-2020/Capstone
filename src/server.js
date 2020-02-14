@@ -157,6 +157,15 @@ app.get("/computeSFG", (req, res) => {
     res.status(200).send(nodes);
 });
 
+// Get loop gain
+app.get("/loopGain", (req, res) => {
+    const loopGain = m1.computeLoopGain(nodes);
+    res.status(200).send({ bode: {
+            phase: loopGain.bode.phase,
+            magnitude: loopGain.bode.magnitude
+        }});
+});
+
 // Get the computeMasons eqns
 app.post("/computeMasons", (req, res) => {
     startNode = req.body.start;
@@ -197,6 +206,7 @@ app.post("/computeMasons", (req, res) => {
     res.status(200).send({n: newNumer.toString(), d: newDenom.toString(),
                           bode: { phase: masonsdata.bode.phase, magnitude: masonsdata.bode.magnitude }});
 });
+
 
 // add router
 app.use('/', router);

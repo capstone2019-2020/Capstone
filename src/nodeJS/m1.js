@@ -63,7 +63,13 @@ function computeLoopGain(nodes) {
   const nonTouchingLoops = m1helper.findNonTouching(allLoops);
   const denom = m1helper.calculateDenominator(allLoops, nonTouchingLoops);
 
-  return denom.subtract(1);
+  const loopGain = denom.subtract(1);
+  return { bode: {
+            phase: loopGain.phase(),
+            magnitude:loopGain.magnitude()
+            }
+          };
+
 }
 
 /**
