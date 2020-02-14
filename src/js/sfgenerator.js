@@ -15,8 +15,8 @@ function initSvgraph() {
       "label": "frequency (Hz)",
       "scale": "log-log",
       "fixed": true,
-      "lb": -20,
-      "ub": 20,
+      "lb": 0,
+      "ub": 10,
       "num_grids": 10
     },
     "left_y_axis": {

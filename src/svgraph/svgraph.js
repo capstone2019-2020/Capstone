@@ -6,7 +6,7 @@ const MAX_XGRID = 15, MAX_YGRID = 15;
 const MAX_LOG_XGRID = 5;
 const SAMPLE_RATE = 10, SAMPLE_INTERVAL = 50; /* ms */
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
-const GRID_MODE = false;
+const GRID_MODE = true;
 const SEMI_LOG_MODE = true;
 const START_X = 100, START_Y = 470;
 const LENGTH_X = 600, LENGTH_Y = 400;
@@ -329,7 +329,8 @@ function plot(dp, x_cratio, y_cratio, color, ylb) {
   ];
 }
 
-function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
+function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio},
+               logvals=[]) {
   const partitions = [];
   let i, x_coord, xval;
   const margin = lenx / parts;
@@ -374,9 +375,23 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
     }
   }
 
+  if (SEMI_LOG_MODE && grid) {
+    let i;
+    for (i=0; i<logvals.length; i++) {
+      x_coord = MIN(__gX(logvals[i], x_cratio), START_X + LENGTH_X);
+      partitions.push(line(
+        __vec(x_coord, UP(START_Y, 5)),
+        __vec(x_coord, UP(START_Y, leny)), {
+          stroke: 'grey',
+          'stroke-opacity': '0.3',
+        }
+      ));
+    }
+  }
+
   return [
     text(__vec(
-      RIGHT(START_X, HALF(lenx)), DOWN(START_Y, 50)
+      RIGHT(START_X, HALF(lenx)), DOWN(START_Y, 20)
       ), label, {'text-anchor': 'end'}
     ),
     line(
@@ -399,7 +414,7 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
 }
 
 function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
-                 label, grid}) {
+                 label, grid, label_postfix}, is_left=true) {
   /* Re-adjust LENGTH_Y */
   leny = START_Y-leny < 0 ? START_Y : leny;
 
@@ -425,10 +440,15 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
       ? EXP(yval, 1)
       : FIXED(yval, 2);
 
+    let _yval = `${yval}${label_postfix}`;
     partitions.push(
       text(
-        __vec(LEFT(AXIS_XPOS,10), DOWN(y_coord,5)),
-        yval, {'text-anchor': 'end'}
+        __vec(
+          is_left
+            ? LEFT(AXIS_XPOS,10)
+            : RIGHT(AXIS_XPOS, 50),
+          DOWN(y_coord,5)),
+        _yval, {'text-anchor': 'end'}
       )
     );
 
@@ -449,7 +469,9 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
 
   return [
     text(__vec(
-      LEFT(START_X, 60),
+      is_left
+        ? LEFT(START_X, 85)
+        : RIGHT(START_X+LENGTH_X, 60),
       UP(START_Y, DOWN(HALF(leny),40))
       ),
       label, {
@@ -513,7 +535,7 @@ function legend(fpoints) {
     for (j=i; j<_i; j++) {
       _fpoint = fpoints[j];
       color_elems.push(rect(__vec(
-        RIGHT(START_X, width+inc_width),
+        RIGHT(START_X, width+inc_width+10),
         DOWN(10, 10+20*(j-i))
         ), 30, fontsize, {
           fill: _fpoint.color,
@@ -651,6 +673,31 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
       }
     }
   }
+}
+
+function generate_logvals(xlb, xub) {
+  let logdist = [
+    0,
+    0.301,
+    0.477,
+    0.602,
+    0.699,
+    0.778,
+    0.845,
+    0.903,
+    0.954
+  ];
+
+  let logvals = [];
+  let xval;
+  for (xval=xlb; xval<=xub; xval++) {
+    let i;
+    for (i=0; i<logdist.length; i++) {
+      logvals.push(xval+logdist[i]);
+    }
+  }
+
+  return logvals;
 }
 
 function eval_log(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
@@ -924,9 +971,10 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       lb: xlb,
       ub: xub,
       parts: xgrid,
-      label: '',
-      grid: GRID_MODE
-    })),
+      label: config.x_axis.label,
+      grid: GRID_MODE,
+      x_cratio: RATIO(LENGTH_X, xub-xlb)
+    }, generate_logvals(xlb, xub))),
     g('y-axis-1', ...yaxis({
       leny: LENGTH_Y,
       lenx: LENGTH_X,
@@ -934,9 +982,10 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       lb: ylb1,
       ub: yub1,
       parts: ygrid1,
-      label: '|f(jw)| (dB)',
-      grid: GRID_MODE
-    })),
+      label: config.left_y_axis.label,
+      grid: GRID_MODE,
+      label_postfix: ' dB'
+    }, true, false)),
     g('y-axis-2', ...yaxis({
       leny: LENGTH_Y,
       lenx: LENGTH_X,
@@ -944,9 +993,10 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       lb: ylb2,
       ub: yub2,
       parts: ygrid2,
-      label: '<f(jw) (deg)',
-      grid: GRID_MODE
-    })),
+      label: config.right_y_axis.label,
+      grid: GRID_MODE,
+      label_postfix: '°'
+    }, false, true)),
   );
 
   Svgraph().appendChild(_svg);
