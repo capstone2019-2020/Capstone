@@ -1,4 +1,5 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
+const MATHML_NS = 'http://www.w3.org/1998/Math/MathML';
 
 const MIN_XGRID = 8, MIN_YGRID = 8, MIN_X = 1, MIN_Y = 1;
 const MAX_XGRID = 15, MAX_YGRID = 15;
@@ -18,7 +19,7 @@ const ID_GUIDE_X = 'x-guide';
 const ID_GUIDE_Y = 'y-guide';
 const ID_LEGEND = 'legend';
 
-const LOG_LEVEL = 1;
+const LOG_LEVEL = 4;
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
 
 /* 'fake' macros */
@@ -226,9 +227,40 @@ function line(vec_from, vec_to, config={}) {
   });
 }
 
+function foreignObject(vec, w, h, config, ...children) {
+  const f = document.createElementNS(SVG_NS, 'foreignObject');
+
+  return __ns(f, {
+    ...config,
+    width: w, height: h,
+    x: vec.x, y: vec.y,
+  }, ...children);
+}
+
+function exponent(vec, base, exp) {
+  const _math = document.createElementNS(MATHML_NS, 'math');
+  const _msup = document.createElementNS(MATHML_NS,'msup');
+  const base_mn = document.createElementNS(MATHML_NS,'mn');
+  const exp_mn = document.createElementNS(MATHML_NS,'mn');
+  base_mn.innerHTML = base;
+  exp_mn.innerHTML = exp;
+  _msup.appendChild(base_mn);
+  _msup.appendChild(exp_mn);
+  _math.appendChild(_msup);
+
+  return foreignObject(vec, 40, 40,
+    {style: CSS({'z-index': 10})},
+    _math
+  );
+}
+
 function text(vec, words, config={}) {
   const t = document.createElementNS(SVG_NS, 'text');
-  t.innerHTML = words;
+  if (typeof words === 'string') {
+    t.innerHTML = words;
+  } else {
+    t.appendChild(words);
+  }
   t.style.zIndex = '1';
 
   return __ns(t, {
@@ -318,14 +350,15 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid}) {
     xval = lb+SCALE(part_val, i);
     xval = Math.abs(xval) < 1 ? FIXED(xval, 1) : ROUND(xval);
     if (SEMI_LOG_MODE) {
-      xval = `10e+${xval}`;
-    }
-    partitions.push(
-      text(
+      partitions.push(exponent(
+        __vec(RIGHT(x_coord, -10), DOWN(ORIGIN_Y1, 5)),
+        10, xval));
+    } else {
+      partitions.push(text(
         __vec(RIGHT(x_coord, 5), DOWN(ORIGIN_Y1, 20)),
-        xval, {'text-anchor': 'end'}
-      )
-    );
+        xval, {'text-anchor': 'end'})
+      );
+    }
 
     if (grid && xval !== 0) {
       partitions.push(
@@ -509,6 +542,9 @@ function legend(fpoints) {
 
 function init_plot(lb, ub, plot_len, parts,is_init=false,
                    seed_offset=0) {
+  lb = ROUND_UP(lb, 5);
+  ub = ROUND_UP(ub, 5);
+
   INFO(`lb: ${lb}, ub: ${ub}`);
   if (lb === ub) {
     return {
@@ -701,17 +737,6 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
     return {f, points, color: COLOR()};
   });
 
-  if (ylb < 0) {
-    ylb = is_init ? ylb*1.1 : ylb;
-  } else {
-    ylb = 0;
-  }
-  if (yub > 0) {
-    yub = is_init ? yub*1.1 : yub;
-  } else {
-    yub = 0;
-  }
-
   return {fpoints, sample_amt,
     xub, xlb, yub, ylb};
 }
@@ -764,45 +789,50 @@ function eval(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
     return {f, points, color: COLOR()};
   });
 
-  /*
-   * Bounding y-axis:
-   * Write it this way so it's less confusing
-   */
-  if (ylb < 0) {
-    ylb = is_init ? ylb*1.1 : ylb;
-  } else {
-    ylb = 0;
-  }
-  if (yub > 0) {
-    yub = is_init ? yub*1.1 : yub;
-  } else {
-    yub = 0;
-  }
-
   return {fpoints, sample_amt,
     xub, xlb, yub, ylb};
 }
 
-function render(config, funcs1, funcs2, xlb, xub,
+function render(config, changeSet, funcs1, funcs2, xlb, xub,
                 ylb1, yub1, ylb2, yub2,
-                xgrid, ygrid1, ygrid2) {
-  let sample_amt1, sample_amt2, fpoints1, fpoints2;
-
-  if (config) {
+                xgrid, ygrid1, ygrid2,
+                sample_amt1, sample_amt2,
+                fpoints1, fpoints2) {
+  if (changeSet) {
     DEBUG(`========START CONFIG==========`);
     DEBUG(`BEFORE: ylb: ${ylb1}, yub: ${yub1}`);
     COLOR(true);
-    xgrid = MIN(MAX(xgrid+config.xm, MIN_XGRID), MAX_XGRID);
-    ygrid1 = MIN(MAX(ygrid1+config.ym1, MIN_YGRID), MAX_YGRID);
-    ygrid2 = MIN(MAX(ygrid2+config.ym2, MIN_YGRID), MAX_YGRID);
-    xlb = MIN(xlb-config.xm, -MIN_X);
-    xub = MAX(xub+config.xm, MIN_X);
-    ylb1 = MIN(ylb1-config.ym1, -MIN_Y);
-    yub1 = MAX(yub1+config.ym1, MIN_Y);
-    ylb2 = MIN(ylb2-config.ym2, -MIN_Y);
-    yub2 = MAX(yub2+config.ym2, MIN_Y);
+    let {x_axis, left_y_axis, right_y_axis} = config;
+    let {xm, ym1, ym2} = changeSet;
+    let x_changed=false, y1_changed=false, y2_changed=false;
+
+    if (!x_axis.fixed) {
+      xgrid = MIN(MAX(xgrid+xm, MIN_XGRID), MAX_XGRID);
+      xlb = MIN(xlb-xm, -MIN_X);
+      xub = MAX(xub+xm, MIN_X);
+      x_changed = true;
+    }
+    if (!left_y_axis.fixed) {
+      ygrid1 = MIN(MAX(ygrid1+ym1, MIN_YGRID), MAX_YGRID);
+      ylb1 = MIN(ylb1-ym1, -MIN_Y);
+      yub1 = MAX(yub1+ym1, MIN_Y);
+      y1_changed = true;
+    }
+    if (!right_y_axis.fixed) {
+      ygrid2 = MIN(MAX(ygrid2+ym2, MIN_YGRID), MAX_YGRID);
+      ylb2 = MIN(ylb2-ym2, -MIN_Y);
+      yub2 = MAX(yub2+ym2, MIN_Y);
+      y2_changed = true;
+    }
     DEBUG(`AFTER: ylb: ${ylb1}, yub: ${yub1}`);
     DEBUG(`========END CONFIG==========`);
+    if (!y1_changed && !y2_changed && !x_changed) {
+      return {
+        xlb, xub, ylb1, yub1, ylb2, yub2,
+        xgrid, ygrid1, ygrid2,
+        sample_amt1, sample_amt2, fpoints1, fpoints2
+      };
+    }
   }
 
   if (funcs1.length !== 0) {
@@ -810,7 +840,7 @@ function render(config, funcs1, funcs2, xlb, xub,
       fpoints: fpoints1, sample_amt: sample_amt1,
       xlb, xub, ylb: ylb1, yub: yub1
     } = eval(funcs1, xgrid, xlb, xub, ylb1, yub1,
-      !DEFINED(config)));
+      !DEFINED(changeSet)));
   } else {
     fpoints1 = [];
   }
@@ -820,7 +850,7 @@ function render(config, funcs1, funcs2, xlb, xub,
       fpoints: fpoints2, sample_amt: sample_amt2,
       xlb, xub, ylb: ylb2, yub: yub2
     } = eval(funcs2, xgrid, xlb, xub, ylb2, yub2,
-      !DEFINED(config)));
+      !DEFINED(changeSet)));
   } else {
     fpoints2 = [];
   }
@@ -833,7 +863,7 @@ function render(config, funcs1, funcs2, xlb, xub,
       offset: x_offset,
       parts: xgrid
     } = init_plot(xlb, xub, LENGTH_X, xgrid,
-      !DEFINED(config)));
+      !DEFINED(changeSet)));
     if (funcs1.length !== 0) {
       ({
         lb: ylb1,
@@ -841,26 +871,32 @@ function render(config, funcs1, funcs2, xlb, xub,
         offset: y_offset1,
         parts: ygrid1
       } = init_plot(ylb1, yub1, LENGTH_Y, ygrid1,
-        !DEFINED(config)));
-    }
-    if (funcs2.length !== 0) {
+        !DEFINED(changeSet)));
+    } else {
       ({
         lb: ylb2,
         ub: yub2,
         offset: y_offset2,
         parts: ygrid2
       } = init_plot(ylb2, yub2, LENGTH_Y, ygrid2,
-        !DEFINED(config), y_offset1));
+        !DEFINED(changeSet), y_offset1));
     }
     let wrapper = ELEM('wrapper');
     if (wrapper) {
       Svgraph().removeChild(ELEM('wrapper'));
     }
   } catch (err) {
-    return;
+    return {
+      xlb, xub, ylb1, yub1, ylb2, yub2,
+      xgrid, ygrid1, ygrid2,
+      sample_amt1, sample_amt2, fpoints1, fpoints2
+    };
   }
 
   ORIGIN_X = RIGHT(START_X, x_offset);
+  if (!y_offset1) {
+    y_offset1 = __ROUND(START_Y/2);
+  }
   ORIGIN_Y1 = UP(START_Y, y_offset1);
   ORIGIN_Y2 = ORIGIN_Y1;
 
@@ -922,7 +958,7 @@ function render(config, funcs1, funcs2, xlb, xub,
   };
 }
 
-function init() {
+function init(config) {
   /*
    * These variables are the core rendering components:
    * [x/y]lb    : Lower-bound value for x/y-axis (actual)
@@ -935,9 +971,14 @@ function init() {
    * fpoints    : Main data structure - each elem contains 'y'
    *              values for each sample for each function
    */
-  let xlb=-20, xub=20, ylb1=0, yub1=0, ylb2=0, yub2=0;
-  let ygrid1=10, ygrid2=10;
-  let xgrid = 15;
+  let {left_y_axis, right_y_axis, x_axis} = config;
+
+  let xlb=x_axis.lb, xub=x_axis.ub;
+  let ylb1=left_y_axis.lb, yub1=left_y_axis.ub;
+  let ylb2=right_y_axis.lb, yub2=right_y_axis.ub;
+  let ygrid1=left_y_axis.num_grids, ygrid2=right_y_axis.num_grids;
+  let xgrid = x_axis.num_grids;
+
   let sample_amt1, sample_amt2, fpoints1, fpoints2;
   const axis1_funcs = [], axis2_funcs = [];
 
@@ -946,13 +987,11 @@ function init() {
     xlb, xub, ylb1, yub1, ylb2, yub2,
     xgrid, ygrid1, ygrid2,
     sample_amt1, sample_amt2, fpoints1, fpoints2
-  } = render(undefined, [], [],
+  } = render(config, undefined, [], [],
     xlb, xub, ylb1, yub1, ylb2, yub2,
-    xgrid, ygrid1, ygrid2));
-
-  // Svgraph().appendChild(g('legend',
-  //   ...legend([...fpoints1, ...fpoints2])
-  // ));
+    xgrid, ygrid1, ygrid2,
+    sample_amt1, sample_amt2,
+    fpoints1, fpoints2));
 
   /*
    * This event is triggered upon every mouse move action
@@ -1134,9 +1173,12 @@ function init() {
           xlb, xub, ylb1, yub1, ylb2, yub2,
           xgrid, ygrid1, ygrid2,
           sample_amt1, sample_amt2, fpoints1, fpoints2
-        } = render(c, axis1_funcs, axis2_funcs,
+        } = render(config, c, axis1_funcs, axis2_funcs,
           xlb, xub, ylb1, yub1, ylb2, yub2,
-          xgrid, ygrid1, ygrid2));
+          xgrid, ygrid1, ygrid2,
+          sample_amt1, sample_amt2,
+          fpoints1, fpoints2)
+        );
       }
     }, SAMPLE_INTERVAL);
   });
@@ -1150,18 +1192,16 @@ function init() {
 
   return {
     update(left_funcs, right_funcs) {
-      xlb=-20; xub=20; ylb1=0; yub1=0; ylb2=0; yub2=0;
-      ygrid1=10; ygrid2=10;
-      xgrid = 15;
-
       /* =========== Update render =========== */
       ({
         xlb, xub, ylb1, yub1, ylb2, yub2,
         xgrid, ygrid1, ygrid2,
         sample_amt1, sample_amt2, fpoints1, fpoints2
-      } = render(undefined, left_funcs, right_funcs,
+      } = render(config, undefined, left_funcs, right_funcs,
         xlb, xub, ylb1, yub1, ylb2, yub2,
-        xgrid, ygrid1, ygrid2));
+        xgrid, ygrid1, ygrid2,
+        sample_amt1, sample_amt2,
+        fpoints1, fpoints2));
 
       Svgraph().appendChild(g('legend',
         ...legend([...fpoints1, ...fpoints2])

@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Circuit Upload</title>
-  <link rel="stylesheet" type="text/css" href="css/buttonindex.css"/>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8">
+    <title>Circuit Upload</title>
+    <link rel="stylesheet" type="text/css" href="css/buttonindex.css"/>
+  </head>
+  <body>
     <div id="file-box" class="file-box">
-        <p>
-            <strong>Upload Netlist File</strong>
-        </p>
-        <div id="drop-area" class="drop-area"> 
-            <input type="file" id="fileUpload" accept=".txt, .net/*" onchange="handleDrop(this.files)" hidden="hidden">
-            <label class="button" for="fileUpload">Drag & Drop or Browse</label>
-            <span id="custom-text"></span>
-        </div>
-        <p id = "test"></p>
-        <div class="upload-sucess"></div>
-        <!-- For generating SFG/Bode/Magnitude/Frequency plot -->
-        <input type="submit" id="generate" value="GENERATE" onClick="sendNext();">
+      <p>
+        <strong>Upload Netlist File</strong>
+      </p>
+      <div id="drop-area" class="drop-area">
+        <input type="file" id="fileUpload" accept=".txt, .net/*" onchange="handleDrop(this.files)" hidden="hidden">
+        <label class="button" for="fileUpload">Drag & Drop or Browse</label>
+        <span id="custom-text"></span>
+      </div>
+      <p id="test"></p>
+      <div class="upload-sucess"></div>
+      <!-- For generating SFG/Bode/Magnitude/Frequency plot -->
+      <input type="submit" id="generate" value="GENERATE" onClick="sendNext();">
     </div>
     <script type="text/javascript" src="js/index2.js"></script>
-</body>
+  </body>
 </html>

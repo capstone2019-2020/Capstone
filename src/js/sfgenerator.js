@@ -10,7 +10,32 @@ let cy = null;
 let svgraph = null;
 
 function initSvgraph() {
-  svgraph = init();
+  svgraph = init({
+    "x_axis": {
+      "label": "frequency (Hz)",
+      "scale": "log-log",
+      "fixed": true,
+      "lb": -20,
+      "ub": 20,
+      "num_grids": 10
+    },
+    "left_y_axis": {
+      "label": "magnitude (dB)",
+      "scale": "linear",
+      "fixed": true,
+      "lb": -60,
+      "ub": 30,
+      "num_grids": 9
+    },
+    "right_y_axis": {
+      "label": "phase (degrees)",
+      "scale": "linear",
+      "fixed": true,
+      "lb": -90,
+      "ub": 0,
+      "num_grids": 9
+    }
+  });
 }
 
 /**
