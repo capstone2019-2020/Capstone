@@ -58,6 +58,14 @@ function computeMasons(nodes, start, end) {
           };
 }
 
+function computeLoopGain(nodes) {
+  const allLoops = m1helper.findAllLoops(nodes);
+  const nonTouchingLoops = m1helper.findNonTouching(allLoops);
+  const denom = m1helper.calculateDenominator(allLoops, nonTouchingLoops);
+
+  return denom.subtract(1);
+}
+
 /**
  * Print out the transfer function - need to format this ourselves since currently algebra.js only supports dividing by constant integers/fractions
  *
@@ -357,5 +365,5 @@ function outputSFG (sfgnodes) {
  * Export functions as part of m1 module
  */
 module.exports = {
-  outputSFG, computeSFG, computeMasons, getEquations, getUserInput
+  outputSFG, computeSFG, computeMasons, getEquations, getUserInput, computeLoopGain
 };
