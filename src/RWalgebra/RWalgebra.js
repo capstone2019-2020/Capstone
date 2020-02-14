@@ -141,7 +141,7 @@ const simplify = (terms) => {
       f.push(t);
       return;
     }
-    v_names = t.variables.map(v => v.name).sort().join('') + t.imag;
+    v_names = t.variables.map(v => v.name + v.degree).sort().join('') + t.imag;
     if (!vars[v_names])
       vars[v_names] = t;
     else  { // need to combine variables
@@ -210,6 +210,35 @@ const subtractTerms = (op1, op2) => {
   return op1.concat(_op2);
 };
 
+
+const mergeVariables = (v1, v2) => {
+  let _v1 = {};
+  let _v2 = {};
+
+  v1.forEach( v => _v1[v.name] = v.copy() );
+  v2.forEach( v => _v2[v.name] = v.copy() );
+
+  let name;
+  v1.forEach( v => {
+    name = v.name;
+    if (_v2[name]) {
+      _v1[name].degree += _v2[name].degree;
+      delete _v2[name];
+    }
+  });
+
+  let merged = [];
+  let _merge = function(_v) {
+    for (const v of Object.keys(_v)) {
+      merged.push(_v[v])
+    }
+  };
+
+  _merge(_v1);
+  _merge(_v2);
+  return merged;
+};
+
 const multiplyTerms = (op1, op2) => {
   if (DEBUG) {
     console.log('============================');
@@ -221,7 +250,7 @@ const multiplyTerms = (op1, op2) => {
   op1.forEach( t1 => {
     op2.forEach( t2 => {
       temp_term = new Term();
-      temp_term.variables = t1.variables.concat(t2.variables);
+      temp_term.variables = mergeVariables(t1.variables, t2.variables);
       temp_term.coefficient = t1.coefficient * t2.coefficient;
       if (t1.imag && t2.imag) // j * j = -1
         temp_term.coefficient *= -1;

@@ -87,7 +87,6 @@ function generateSFG() {
   const sfg = localStorage.getItem('sfg_nodes');
   console.log(sfg);
   const elements = sfgToCyto(JSON.parse(sfg));
-  // cytoscape.use(klay);
   cy = cytoscape({
     container: document.getElementById('sfg-canvas'), // container to render in
     elements,
@@ -114,6 +113,7 @@ function generateSFG() {
       }
       endNode = null;
       clickedNodes.splice(i, 1);
+
       highlightForwardPaths(cy.getElementById(startNode));
       document.getElementById('simulate-button').style.display = 'none';
       document.getElementById('sfg-help-text').style.display = 'inline-block';

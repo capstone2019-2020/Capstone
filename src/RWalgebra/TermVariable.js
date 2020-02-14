@@ -19,7 +19,9 @@ var Variable = function (variable) {
 };
 
 Variable.prototype.copy = function () {
-  return new Variable(this.variable);
+  let copy = new Variable(this.name);
+  copy.degree = this.degree;
+  return copy;
 };
 
 // Converting the variable to string function 
@@ -70,7 +72,7 @@ Term.prototype.eval = function(sub) {
     if (vars.includes(v.name)) {
       if (typeof sub[v.name] !== 'number')
         throw new ArgumentsError('ERROR: eval() only accepts floating point numbers!');
-      copy.coefficient *= sub[v.name];
+      copy.coefficient *= Math.pow(sub[v.name], v.degree);
     }
   });
 
@@ -95,7 +97,7 @@ Term.prototype.eval = function(sub) {
 Term.prototype.copy = function() {
   let term = new Term();
   term.coefficient = this.coefficient;
-  term.variables = this.variables.map(v => new Variable(v.name));
+  term.variables = this.variables.map(v => v.copy());
   term.fraction = this.fraction.copy();
   term.imag = this.imag;
   return term;
