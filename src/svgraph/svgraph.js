@@ -19,7 +19,7 @@ const ID_GUIDE_X = 'x-guide';
 const ID_GUIDE_Y = 'y-guide';
 const ID_LEGEND = 'legend';
 
-const LOG_LEVEL = 4;
+const LOG_LEVEL = 1;
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
 
 /* 'fake' macros */
