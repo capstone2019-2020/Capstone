@@ -105,7 +105,14 @@ async function sendNext(event) {
           console.log(ex);
         // alert('Failed to computeSFG!')
     });
-    location.href='./index2.html'
+    
+    if (eqns.length === 0) {
+        alert("Must Upload a netlist File");
+        errorMes.innerHTML = "Must Upload a netlist File";
+    }
+    else {
+        location.href='./index2.html'
+    }
 }
 
 function setLocalStorage(key, val) {

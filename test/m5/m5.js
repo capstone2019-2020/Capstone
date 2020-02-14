@@ -258,10 +258,7 @@ function __test_that__(exprs, op, terms, expected, testType, isImag=false) {
     FIXED(expected, 4) !== FIXED(actual, 4))) {
     let exprStr = '';
     exprs.forEach((expr, i) => {
-      exprStr+=expr;
-      if (i !== exprs.length-1) {
-        exprStr+='\n';
-      }
+      exprStr+=`(${i}). ${expr}\n`;
     });
     let output = `
     \n========================================= \
