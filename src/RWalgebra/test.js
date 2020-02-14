@@ -16,31 +16,41 @@ function main() {
   // const imaginary = '(-x)*j + (2j) + x1 + 5' ;
 
 
-  const test_type = process.argv[2];
-  let ex;
-  if (test_type === 'simple')
-    ex = new Expression(simple);
-  else if (test_type === 'add')
-    ex = new Expression(add_test);
-  else if (test_type === 'sub')
-    ex = new Expression(sub_test);
-  else if (test_type === 'mult')
-    ex = new Expression(mult_test);
-  else if (test_type === 'div')
-    ex = new Expression(div_test);
-  else if (test_type === 'bracket')
-    ex = new Expression(bracket_test);
-  else if (test_type === 'no_vars')
-    ex = new Expression(no_vars);
-  else if (test_type === 'circuit')
-    ex = new Expression(circuit_test);
-  else if (test_type === 'imag')
-    ex = new Expression(imaginary);
+  // const test_type = process.argv[2];
+  // let ex;
+  // if (test_type === 'simple')
+  //   ex = new Expression(simple);
+  // else if (test_type === 'add')
+  //   ex = new Expression(add_test);
+  // else if (test_type === 'sub')
+  //   ex = new Expression(sub_test);
+  // else if (test_type === 'mult')
+  //   ex = new Expression(mult_test);
+  // else if (test_type === 'div')
+  //   ex = new Expression(div_test);
+  // else if (test_type === 'bracket')
+  //   ex = new Expression(bracket_test);
+  // else if (test_type === 'no_vars')
+  //   ex = new Expression(no_vars);
+  // else if (test_type === 'circuit')
+  //   ex = new Expression(circuit_test);
+  // else if (test_type === 'imag')
+  //   ex = new Expression(imaginary);
+  //
+  // ex.divide('wj + 30');
+  // console.log(JSON.stringify(ex));
+  // console.log(ex.magnitude());
+  // console.log(ex.phase());
 
-  ex.divide('wj + 30');
+  let ex = new Expression('24*x2 - 98*x1 - x2');
   console.log(JSON.stringify(ex));
-  console.log(ex.magnitude());
-  console.log(ex.phase());
+  console.log("multiplying...");
+  ex.multiply('69*x1 + 87*x1 - 93*x0');
+  console.log(JSON.stringify(ex));
+  console.log("evaluationg");
+  console.log(ex.eval({x1: 20, x0: 10, x2: 2}));
+  // console.log(ex.toString());
+  // console.log(ex.eval({x:1}))
 
   // ex.subtract('x_8j + 9j + (-9) -(8 - (-8)*j)');
   // ex.divide(5);
