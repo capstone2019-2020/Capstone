@@ -185,7 +185,7 @@ function simulate() {
       let mag = math.simplify(j.bode.magnitude).toString();
       let phase = math.simplify(j.bode.phase).toString();
 
-      svgraph.update([`f(w) = ${mag}`], [`f(w) = ${phase}`]);
+      svgraph.put([`f(w) = ${mag}`], [`f(w) = ${phase}`]);
     });
 
 }

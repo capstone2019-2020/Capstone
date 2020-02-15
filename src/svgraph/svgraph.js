@@ -1241,8 +1241,10 @@ function init(config) {
   });
 
   return {
-    update(left_funcs, right_funcs) {
-      /* =========== Update render =========== */
+    put(left_funcs, right_funcs) {
+      /* =========== Put render =========== */
+      COLOR(true);
+
       ({
         xlb, xub, ylb1, yub1, ylb2, yub2,
         xgrid, ygrid1, ygrid2,
@@ -1256,6 +1258,23 @@ function init(config) {
       Svgraph().appendChild(g('legend',
         ...legend([...fpoints1, ...fpoints2])
       ));
+    },
+    update(left_funcs, right_funcs) {
+      /* =========== Update render =========== */
+      COLOR(true);
+
+      axis1_funcs.push(...left_funcs);
+      axis2_funcs.push(...right_funcs);
+
+      ({
+        xlb, xub, ylb1, yub1, ylb2, yub2,
+        xgrid, ygrid1, ygrid2,
+        sample_amt1, sample_amt2, fpoints1, fpoints2
+      } = render(config, undefined, axis1_funcs, axis2_funcs,
+        xlb, xub, ylb1, yub1, ylb2, yub2,
+        xgrid, ygrid1, ygrid2,
+        sample_amt1, sample_amt2,
+        fpoints1, fpoints2));
     }
   }
 }
