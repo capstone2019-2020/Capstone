@@ -43,6 +43,7 @@ const Expression = function (exp) {
     // do nothing
   }
   else {
+    console.log(exp);
     throw new ArgumentsError('Invalid argument type for Expression object');
   }
 };
@@ -583,6 +584,10 @@ Expression.prototype.phase = function() {
  * @returns {string}
  */
 Expression.prototype.magnitude = function() {
+  if (!this.real.terms.length && !this.imag.terms.length
+      && (this.real.constant === 0 || this.real.constant === null)
+      && (this.imag.constant === 0 || this.imag.constant === null))
+    return '0';
   const copy = this.copy();
   const terms = convertToTerms(copy);
   const real = terms.filter(t => !t.imag);

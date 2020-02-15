@@ -107,7 +107,8 @@ async function sendNext(event) {
       })
       .then( (j) => {
           localStorage.clear();
-          setLocalStorage('sfg_nodes', JSON.stringify(j));
+          setLocalStorage('sfg_nodes', JSON.stringify(j.sfg));
+          setLocalStorage('loop_gain', JSON.stringify(j.bode));
       })
       .catch((ex) => {
           console.log(ex);

@@ -154,17 +154,15 @@ app.post("/input-form", (req, res) => {
 // Send back the nodes array as successful
 app.get("/computeSFG", (req, res) => {
     nodes = m1.computeSFG(equations);
-    res.status(200).send(nodes);
+    const loopGain = m1.computeLoopGain(nodes);
+    res.status(200).send({ sfg: nodes,
+    bode: {
+        phase: loopGain.bode.phase,
+        magnitude: loopGain.bode.magnitude
+    }
+    });
 });
 
-// Get loop gain
-app.get("/loopGain", (req, res) => {
-    const loopGain = m1.computeLoopGain(nodes);
-    res.status(200).send({ bode: {
-            phase: loopGain.bode.phase,
-            magnitude: loopGain.bode.magnitude
-        }});
-});
 
 // Get the computeMasons eqns
 app.post("/computeMasons", (req, res) => {
