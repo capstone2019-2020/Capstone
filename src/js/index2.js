@@ -34,30 +34,38 @@ function unhighlight(e) {
 }
 
 dropArea.addEventListener('drop', handleDrop, false);
-fileUpload.addEventListener('change', uploadFile, false);
+fileUpload.addEventListener('change', handleUpload, false);
 submit.addEventListener('submit', sendNext);
 
 function handleDrop(e) {
     const dt = e.dataTransfer;
-    const files = dt.files;
+    const file = dt.files[0];
 
-    uploadFile(files);
+    previewFile(file);
+    uploadFile(file);
 };
 
-function previewFile() {
-    if (fileUpload.value) {
+function handleUpload(e) {
+    let file = e.target.files[0];
+
+    previewFile(file);
+    uploadFile(file);
+}
+
+function previewFile(file) {
+    if (file.name) {
         // customText.innerHTML = fileUpload.value.match(/[\/\\]([\w\d\s\.\-\(\)]+)$/)[1];
-        customText.innerHTML = fileUpload.value;
+        customText.innerHTML = file.name;
     } else {
         customText.innerHTML = "";
     }
 };
 
-function uploadFile(evt) {
-    evt.preventDefault();
-    previewFile();
+function uploadFile(f) {
+//     evt.preventDefault();
+//     previewFile();
     let contents;
-    let f = evt.target.files[0];
+//     let f = evt.target.files[0];
     
     if (f) {
         var reader = new FileReader();
