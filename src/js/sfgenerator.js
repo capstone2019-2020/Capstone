@@ -108,7 +108,7 @@ function highlightForwardPaths(node) {
  * was previously set when the user first uploaded the
  * netlist file from the buttonindex.html page
  */
-function generateSFG() {
+async function generateSFG() {
   const sfg = localStorage.getItem('sfg_nodes');
   console.log(sfg);
   console.log(localStorage.getItem('loop_gain'));
@@ -141,8 +141,7 @@ function generateSFG() {
       clickedNodes.splice(i, 1);
 
       highlightForwardPaths(cy.getElementById(startNode));
-      document.getElementById('simulate-button').style.display = 'none';
-      document.getElementById('sfg-help-text').style.display = 'inline-block';
+      document.getElementById('sfg-help-text').style.display = 'inline-block'
 
     }
     /* Case 2: node was not clicked yet and only one element selected */
@@ -160,7 +159,7 @@ function generateSFG() {
       endNode = _idx;
 
       resetEdgeColors();
-      document.getElementById('simulate-button').style.display = 'inline-block';
+      simulate();
       document.getElementById('sfg-help-text').style.display = 'none';
     }
     console.log(clickedNodes);
@@ -171,8 +170,8 @@ function generateSFG() {
 /**
  * Function to generate transfer function
  */
-function simulate() {
-  fetch(`${SERVER_URI}/computeMasons`, {
+async function simulate() {
+  await fetch(`${SERVER_URI}/computeMasons`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({start: startNode, end: endNode})
