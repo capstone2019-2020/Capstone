@@ -103,6 +103,22 @@ function highlightForwardPaths(node) {
 }
 
 /**
+ * Hightlight forward paths from start and end node
+ */
+function highlightStartEndPath() {
+  const start = cy.getElementById(startNode);
+  const end = cy.getElementById(endNode);
+  let p = cy.elements().aStar({ root: start, goal: end, directed: true}).path;
+  if (p) {
+    p.forEach( ele => {
+      ele.style('background-color', SELECTED_NODE_CLR);
+      ele.style('line-color', SELECTED_NODE_CLR);
+      ele.style('target-arrow-color', SELECTED_NODE_CLR);
+    })
+  }
+}
+
+/**
  * On page load, generate the Cytoscape SFG
  * Assumes that the 'sfg_nodes' localStorage variable
  * was previously set when the user first uploaded the
@@ -159,6 +175,7 @@ async function generateSFG() {
       endNode = _idx;
 
       resetEdgeColors();
+      highlightStartEndPath();
       simulate();
       document.getElementById('sfg-help-text').style.display = 'none';
     }
