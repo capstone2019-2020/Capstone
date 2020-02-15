@@ -111,6 +111,7 @@ function highlightForwardPaths(node) {
 function generateSFG() {
   const sfg = localStorage.getItem('sfg_nodes');
   console.log(sfg);
+  console.log(localStorage.getItem('loop_gain'));
   const elements = sfgToCyto(JSON.parse(sfg));
   cy = cytoscape({
     container: document.getElementById('sfg-canvas'), // container to render in

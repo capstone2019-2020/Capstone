@@ -1,8 +1,8 @@
-h1 {
-  margin: 3% 10% 0 30%;
+h3 {
+  margin: 0% 15% 0 37%;
   padding: 0px;
   font-family: Nunito Sans, sans-serif;
-  font-size: 2.5em;
+  font-size: 1.5em;
   color: black;
 }
 
@@ -42,22 +42,21 @@ h1 {
 
 .sfg-wrapper {
   width: 80%;
-  height: 70%;
+  height: 60%;
   background-color: white;
-  border: 1px solid #8E8E8E;
-  margin: 5% 20% 0% 10%;
+  border: 1px solid #dddd;
+  margin: 0% 0 0% 17%;
 }
 
 #fit-icon {
   position: absolute;
-  margin: 34.3% -2% 5%;
+  margin: 29% -2% 10%;
   color: #ccc;
   font-size: 1.5em;
   cursor: pointer;
 }
 #fit-icon:hover {
   position: absolute;
-  margin: 34.3% -2% 5%;
   color: #999;
   font-size: 1.5em;
   cursor: pointer;
