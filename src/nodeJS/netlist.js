@@ -93,8 +93,8 @@ function toNetlist(arr) {
       type: a[0][0],
       pnode: parseInt(a[1]),
       nnode: parseInt(a[2]),
-      ctrlPNode: cpnode || undefined, // voltage controlled
-      ctrlNNode: cnnode || undefined, // voltage controlled
+      ctrlPNode: parseInt(cpnode) || undefined, // voltage controlled
+      ctrlNNode: parseInt(cnnode) || undefined, // voltage controlled
       vbranch: vbranch || undefined, // current controlled
       value: val * multiplier
     });

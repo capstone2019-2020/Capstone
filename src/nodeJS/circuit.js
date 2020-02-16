@@ -76,7 +76,7 @@ Node.prototype.kcl = function(circuitObj){
     for (var i = 0; i < this.passiveComponents.length; i++){
         pComp = this.passiveComponents[i];
         pComp.ohmsLaw(circuitObj);
-        pComp.print(); //DEBUG
+        //pComp.print(); //DEBUG
 
         if (pComp.currentNumeric.real.constant != null){
             equations.push(new Equation(pComp.currentNumeric, pComp.current));
@@ -394,6 +394,7 @@ function createCircuit(components){
     // Initialize an empty Circuit object
     var circuit = new Circuit([], 0);
     var nodeOfInterest;
+    var VCCS_temp = [];
 
     components.forEach((c) => {
         // adding nodes
@@ -434,19 +435,25 @@ function createCircuit(components){
             nodeid = c.nnode;
         }
 
-        if (c.type == 'V'){
+        if (c.type == 'V' || c.type == "E"){
             var indexUnknownVnodes;
 
             circuit.numVsrc ++;
 
-            // Set the voltage value
-            if (c.nnode == 0){
-                var pnode = circuit.findNodeById(c.pnode);
-                pnode.voltage = new Expression(c.value);
+            if (c.type == 'V'){
+                // Set the voltage value
+                if (c.nnode == 0){
+                    var pnode = circuit.findNodeById(c.pnode);
+                    pnode.voltage = new Expression(c.value);
+                }
+                else if (c.pnode == 0){
+                    var nnode = circuit.findNodeById(c.nnode);
+                    nnode.voltage = new Expression(c.value * -1);
+                }
             }
-            else if (c.pnode == 0){
-                var nnode = circuit.findNodeById(c.nnode);
-                nnode.voltage = new Expression(c.value * -1);
+            else{
+                // temporary store it to work on it after all the components are known
+                VCCS_temp.push(c);
             }
 
             // Remove pnode and nnode of Voltage source from unknownVnodes array
@@ -492,29 +499,35 @@ function createCircuit(components){
             nnode.passiveComponents.push(l);
         }
 
-        else if (c.type == 'E'){ // V controlled dependent voltage source
-
-        }
-
         else if (c.type == 'G'){ // V controlled current source
-            cSrc  = new CurrentSource(new Expression(c.value), c.pnode, c.nnode, true, c.ctrlPNode, c.ctrllNnode);
-            pnode = circuit.findNodeById(c.pnode);
-            nnode = circuit.findNodeById(c.nnode);
-            pnode.currentSources.push(cSrc);
-            nnode.currentSources.push(cSrc);
+        }
+    });
+
+    VCCS_temp.forEach((vccs) => {
+        var ctrl_pnode = circuit.findNodeById(vccs.ctrlPNode);
+        var ctrl_nnode = circuit.findNodeById(vccs.ctrlNNode);
+        var pnode = circuit.findNodeById(vccs.pnode);
+
+        var ctrl_pnode_vol, ctrl_nnode_vol;
+
+        if (circuit.unknownVnodes.indexOf(ctrl_pnode.id) != -1){ // in unknown array -> voltage not known
+            ctrl_pnode_vol = Expression(`n${ctrl_pnode.id}`);
+        } 
+        else{
+            ctrl_pnode_vol = ctrl_pnode.voltage;
         }
 
-        else if (c.type == 'H'){ // current controlled voltage source (CCVS)
-
+        if (circuit.unknownVnodes.indexOf(ctrl_nnode.id) != -1){ // in unknown array -> voltage not known
+            ctrl_nnode_vol = Expression(`n${ctrl_nnode.id}`);
+        } 
+        else{
+            ctrl_nnode_vol = ctrl_nnode.voltage;
         }
 
-        else if (Fc.type == 'F'){ // current controlled current source (CCCS)
-            cSrc  = new CurrentSource(new Expression(c.value), c.pnode, c.nnode, true, c.ctrlPNode, c.ctrllNnode);
-            pnode = circuit.findNodeById(c.pnode);
-            nnode = circuit.findNodeById(c.nnode);
-            pnode.currentSources.push(cSrc);
-            nnode.currentSources.push(cSrc);
-        }
+        // This is only true because we limit ourselves to a voltage source connected to the ground
+        // voltage =  value * (ctrl_pnode - ctrl_nnode)
+        pnode.voltage = ctrl_pnode_vol.subtract(ctrl_nnode_vol).multiply(vccs.value);
+        console.log(ctrol_pnode_vol.toString());
     });
 
     return circuit;
@@ -541,15 +554,16 @@ AnalysisSummary.prototype.addSummary= function(id, dpi, isc, eqs){
 };
 
 // (function main(){
-//    const voltage_div = 'test/netlist_ann1.txt'
-//    const var_simple = 'test/netlist_ann2.txt'
-//    const curr_src = 'test/netlist_ann_csrc.txt'
-//    const rc = 'test/netlist_ann_rc.txt'
-//
-//    c = nl.nlConsume(rc);
-//    circuit = createCircuit(c);
-//    circuit.nodalAnalysis();
-// //    console.log(JSON.stringify(circuit.nodalAnalysis()));
+//     const voltage_div = 'test/netlist_ann1.txt'
+//     const var_simple = 'test/netlist_ann2.txt'
+//     const curr_src = 'test/netlist_ann_csrc.txt'
+//     const rc = 'test/netlist_ann_rc.txt'
+//     const vccs = 'test/netlist_ann_vccs.txt'
+
+//     c = nl.nlConsume(vccs);
+//     circuit = createCircuit(c);
+//     var summary = circuit.nodalAnalysis();
+//     console.log(JSON.stringify(summary.currentEquations.toString()));
 // })();
 
 exports.createCircuit = createCircuit;
