@@ -676,33 +676,6 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
 }
 
 function generate_logvals(xlb, xub) {
-  let logdist = [
-    0,
-    0.301,
-    0.477,
-    0.602,
-    0.699,
-    0.778,
-    0.845,
-    0.903,
-    0.954
-  ];
-
-  let logvals = [];
-  let xval;
-  for (xval=xlb; xval<=xub; xval++) {
-    let i;
-    for (i=0; i<logdist.length; i++) {
-      logvals.push(xval+logdist[i]);
-    }
-  }
-
-  return logvals;
-}
-
-function eval_log(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
-  let sample_amt = 1;
-
   /*
    * Here is the log-scale conversion -> we need to evaluate
    * each function at f(x) for x = {1,2,3,..,10,20,30,..,},
@@ -746,45 +719,52 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
     0.903,
     0.954
   ];
-  let fpoints;
+
+  let logvals = [];
+  let xval;
+  for (xval=xlb; xval<=xub; xval++) {
+    let i;
+    for (i=0; i<logdist.length; i++) {
+      logvals.push(xval+logdist[i]);
+    }
+  }
+
+  return logvals;
+}
+
+function eval_log(funcs, xgrid, xlb, xub, ylb, yub) {
+  let fpoints, points, logvals;
 
   /*
-   * xlb: lower bound log(x)
-   * xub: upper bound log(x)
+   * xlb: lower bound log(x), xub: upper bound log(x)
    */
   xlb = 0;
   xub = MIN(xgrid, MAX_LOG_XGRID);
 
-  let points;
   const parser = math.parser();
   fpoints = funcs.map(f => {
     parser.evaluate(f);
 
     points = [];
-    let xval, yval, x_base = 1, x_incr = 1;
-    for (xval=xlb; xval<=xub; xval++) {
-      let i, xlog;
-      for (i=0; i<logdist.length; i++) {
-        xlog = xval+logdist[i];
-        yval = parser.evaluate(`f(${x_base+(x_incr*i)})`);
-        if (!isNaN(yval) && !INFINITY(yval)) {
-          yub = MAX(yval, yub);
-          ylb = MIN(yval, ylb);
+    logvals = generate_logvals(xlb, xub);
+    let i, yval, xlog;
+    for (i=0; i<logvals.length; i++) {
+      xlog = logvals[i];
+      yval = parser.evaluate(`f(${EXP(10, xlog)})`);
+      if (!isNaN(yval) && !INFINITY(yval)) {
+        yub = MAX(yval, yub);
+        ylb = MIN(yval, ylb);
 
-          points.push(__vec(xlog, yval));
-        } else {
-          points.push(__vec(xlog, NaN));
-        }
+        points.push(__vec(xlog, yval));
+      } else {
+        points.push(__vec(xlog, NaN));
       }
-
-      x_base*=10;
-      x_incr*=10;
     }
 
     return {f, points, color: COLOR()};
   });
 
-  return {fpoints, sample_amt,
+  return {fpoints, sample_amt: 1,
     xub, xlb, yub, ylb};
 }
 
@@ -793,7 +773,7 @@ function eval(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
 
   if (SEMI_LOG_MODE) {
     return eval_log(funcs, xgrid, xlb, xub,
-      ylb, yub, is_init);
+      ylb, yub);
   }
 
   /*
@@ -844,7 +824,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
                 ylb1, yub1, ylb2, yub2,
                 xgrid, ygrid1, ygrid2,
                 sample_amt1, sample_amt2,
-                fpoints1, fpoints2) {
+                fpoints1, fpoints2, is_update=false) {
   if (changeSet) {
     DEBUG(`========START CONFIG==========`);
     DEBUG(`BEFORE: ylb: ${ylb1}, yub: ${yub1}`);
@@ -1000,6 +980,15 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
   );
 
   Svgraph().appendChild(_svg);
+  if (is_update) {
+    let legend_elem = ELEM('legend');
+    if (legend_elem) {
+      Svgraph().removeChild(legend_elem);
+    }
+    Svgraph().appendChild(g('legend',
+      ...legend([...fpoints1, ...fpoints2])
+    ));
+  }
 
   return {
     xlb, xub, ylb1, yub1, ylb2, yub2,
@@ -1253,11 +1242,7 @@ function init(config) {
         xlb, xub, ylb1, yub1, ylb2, yub2,
         xgrid, ygrid1, ygrid2,
         sample_amt1, sample_amt2,
-        fpoints1, fpoints2));
-
-      Svgraph().appendChild(g('legend',
-        ...legend([...fpoints1, ...fpoints2])
-      ));
+        fpoints1, fpoints2, true));
     },
     update(left_funcs, right_funcs) {
       /* =========== Update render =========== */
@@ -1274,7 +1259,7 @@ function init(config) {
         xlb, xub, ylb1, yub1, ylb2, yub2,
         xgrid, ygrid1, ygrid2,
         sample_amt1, sample_amt2,
-        fpoints1, fpoints2));
+        fpoints1, fpoints2, true));
     }
   }
 }
