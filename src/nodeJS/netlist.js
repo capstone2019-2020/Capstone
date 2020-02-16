@@ -22,6 +22,7 @@ const CONVERSION_LUT = {
   'n': 0.000000001,
   'p': 0.000000000001
 };
+const DEFINED = (v) => v !== null && v !== undefined;
 
 // export these to be used in other modules
 exports.TYPES = {R_t, L_t, C_t, V_t, I_t, VCVS_t, VCCS_t};
@@ -34,10 +35,16 @@ function assertComponents(components) {
 
     // special check for dependent sources
     if ([VCVS_t, VCCS_t].includes(c.type)) {
-      assert(c.ctrlPNode && c.ctrlNNode);
+      assert(DEFINED(c.ctrlPNode) && DEFINED(c.ctrlNNode));
     } else {
       delete c.ctrlPNode;
       delete c.ctrlNNode;
+    }
+
+    if ([CCVS_t, CCCS_t].includes(c.type)) {
+      assert(DEFINED(c.vbranch));
+    } else {
+      delete c.vbranch;
     }
 
     // check for name uniqueness
@@ -88,14 +95,16 @@ function toNetlist(arr) {
       val = parseFloat(val);
     }
 
+    cpnode = parseInt(cpnode);
+    cnnode = parseInt(cnnode);
     components.push({
       id: a[0],
       type: a[0][0],
       pnode: parseInt(a[1]),
       nnode: parseInt(a[2]),
-      ctrlPNode: parseInt(cpnode) || undefined, // voltage controlled
-      ctrlNNode: parseInt(cnnode) || undefined, // voltage controlled
-      vbranch: vbranch || undefined, // current controlled
+      ctrlPNode: !isNaN(cpnode) ? cpnode : undefined, // voltage controlled
+      ctrlNNode: !isNaN(cnnode) ? cnnode : undefined, // voltage controlled
+      vbranch: DEFINED(vbranch) ? vbranch : undefined, // current controlled
       value: val * multiplier
     });
   }
