@@ -207,9 +207,9 @@ Circuit.prototype.nodalAnalysis = function(){
     assert(this.unknownVnodes.length == numEqToSolve);
 
     var resultSummary = new AnalysisSummary();
-    var equations_at_nodes = [];    // Store a list of equations at node x
 
     this.unknownVnodes.forEach((n_id) => {
+        var equations_at_nodes = [];    // Store a list of equations at node x
         unknownVnode = this.findNodeById(n_id);
         
         if (unknownVnode.allCurrentKnown()){
