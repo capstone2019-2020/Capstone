@@ -365,19 +365,19 @@ CurrentSource.prototype.print = function(){
  */
 function PassiveComponentInSeriesWithCSrc(p, csrc){
     if (p.pnode == csrc.pnode){
-        p.currentNumeric = new Expression(-1 * csrc.value);
+        p.currentNumeric = csrc.value.multiply(-1);
         return true;
     }
     else if (p.pnode == csrc.nnode){
-        p.currentNumeric = new Expression(csrc.value);
+        p.currentNumeric = csrc.value;
         return true;
     }
     else if (p.nnode == csrc.pnode){
-        p.currentNumeric = new Expression(csrc.value);
+        p.currentNumeric = csrc.value;
         return true;
     }
     else if (p.nnode == csrc.nnode){
-        p.currentNumeric = new Expression(-1 * csrc.value);
+        p.currentNumeric = csrc.value.multiply(-1);
         return true;
     }
     else {
@@ -394,7 +394,8 @@ function createCircuit(components){
     // Initialize an empty Circuit object
     var circuit = new Circuit([], 0);
     var nodeOfInterest;
-    var VCCS_temp = [];
+    var VCVS_temp = []; // temprary storage for dependent voltage sources
+    var VCCS_temp = []; // temporary storage for dependent current sources
 
     components.forEach((c) => {
         // adding nodes
@@ -453,7 +454,7 @@ function createCircuit(components){
             }
             else{
                 // temporary store it to work on it after all the components are known
-                VCCS_temp.push(c);
+                VCVS_temp.push(c);
             }
 
             // Remove pnode and nnode of Voltage source from unknownVnodes array
@@ -500,13 +501,14 @@ function createCircuit(components){
         }
 
         else if (c.type == 'G'){ // V controlled current source
+            VCCS_temp.push(c);
         }
     });
 
-    VCCS_temp.forEach((vccs) => {
-        var ctrl_pnode = circuit.findNodeById(vccs.ctrlPNode);
-        var ctrl_nnode = circuit.findNodeById(vccs.ctrlNNode);
-        var pnode = circuit.findNodeById(vccs.pnode);
+    VCVS_temp.forEach((vcvs) => {
+        var ctrl_pnode = circuit.findNodeById(vcvs.ctrlPNode);
+        var ctrl_nnode = circuit.findNodeById(vcvs.ctrlNNode);
+        var pnode = circuit.findNodeById(vcvs.pnode);
 
         var ctrl_pnode_vol, ctrl_nnode_vol;
 
@@ -526,7 +528,37 @@ function createCircuit(components){
 
         // This is only true because we limit ourselves to a voltage source connected to the ground
         // voltage =  value * (ctrl_pnode - ctrl_nnode)
-        pnode.voltage = ctrl_pnode_vol.subtract(ctrl_nnode_vol).multiply(vccs.value);
+        pnode.voltage = ctrl_pnode_vol.subtract(ctrl_nnode_vol).multiply(vcvs.value);
+    });
+
+    VCCS_temp.forEach((vccs) => {
+        var ctrl_pnode = circuit.findNodeById(vccs.ctrlPNode);
+        var ctrl_nnode = circuit.findNodeById(vccs.ctrlNNode);
+        var current_val;
+        var ctrl_pnode_vol, ctrl_nnode_vol;
+
+        if (circuit.unknownVnodes.indexOf(ctrl_pnode.id) != -1){ // in unknown array -> voltage not known
+            ctrl_pnode_vol = new Expression(`n${ctrl_pnode.id}`);
+        } 
+        else{
+            ctrl_pnode_vol = ctrl_pnode.voltage;
+        }
+
+        if (circuit.unknownVnodes.indexOf(ctrl_nnode.id) != -1){ // in unknown array -> voltage not known
+            ctrl_nnode_vol = new Expression(`n${ctrl_nnode.id}`);
+        } 
+        else{
+            ctrl_nnode_vol = ctrl_nnode.voltage;
+        }
+
+        // This is only true because we limit ourselves to a voltage source connected to the ground
+        // current =  value * (ctrl_pnode - ctrl_nnode)
+        current_val = ctrl_pnode_vol.subtract(ctrl_nnode_vol).multiply(vccs.value);
+        cSrc  = new CurrentSource(current_val, vccs.pnode, vccs.nnode, true, vccs.ctrlPNode, vccs.ctrlNNode);
+        pnode = circuit.findNodeById(vccs.pnode);
+        nnode = circuit.findNodeById(vccs.nnode);
+        pnode.currentSources.push(cSrc);
+        nnode.currentSources.push(cSrc);
     });
 
     return circuit;
@@ -557,9 +589,12 @@ AnalysisSummary.prototype.addSummary= function(id, dpi, isc, eqs){
 //     const var_simple = 'test/netlist_ann2.txt'
 //     const curr_src = 'test/netlist_ann_csrc.txt'
 //     const rc = 'test/netlist_ann_rc.txt'
+//     const vcvs = 'test/netlist_ann_vcvs.txt'
+//     const vcvs2 = 'test/netlist_ann_vcvs2.txt'
+//     const amplifier = 'test/netlist_ann_vcvs3.txt'
 //     const vccs = 'test/netlist_ann_vccs.txt'
 
-//     c = nl.nlConsume(vccs);
+//     c = nl.nlConsume(curr_src);
 //     circuit = createCircuit(c);
 //     var summary = circuit.nodalAnalysis();
 //     console.log(JSON.stringify(summary.currentEquations.toString()));
