@@ -511,14 +511,14 @@ function createCircuit(components){
         var ctrl_pnode_vol, ctrl_nnode_vol;
 
         if (circuit.unknownVnodes.indexOf(ctrl_pnode.id) != -1){ // in unknown array -> voltage not known
-            ctrl_pnode_vol = Expression(`n${ctrl_pnode.id}`);
+            ctrl_pnode_vol = new Expression(`n${ctrl_pnode.id}`);
         } 
         else{
             ctrl_pnode_vol = ctrl_pnode.voltage;
         }
 
         if (circuit.unknownVnodes.indexOf(ctrl_nnode.id) != -1){ // in unknown array -> voltage not known
-            ctrl_nnode_vol = Expression(`n${ctrl_nnode.id}`);
+            ctrl_nnode_vol = new Expression(`n${ctrl_nnode.id}`);
         } 
         else{
             ctrl_nnode_vol = ctrl_nnode.voltage;
@@ -527,7 +527,6 @@ function createCircuit(components){
         // This is only true because we limit ourselves to a voltage source connected to the ground
         // voltage =  value * (ctrl_pnode - ctrl_nnode)
         pnode.voltage = ctrl_pnode_vol.subtract(ctrl_nnode_vol).multiply(vccs.value);
-        console.log(ctrol_pnode_vol.toString());
     });
 
     return circuit;
