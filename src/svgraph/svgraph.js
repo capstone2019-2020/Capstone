@@ -10,14 +10,6 @@ const GRID_MODE = true;
 const SEMI_LOG_MODE = true;
 const START_X = 100, START_Y = 470;
 const LENGTH_X = 600, LENGTH_Y = 400;
-let ORIGIN_X = 100, ORIGIN_Y1 = 450, ORIGIN_Y2 = 450; /* These change depending on graph */
-let AXIS_XPOS_1 = START_X;
-let AXIS_XPOS_2 = START_X+LENGTH_X;
-
-const ID_GRAPH_SVG = 'svg-graph';
-const ID_GUIDE_X = 'x-guide';
-const ID_GUIDE_Y = 'y-guide';
-const ID_LEGEND = 'legend';
 
 const LOG_LEVEL = 1;
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
@@ -80,7 +72,7 @@ const COLOR = (() => {
 /* SVG grid related macros */
 const __X = (x, xlb, xub) => (x-START_X)/RATIO(LENGTH_X, xub-xlb)+xlb;
 const __Y = (y, ylb, yub) => (START_Y-y)/RATIO(LENGTH_Y, yub-ylb)+ylb;
-const __gX = (x, ratio) => RIGHT(ORIGIN_X, SCALE(x, ratio));
+const __gX = (ORIGIN_X, x, ratio) => RIGHT(ORIGIN_X, SCALE(x, ratio));
 const __gY = (y, ratio, ORIGIN) => UP(ORIGIN, SCALE(y, ratio));
 
 /* Math related "macros" */
@@ -97,14 +89,12 @@ const ROUND_UP = (f, n) => {
   return f < 0 ? - (Math.abs(f) - r) : (f+n-r);
 };
 
-const Svgraph = () => document.getElementById(ID_GRAPH_SVG);
-
-const __Guide = (guideId, vec1, vec2) => {
+const __Guide = function(guideId, vec1, vec2) {
   const guide = document.getElementById(guideId);
   if (!vec1 || !vec2) return guide;
 
   if (!guide) {
-    Svgraph().appendChild(
+    this.get_Svgraph().appendChild(
       line(vec1, vec2, {
         id: guideId, 'stroke': 'purple',
         'stroke-opacity': 0.3
@@ -118,12 +108,12 @@ const __Guide = (guideId, vec1, vec2) => {
   }
 };
 
-const __Tracer = (tracerId, xval, yval, xratio, yratio, ylb) => {
+const __Tracer = function(tracerId, xval, yval, xratio, yratio, ylb) {
   const tracer = ELEM(tracerId);
   const tracerRect = ELEM(`${tracerId}-rect`);
   const tracerTxt = ELEM(`${tracerId}-text`);
   const tracerCirc = ELEM(`${tracerId}-circle`);
-  const gx = __gX(xval, xratio);
+  const gx = __gX(this.ORIGIN_X, xval, xratio);
   const gy = MAX(
     MIN(__gY(yval-ylb, yratio, START_Y), START_Y),
     START_Y-LENGTH_Y
@@ -162,7 +152,7 @@ const __Tracer = (tracerId, xval, yval, xratio, yratio, ylb) => {
       })
     ];
 
-    Svgraph().appendChild(__ns(
+    this.get_Svgraph().appendChild(__ns(
       svg(tracerId), undefined, ...elems
     ));
   } else if (tracer && !isNaN(yval)) {
@@ -176,7 +166,7 @@ const __Tracer = (tracerId, xval, yval, xratio, yratio, ylb) => {
     tracer.removeChild(tracerRect);
     tracer.removeChild(tracerTxt);
     tracer.removeChild(tracerCirc);
-    Svgraph().removeChild(tracer);
+    this.get_Svgraph().removeChild(tracer);
   }
 };
 
@@ -298,7 +288,7 @@ function polyline(points, config={}, cb) {
   });
 }
 
-function plot(dp, x_cratio, y_cratio, color, ylb) {
+function plot(ORIGIN_X, dp, x_cratio, y_cratio, color, ylb) {
   let points = '';
   let i;
   let x_coord, y_coord;
@@ -306,7 +296,7 @@ function plot(dp, x_cratio, y_cratio, color, ylb) {
   for (i=0; i<dp.length; i++) {
     dp_e = dp[i];
     if (!isNaN(dp_e.y)) {
-      x_coord = MIN(__gX(dp_e.x, x_cratio), START_X+LENGTH_X);
+      x_coord = MIN(__gX(ORIGIN_X, dp_e.x, x_cratio), START_X+LENGTH_X);
       y_coord = MIN(__gY(dp_e.y-ylb, y_cratio, START_Y), START_Y);
 
       points += `${x_coord},${y_coord}`;
@@ -329,7 +319,8 @@ function plot(dp, x_cratio, y_cratio, color, ylb) {
   ];
 }
 
-function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio},
+function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio,
+                 ORIGIN_Y1, ORIGIN_X},
                logvals=[]) {
   const partitions = [];
   let i, x_coord, xval;
@@ -378,7 +369,8 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio},
   if (SEMI_LOG_MODE && grid) {
     let i;
     for (i=0; i<logvals.length; i++) {
-      x_coord = MIN(__gX(logvals[i], x_cratio), START_X + LENGTH_X);
+      x_coord = MIN(__gX(ORIGIN_X, logvals[i], x_cratio),
+        START_X + LENGTH_X);
       partitions.push(line(
         __vec(x_coord, UP(START_Y, 5)),
         __vec(x_coord, UP(START_Y, leny)), {
@@ -503,7 +495,7 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
   ]
 }
 
-function legend(fpoints) {
+function legend(fpoints, ID_LEGEND) {
   let width = 10, height = 50, rownum = 2;
   let fontsize = 14; // pixels
 
@@ -910,7 +902,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
     }
     let wrapper = ELEM('wrapper');
     if (wrapper) {
-      Svgraph().removeChild(ELEM('wrapper'));
+      this.get_Svgraph().removeChild(ELEM('wrapper'));
     }
   } catch (err) {
     return {
@@ -920,12 +912,12 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
     };
   }
 
-  ORIGIN_X = RIGHT(START_X, x_offset);
+  this.ORIGIN_X = RIGHT(START_X, x_offset);
   if (!y_offset1) {
     y_offset1 = __ROUND(START_Y/2);
   }
-  ORIGIN_Y1 = UP(START_Y, y_offset1);
-  ORIGIN_Y2 = ORIGIN_Y1;
+  this.ORIGIN_Y1 = UP(START_Y, y_offset1);
+  this.ORIGIN_Y2 = this.ORIGIN_Y1;
 
   let _svg = svg('wrapper');
 
@@ -934,13 +926,13 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
   __ns(_svg,
     undefined,
     ...fpoints1.map(({points, color}) => g(
-      'plot', ...plot(points,
+      'plot', ...plot(this.ORIGIN_X, points,
         RATIO(LENGTH_X, xub-xlb),
         RATIO(LENGTH_Y, yub1-ylb1), color,
         ylb1)
     )),
     ...fpoints2.map(({points, color}) => g(
-      'plot', ...plot(points,
+      'plot', ...plot(this.ORIGIN_X, points,
         RATIO(LENGTH_X, xub-xlb),
         RATIO(LENGTH_Y, yub2-ylb2), color,
         ylb2)
@@ -953,12 +945,14 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       parts: xgrid,
       label: config.x_axis.label,
       grid: GRID_MODE,
-      x_cratio: RATIO(LENGTH_X, xub-xlb)
+      x_cratio: RATIO(LENGTH_X, xub-xlb),
+      ORIGIN_Y1: this.ORIGIN_Y1,
+      ORIGIN_X: this.ORIGIN_X
     }, generate_logvals(xlb, xub))),
     g('y-axis-1', ...yaxis({
       leny: LENGTH_Y,
       lenx: LENGTH_X,
-      AXIS_XPOS: AXIS_XPOS_1,
+      AXIS_XPOS: this.AXIS_XPOS_1,
       lb: ylb1,
       ub: yub1,
       parts: ygrid1,
@@ -969,7 +963,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
     g('y-axis-2', ...yaxis({
       leny: LENGTH_Y,
       lenx: LENGTH_X,
-      AXIS_XPOS: AXIS_XPOS_2,
+      AXIS_XPOS: this.AXIS_XPOS_2,
       lb: ylb2,
       ub: yub2,
       parts: ygrid2,
@@ -979,14 +973,14 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
     }, false, true)),
   );
 
-  Svgraph().appendChild(_svg);
+  this.get_Svgraph().appendChild(_svg);
   if (is_update) {
     let legend_elem = ELEM('legend');
     if (legend_elem) {
-      Svgraph().removeChild(legend_elem);
+      this.get_Svgraph().removeChild(legend_elem);
     }
-    Svgraph().appendChild(g('legend',
-      ...legend([...fpoints1, ...fpoints2])
+    this.get_Svgraph().appendChild(g('legend',
+      ...legend([...fpoints1, ...fpoints2], this.ID_LEGEND)
     ));
   }
 
@@ -997,8 +991,34 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
   };
 }
 
-function init(config) {
-  /*
+const SVGraph_initializer = (function() {
+  function SVGraph(ID_GRAPH_SVG='svg-graph') {
+    this.ORIGIN_X = 100;
+    this.ORIGIN_Y1 = 450;
+    this.ORIGIN_Y2 = 450; /* These change depending on graph */
+
+    this.AXIS_XPOS_1 = START_X;
+    this.AXIS_XPOS_2 = START_X+LENGTH_X;
+
+    this.ID_GRAPH_SVG = ID_GRAPH_SVG;
+    this.ID_GUIDE_X = `${ID_GRAPH_SVG}-x-guide`;
+    this.ID_GUIDE_Y = `${ID_GRAPH_SVG}-y-guide`;
+    this.ID_LEGEND = `${ID_GRAPH_SVG}-legend`;
+
+    if (this.get_Svgraph() === null) {
+      throw new Error(`Cannot initialize svgraph, 
+        element with ID \"${this.ID_GRAPH_SVG}\" does not exist`);
+    }
+  }
+
+  const __proto__ = SVGraph.prototype;
+
+  __proto__.get_Svgraph = function() {
+    return document.getElementById(this.ID_GRAPH_SVG);
+  };
+
+  __proto__.init = function(config) {
+    /*
    * These variables are the core rendering components:
    * [x/y]lb    : Lower-bound value for x/y-axis (actual)
    * [x/y]ub    : Upper-bound value for x/y-axis (actual)
@@ -1010,256 +1030,262 @@ function init(config) {
    * fpoints    : Main data structure - each elem contains 'y'
    *              values for each sample for each function
    */
-  let {left_y_axis, right_y_axis, x_axis} = config;
+    let {left_y_axis, right_y_axis, x_axis} = config;
 
-  let xlb=x_axis.lb, xub=x_axis.ub;
-  let ylb1=left_y_axis.lb, yub1=left_y_axis.ub;
-  let ylb2=right_y_axis.lb, yub2=right_y_axis.ub;
-  let ygrid1=left_y_axis.num_grids, ygrid2=right_y_axis.num_grids;
-  let xgrid = x_axis.num_grids;
+    let xlb=x_axis.lb, xub=x_axis.ub;
+    let ylb1=left_y_axis.lb, yub1=left_y_axis.ub;
+    let ylb2=right_y_axis.lb, yub2=right_y_axis.ub;
+    let ygrid1=left_y_axis.num_grids, ygrid2=right_y_axis.num_grids;
+    let xgrid = x_axis.num_grids;
 
-  let sample_amt1, sample_amt2, fpoints1, fpoints2;
-  const axis1_funcs = [], axis2_funcs = [];
+    let sample_amt1, sample_amt2, fpoints1, fpoints2;
+    const axis1_funcs = [], axis2_funcs = [];
 
-  /* =========== first time render =========== */
-  ({
-    xlb, xub, ylb1, yub1, ylb2, yub2,
-    xgrid, ygrid1, ygrid2,
-    sample_amt1, sample_amt2, fpoints1, fpoints2
-  } = render(config, undefined, [], [],
-    xlb, xub, ylb1, yub1, ylb2, yub2,
-    xgrid, ygrid1, ygrid2,
-    sample_amt1, sample_amt2,
-    fpoints1, fpoints2));
-
-  /*
-   * This event is triggered upon every mouse move action
-   * within the SVG element. Used to handle all dynamic
-   * graph renders. See implementation below for details.
-   */
-  let X, Y;
-  Svgraph().addEventListener('mousemove', event => {
-    X = event.offsetX; Y = event.offsetY;
-    if (Y > START_Y || Y < START_Y-LENGTH_Y
-      || X > START_X+LENGTH_X || X < START_X) {
-      return;
-    }
+    /* =========== first time render =========== */
+    ({
+      xlb, xub, ylb1, yub1, ylb2, yub2,
+      xgrid, ygrid1, ygrid2,
+      sample_amt1, sample_amt2, fpoints1, fpoints2
+    } = render.bind(this)(config, undefined, [], [],
+      xlb, xub, ylb1, yub1, ylb2, yub2,
+      xgrid, ygrid1, ygrid2,
+      sample_amt1, sample_amt2,
+      fpoints1, fpoints2));
 
     /*
-     * Formula for getting 'points' array index from cursor
-     * coordinates. Basic idea is to find the X-AXIS value,
-     * then translate that into the number of iterations in
-     * the generation loop (see above) it took for 'xval' to
-     * be the current X-AXIS value -> __X(X, xlb, xub).
+     * This event is triggered upon every mouse move action
+     * within the SVG element. Used to handle all dynamic
+     * graph renders. See implementation below for details.
      */
-    const tracer_guide = (id, fpoints, ORIGIN, ylb, yub,
-                          sample_amt) => {
-      let idx;
-      if (!SEMI_LOG_MODE) {
-        idx = RATIO(__X(X, xlb, xub) - xlb, sample_amt);
-      } else {
-        let _x, _base, _d, _add=0;
-
-        _x = __X(X, xlb, xub);
-        _base = Math.floor(_x);
-        _d = _x - _base;
-
-        /*
-         * Same ranges used in eval_log(), see that for
-         * more detailed explanation.
-         */
-        if (RANGE(_d, 0.1, 0.301))
-          _add = 1;
-        else if (RANGE(_d, 0.301, 0.477))
-          _add = 2;
-        else if (RANGE(_d, 0.477, 0.602))
-          _add = 3;
-        else if (RANGE(_d, 0.602, 0.699))
-          _add = 4;
-        else if (RANGE(_d, 0.699, 0.778))
-          _add = 5;
-        else if (RANGE(_d, 0.778, 0.845))
-          _add = 6;
-        else if (RANGE(_d, 0.845, 0.903))
-          _add = 7;
-        else if (RANGE(_d, 0.903, 0.945))
-          _add = 8;
-        else if (RANGE(_d, 0.945, 1))
-          _add = 9;
-
-        /*
-         * The *9 is because there are 9 values stored per
-         * grid interval. So the formula comes down to:
-         * idx = (# spaces in interval)*(# intervals) + (offset spaces)
-         */
-        idx = 9*_base + _add;
-      }
-
-      if (FIXED(idx%1, 1) === '0.0') {
-        idx = Math.floor(idx);
-
-        __Guide(ID_GUIDE_X, __vec(START_X, Y),
-          __vec(RIGHT(START_X, LENGTH_X), Y)
-        );
-        __Guide(ID_GUIDE_Y, __vec(X, START_Y),
-          __vec(X, UP(START_Y, LENGTH_Y))
-        );
-
-        /*
-         * For each plot, draw out their own locations. This
-         * creates a new tracer for each new plot that is
-         * present on the graph and refreshes based on a fixed
-         * ID convention.
-         */
-        fpoints.forEach(({points}, i) => {
-          let vec = points[idx];
-          if (DEFINED(vec)) {
-            __Tracer(`tracer-${id}-${i}`,
-              vec.x, vec.y,
-              RATIO(LENGTH_X, xub - xlb),
-              RATIO(LENGTH_Y, yub - ylb),
-              ylb
-            );
-          }
-        });
-      }
-    };
-
-    tracer_guide('ORIGIN_Y1', fpoints1, ORIGIN_Y1,
-      ylb1, yub1, sample_amt1);
-    tracer_guide('ORIGIN_Y2', fpoints2,
-      ORIGIN_Y2, ylb2, yub2, sample_amt2);
-  });
-
-  let intervalId = 0;
-  Svgraph().addEventListener('mousedown', event => {
-    X = event.offsetX; Y = event.offsetY;
-    if (Y > START_Y || Y < START_Y-LENGTH_Y
-      || X > START_X+LENGTH_X || X < START_X) {
-      return;
-    }
-    const cb_setup = (xory, y1ory2) => {
-      return (X, Y, oldX, oldY) => {
-        let ylb = y1ory2 ? ylb1 : ylb2;
-        let yub = y1ory2 ? yub1 : yub2;
-
-        if (X === oldX && Y === oldY)
-          return {xm: 0, ym1: 0, ym2: 0};
-
-        DEBUG('=======CB_SETUP=======');
-        DEBUG(`(${X},${Y}) | OLD:(${oldX},${oldY})`);
-        let x_offset=0, y_offset=0;
-        if (xory) { /* X-axis */
-          if (DELTA(X, oldX) > 5) {
-            x_offset = 2;
-            if (Math.abs(__X(oldX, xlb, xub)) <
-              Math.abs(__X(X, xlb, xub))) {
-              x_offset *= -1;
-            }
-          }
-        } else { /* Y-axis */
-          if (DELTA(Y, oldY) > 5) {
-            y_offset = 2;
-            if (Math.abs(__Y(oldY, ylb, yub)) <
-              Math.abs(__Y(Y, ylb, yub))) {
-              y_offset *= -1;
-            }
-          }
-        }
-        DEBUG(`OFFSET: (${x_offset},${y_offset})`);
-        DEBUG('=======END CB_SETUP=======');
-        return {
-          xm: x_offset,
-          ym1: y1ory2 ? y_offset : 0,
-          ym2: y1ory2 ? 0 : y_offset
-        };
-      }
-    };
-
-    let cb = undefined;
-    if (APPROX(Y, ORIGIN_Y1, 5)) { /* X-axis */
-      cb = cb_setup(true, true);
-    } else if (APPROX(X, AXIS_XPOS_1, 5)) { /* Y-axis 1 */
-      cb = cb_setup(false, true);
-    } else if (APPROX(X, AXIS_XPOS_2, 5)) { /* Y-axis 2 */
-      cb = cb_setup(false, false);
-    }
-
-    if (!DEFINED(cb) || intervalId !== 0) {
-      return;
-    }
-
-    let _X = X, _Y = Y;
-    intervalId = setInterval(() => {
+    let _this = this;
+    let X, Y;
+    _this.get_Svgraph().addEventListener('mousemove', event => {
+      X = event.offsetX; Y = event.offsetY;
       if (Y > START_Y || Y < START_Y-LENGTH_Y
         || X > START_X+LENGTH_X || X < START_X) {
-        clearInterval(intervalId);
-        intervalId = 0;
         return;
       }
 
-      let c = cb(X, Y, _X, _Y);
-      _X = X; _Y = Y;
-
       /*
-       * Re-render with update to x/y components.
-       * Render returns the updated copies of every
-       * core component, so we reassign them to keep
-       * up to date.
+       * Formula for getting 'points' array index from cursor
+       * coordinates. Basic idea is to find the X-AXIS value,
+       * then translate that into the number of iterations in
+       * the generation loop (see above) it took for 'xval' to
+       * be the current X-AXIS value -> __X(X, xlb, xub).
        */
-      if (c.xm !== 0 || c.ym1 !== 0 || c.ym2 !== 0) {
+      const tracer_guide = (id, fpoints, ORIGIN, ylb, yub,
+                            sample_amt) => {
+        let idx;
+        if (!SEMI_LOG_MODE) {
+          idx = RATIO(__X(X, xlb, xub) - xlb, sample_amt);
+        } else {
+          let _x, _base, _d, _add=0;
+
+          _x = __X(X, xlb, xub);
+          _base = Math.floor(_x);
+          _d = _x - _base;
+
+          /*
+           * Same ranges used in eval_log(), see that for
+           * more detailed explanation.
+           */
+          if (RANGE(_d, 0.1, 0.301))
+            _add = 1;
+          else if (RANGE(_d, 0.301, 0.477))
+            _add = 2;
+          else if (RANGE(_d, 0.477, 0.602))
+            _add = 3;
+          else if (RANGE(_d, 0.602, 0.699))
+            _add = 4;
+          else if (RANGE(_d, 0.699, 0.778))
+            _add = 5;
+          else if (RANGE(_d, 0.778, 0.845))
+            _add = 6;
+          else if (RANGE(_d, 0.845, 0.903))
+            _add = 7;
+          else if (RANGE(_d, 0.903, 0.945))
+            _add = 8;
+          else if (RANGE(_d, 0.945, 1))
+            _add = 9;
+
+          /*
+           * The *9 is because there are 9 values stored per
+           * grid interval. So the formula comes down to:
+           * idx = (# spaces in interval)*(# intervals) + (offset spaces)
+           */
+          idx = 9*_base + _add;
+        }
+
+        if (FIXED(idx%1, 1) === '0.0') {
+          idx = Math.floor(idx);
+
+          __Guide.bind(_this)(_this.ID_GUIDE_X, __vec(START_X, Y),
+            __vec(RIGHT(START_X, LENGTH_X), Y)
+          );
+          __Guide.bind(_this)(_this.ID_GUIDE_Y, __vec(X, START_Y),
+            __vec(X, UP(START_Y, LENGTH_Y))
+          );
+
+          /*
+           * For each plot, draw out their own locations. This
+           * creates a new tracer for each new plot that is
+           * present on the graph and refreshes based on a fixed
+           * ID convention.
+           */
+          fpoints.forEach(({points}, i) => {
+            let vec = points[idx];
+            if (DEFINED(vec)) {
+              __Tracer.bind(_this)(`tracer-${id}-${i}`,
+                vec.x, vec.y,
+                RATIO(LENGTH_X, xub - xlb),
+                RATIO(LENGTH_Y, yub - ylb),
+                ylb
+              );
+            }
+          });
+        }
+      };
+
+      tracer_guide('ORIGIN_Y1', fpoints1, _this.ORIGIN_Y1,
+        ylb1, yub1, sample_amt1);
+      tracer_guide('ORIGIN_Y2', fpoints2,
+        _this.ORIGIN_Y2, ylb2, yub2, sample_amt2);
+    });
+
+    let intervalId = 0;
+    _this.get_Svgraph().addEventListener('mousedown', event => {
+      X = event.offsetX; Y = event.offsetY;
+      if (Y > START_Y || Y < START_Y-LENGTH_Y
+        || X > START_X+LENGTH_X || X < START_X) {
+        return;
+      }
+      const cb_setup = (xory, y1ory2) => {
+        return (X, Y, oldX, oldY) => {
+          let ylb = y1ory2 ? ylb1 : ylb2;
+          let yub = y1ory2 ? yub1 : yub2;
+
+          if (X === oldX && Y === oldY)
+            return {xm: 0, ym1: 0, ym2: 0};
+
+          DEBUG('=======CB_SETUP=======');
+          DEBUG(`(${X},${Y}) | OLD:(${oldX},${oldY})`);
+          let x_offset=0, y_offset=0;
+          if (xory) { /* X-axis */
+            if (DELTA(X, oldX) > 5) {
+              x_offset = 2;
+              if (Math.abs(__X(oldX, xlb, xub)) <
+                Math.abs(__X(X, xlb, xub))) {
+                x_offset *= -1;
+              }
+            }
+          } else { /* Y-axis */
+            if (DELTA(Y, oldY) > 5) {
+              y_offset = 2;
+              if (Math.abs(__Y(oldY, ylb, yub)) <
+                Math.abs(__Y(Y, ylb, yub))) {
+                y_offset *= -1;
+              }
+            }
+          }
+          DEBUG(`OFFSET: (${x_offset},${y_offset})`);
+          DEBUG('=======END CB_SETUP=======');
+          return {
+            xm: x_offset,
+            ym1: y1ory2 ? y_offset : 0,
+            ym2: y1ory2 ? 0 : y_offset
+          };
+        }
+      };
+
+      let cb = undefined;
+      if (APPROX(Y, _this.ORIGIN_Y1, 5)) { /* X-axis */
+        cb = cb_setup(true, true);
+      } else if (APPROX(X, _this.AXIS_XPOS_1, 5)) { /* Y-axis 1 */
+        cb = cb_setup(false, true);
+      } else if (APPROX(X, _this.AXIS_XPOS_2, 5)) { /* Y-axis 2 */
+        cb = cb_setup(false, false);
+      }
+
+      if (!DEFINED(cb) || intervalId !== 0) {
+        return;
+      }
+
+      let _X = X, _Y = Y;
+      intervalId = setInterval(() => {
+        if (Y > START_Y || Y < START_Y-LENGTH_Y
+          || X > START_X+LENGTH_X || X < START_X) {
+          clearInterval(intervalId);
+          intervalId = 0;
+          return;
+        }
+
+        let c = cb(X, Y, _X, _Y);
+        _X = X; _Y = Y;
+
+        /*
+         * Re-render with update to x/y components.
+         * Render returns the updated copies of every
+         * core component, so we reassign them to keep
+         * up to date.
+         */
+        if (c.xm !== 0 || c.ym1 !== 0 || c.ym2 !== 0) {
+          ({
+              xlb, xub, ylb1, yub1, ylb2, yub2,
+              xgrid, ygrid1, ygrid2,
+              sample_amt1, sample_amt2, fpoints1, fpoints2
+            } = render.bind(_this)(config, c, axis1_funcs, axis2_funcs,
+              xlb, xub, ylb1, yub1, ylb2, yub2,
+              xgrid, ygrid1, ygrid2,
+              sample_amt1, sample_amt2,
+              fpoints1, fpoints2)
+          );
+        }
+      }, SAMPLE_INTERVAL);
+    });
+
+    _this.get_Svgraph().addEventListener('mouseup', () => {
+      if (intervalId) {
+        clearInterval(intervalId);
+        intervalId = 0;
+      }
+    });
+
+    return {
+      put(left_funcs, right_funcs) {
+        /* =========== Put render =========== */
+        COLOR(true);
+
         ({
           xlb, xub, ylb1, yub1, ylb2, yub2,
           xgrid, ygrid1, ygrid2,
           sample_amt1, sample_amt2, fpoints1, fpoints2
-        } = render(config, c, axis1_funcs, axis2_funcs,
+        } = render.bind(_this)(config, undefined,
+          left_funcs, right_funcs,
           xlb, xub, ylb1, yub1, ylb2, yub2,
           xgrid, ygrid1, ygrid2,
           sample_amt1, sample_amt2,
-          fpoints1, fpoints2)
-        );
+          fpoints1, fpoints2, true));
+      },
+      update(left_funcs, right_funcs) {
+        /* =========== Update render =========== */
+        COLOR(true);
+
+        axis1_funcs.push(...left_funcs);
+        axis2_funcs.push(...right_funcs);
+
+        ({
+          xlb, xub, ylb1, yub1, ylb2, yub2,
+          xgrid, ygrid1, ygrid2,
+          sample_amt1, sample_amt2, fpoints1, fpoints2
+        } = render.bind(_this)(config, undefined,
+          axis1_funcs, axis2_funcs,
+          xlb, xub, ylb1, yub1, ylb2, yub2,
+          xgrid, ygrid1, ygrid2,
+          sample_amt1, sample_amt2,
+          fpoints1, fpoints2, true));
       }
-    }, SAMPLE_INTERVAL);
-  });
-
-  Svgraph().addEventListener('mouseup', () => {
-    if (intervalId) {
-      clearInterval(intervalId);
-      intervalId = 0;
     }
-  });
+  };
 
-  return {
-    put(left_funcs, right_funcs) {
-      /* =========== Put render =========== */
-      COLOR(true);
-
-      ({
-        xlb, xub, ylb1, yub1, ylb2, yub2,
-        xgrid, ygrid1, ygrid2,
-        sample_amt1, sample_amt2, fpoints1, fpoints2
-      } = render(config, undefined, left_funcs, right_funcs,
-        xlb, xub, ylb1, yub1, ylb2, yub2,
-        xgrid, ygrid1, ygrid2,
-        sample_amt1, sample_amt2,
-        fpoints1, fpoints2, true));
-    },
-    update(left_funcs, right_funcs) {
-      /* =========== Update render =========== */
-      COLOR(true);
-
-      axis1_funcs.push(...left_funcs);
-      axis2_funcs.push(...right_funcs);
-
-      ({
-        xlb, xub, ylb1, yub1, ylb2, yub2,
-        xgrid, ygrid1, ygrid2,
-        sample_amt1, sample_amt2, fpoints1, fpoints2
-      } = render(config, undefined, axis1_funcs, axis2_funcs,
-        xlb, xub, ylb1, yub1, ylb2, yub2,
-        xgrid, ygrid1, ygrid2,
-        sample_amt1, sample_amt2,
-        fpoints1, fpoints2, true));
-    }
-  }
-}
+  return SVGraph;
+})();

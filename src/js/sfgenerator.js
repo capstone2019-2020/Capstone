@@ -10,7 +10,7 @@ let cy = null;
 let svgraph = null;
 
 function initSvgraph() {
-  svgraph = init({
+  svgraph = new SVGraph_initializer('svg-graph').init({
     "x_axis": {
       "label": "frequency (Hz)",
       "scale": "log-log",

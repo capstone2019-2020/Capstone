@@ -1,7 +1,7 @@
-console.log(Svgraph);
+console.log(get_Svgraph);
 
 let input = document.querySelector('input[type=text]');
-let draw = Svgraph('drawing').viewbox(0, 0, 300, 140);
+let draw = get_Svgraph('drawing').viewbox(0, 0, 300, 140);
 let text = draw.text(function(add) {
   add.tspan( input.value )
 });
