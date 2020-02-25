@@ -42,7 +42,7 @@ function initSvgraph() {
 }
 
 function onSvgraphXChange(varName, replaceWith) {
-  console.log(varName, replaceWith);
+  // console.log(varName, replaceWith);
   return;
   const replace = (eles, dataName) => {
     let json, expr, evaluated;
