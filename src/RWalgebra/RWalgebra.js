@@ -136,10 +136,21 @@ const filterOutConstantTerms = (terms, _imag) => {
 const simplify = (terms) => {
   let vars = { }; // key = var name, val = Term object
   let f = [];
+  let i = [new Term()]; // list of constant imaginary terms
+  let r = [new Term()]; // list of constant real terms
   let v_names;
+
+  i[0].coefficient = 0;
+  i[0].imag = true;
+  r[0].coefficient = 0;
   terms.forEach( t => {
     if (!t.variables.length) { // no variables
-      f.push(t);
+      if (typeof t.fraction.denom !== 'number')
+        f.push(t);
+      else if (t.imag)
+        i[0].coefficient += t.coefficient;
+      else
+        r[0].coefficient += t.coefficient;
       return;
     }
     v_names = t.variables.map(v => v.name + v.degree).sort().join('') + t.imag;
@@ -156,7 +167,13 @@ const simplify = (terms) => {
     }
   });
 
-  return Object.keys(vars).map( v => vars[v]).concat(f);
+
+  let ret = Object.keys(vars).map( v => vars[v]).concat(f);
+  if (i[0].coefficient)
+    ret = ret.concat(i);
+  if (r[0].coefficient)
+    ret = ret.concat(r);
+  return ret;
 };
 
 
@@ -184,6 +201,9 @@ const compute = (op1, op2, operator) => {
     case (DIV):
       result = divideTerms(op1, op2); // op1 / op2
       break;
+    case (POW):
+      result = powTerms(op1, op2); // op1 ^ op2 - op2 must be a float, op1 can be a SINGLE variable only
+      break;
     default: // do nothing
       break;
   }
@@ -191,8 +211,16 @@ const compute = (op1, op2, operator) => {
 };
 
 
+/*
+ * Returns true if term is a constant
+ * (i.e. only the coefficient field is populated)
+ */
+const termIsConstant = (term) => {
+  return !(term.imag || term.variables.length || typeof term.fraction.denom !== 'number');
+};
+
 /**
- * Helper functions to perform ADD, SUB, MULT, DIVIDE functions
+ * Helper functions to perform ADD, SUB, MULT, DIVIDE, POW functions
  * Each takes 2 arguments: op1, op2 -- both are a LIST OF TERMS
  * **/
 const addTerms = (op1, op2) => {
@@ -209,6 +237,24 @@ const subtractTerms = (op1, op2) => {
     _op2.push(_t);
   });
   return op1.concat(_op2);
+};
+
+const powTerms = (op1, op2) => {
+  if (op1.length !== 1 || op2.length !== 1)
+    throw new Error("Currently only support single variable exponentiation (i.e. x^4 not (x+1)^4)!");
+
+  _op1 = op1[0];
+  _op2 = op2[0];
+
+  if (!termIsConstant(_op2))
+    throw new Error('Only support floating point numbers as exponents!');
+
+  _op1.coefficient = Math.pow(_op1.coefficient, _op2.coefficient);
+  _op1.variables.forEach( v => {
+    v.degree *= _op2.coefficient;
+  });
+
+  return op1;
 };
 
 

@@ -13,6 +13,7 @@ function main() {
   const bracket_test = '(x1 + x2) * (x3 - x4) + 1 / (x1 + x2 * x3) + (x1 + x2) /(x1 + x3)';
   const circuit_test = '(15 - n2) / 12000';
   const imaginary = 'x + x_7j + 5 + 6j + j + (x2 - 10)/(x * j * j)';
+  const pow = 'e^(0-10)';
   // const imaginary = '(-x)*j + (2j) + x1 + 5' ;
 
 
@@ -42,13 +43,16 @@ function main() {
   // console.log(ex.magnitude());
   // console.log(ex.phase());
 
-  let ex = new Expression('24*x2 - 98*x1 - x2');
+  let ex = new Expression(pow);
   console.log(JSON.stringify(ex));
-  console.log("multiplying...");
-  ex.multiply('69*x1 + 87*x1 - 93*x0');
-  console.log(JSON.stringify(ex));
-  console.log("evaluationg");
-  console.log(ex.eval({x1: 20, x0: 10, x2: 2}));
+
+  // let ex = new Expression('24*x2 - 98*x1 - x2');
+  // console.log(JSON.stringify(ex));
+  // console.log("multiplying...");
+  // ex.multiply('69*x1 + 87*x1 - 93*x0');
+  // console.log(JSON.stringify(ex));
+  // console.log("evaluationg");
+  // console.log(ex.eval({x1: 20, x0: 10, x2: 2}));
   // console.log(ex.toString());
   // console.log(ex.eval({x:1}))
 

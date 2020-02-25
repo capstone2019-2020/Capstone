@@ -2,6 +2,7 @@
  * Constants Required for tokenizing expression
  */
 const IMAG_NUM = 'j';
+const _E_ = 'e';
 
 /* Supported functions, operators, and special characters */
 const SUPPORTED_FUNCS = ['sin', 'cos', 'tan', 'log'];
