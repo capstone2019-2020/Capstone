@@ -10,7 +10,10 @@ let cy = null;
 let svgraph = null;
 
 function initSvgraph() {
-  svgraph = new SVGraph_initializer('svg-graph').init({
+  let initializer = new SVGraph_initializer('svg-graph');
+  initializer.onXChange(onSvgraphXChange);
+
+  svgraph = initializer.init({
     "x_axis": {
       "label": "frequency (Hz)",
       "scale": "log-log",
@@ -36,6 +39,20 @@ function initSvgraph() {
       "num_grids": 9
     }
   });
+}
+
+function onSvgraphXChange(xval) {
+  // cy.nodes().forEach(n => {
+  //   n.data({
+  //     value: xval.toString()
+  //   });
+  //   console.log(n);
+  // });
+  // cy.edges().forEach(e => {
+  //   e.data({
+  //     edgeWeight: xval.toString()
+  //   })
+  // })
 }
 
 /**

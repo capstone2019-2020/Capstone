@@ -10,6 +10,8 @@ const GRID_MODE = true;
 const SEMI_LOG_MODE = true;
 const MAX_WIDTH = 800, MIN_WIDTH = 400;
 const MAX_HEIGHT = 700, MIN_HEIGHT = 300;
+const IS_SHOW_X_GUIDE = false;
+const IS_SHOW_Y_GUIDE = true;
 
 const LOG_LEVEL = 1;
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
@@ -97,8 +99,10 @@ const __Guide = function(guideId, vec1, vec2) {
   if (!guide) {
     this.get_Svgraph().appendChild(
       line(vec1, vec2, {
-        id: guideId, 'stroke': 'purple',
-        'stroke-opacity': 0.3
+        id: guideId,
+        'stroke': 'red',
+        'stroke-opacity': 0.5,
+        'stroke-width': 2
       })
     );
   } else {
@@ -1036,8 +1040,8 @@ const SVGraph_initializer = (function() {
 
     /*
      * Padding/spacing & dimensions:
-     * 			                    width
-     *         left				                       right
+     *
+     *                         width
      *        -----------------------------------------
      *        |   |				                       |    | top
      *        |---+------------------------------+----|
@@ -1047,6 +1051,7 @@ const SVGraph_initializer = (function() {
      *        |---+------------------------------+----|
      *        |   |				                       |    | bottom
      *        -----------------------------------------
+     *         left				                       right
      */
 
     /* Everything is in pixels */
@@ -1065,12 +1070,20 @@ const SVGraph_initializer = (function() {
 
     this.AXIS_XPOS_1 = this.START_X;
     this.AXIS_XPOS_2 = this.START_X+this.LENGTH_X;
+
+    /* Callback definitions */
+    this.cb_OnXChange = () => {};
   }
 
   const __proto__ = SVGraph.prototype;
 
   __proto__.get_Svgraph = function() {
     return document.getElementById(this.ID_GRAPH_SVG);
+  };
+
+  __proto__.onXChange = function(cb) {
+    DEBUG('Binded onXChange() callback function', cb);
+    this.cb_OnXChange = cb;
   };
 
   __proto__.init = function(config) {
@@ -1117,10 +1130,16 @@ const SVGraph_initializer = (function() {
     let X, Y;
     _this.get_Svgraph().addEventListener('mousemove', event => {
       X = event.offsetX; Y = event.offsetY;
-      if (Y > _this.START_Y || Y < _this.START_Y-_this.LENGTH_Y
-        || X > _this.START_X+_this.LENGTH_X || X < _this.START_X) {
+      if (Y > _this.START_Y
+          || Y < _this.START_Y-_this.LENGTH_Y
+          || X > _this.START_X+_this.LENGTH_X
+          || X < _this.START_X) {
         return;
       }
+
+      /* Value of x-axis that is being moused over */
+      let _x;
+      _x = __X(X, xlb, xub, _this.START_X, _this.LENGTH_X);
 
       /*
        * Formula for getting 'points' array index from cursor
@@ -1131,8 +1150,7 @@ const SVGraph_initializer = (function() {
        */
       const tracer_guide = (id, fpoints, ORIGIN, ylb, yub,
                             sample_amt) => {
-        let idx, _x;
-        _x = __X(X, xlb, xub, _this.START_X, _this.LENGTH_X);
+        let idx;
         if (!SEMI_LOG_MODE) {
           idx = RATIO(_x - xlb, sample_amt);
         } else {
@@ -1175,12 +1193,20 @@ const SVGraph_initializer = (function() {
         if (FIXED(idx%1, 1) === '0.0') {
           idx = Math.floor(idx);
 
-          __Guide.bind(_this)(_this.ID_GUIDE_X, __vec(_this.START_X, Y),
-            __vec(RIGHT(_this.START_X, _this.LENGTH_X), Y)
-          );
-          __Guide.bind(_this)(_this.ID_GUIDE_Y, __vec(X, _this.START_Y),
-            __vec(X, UP(_this.START_Y, _this.LENGTH_Y))
-          );
+          if (IS_SHOW_X_GUIDE) {
+            __Guide.bind(_this)(
+              _this.ID_GUIDE_X,
+              __vec(_this.START_X, Y),
+              __vec(RIGHT(_this.START_X, _this.LENGTH_X), Y)
+            );
+          }
+          if (IS_SHOW_Y_GUIDE) {
+            __Guide.bind(_this)(
+              _this.ID_GUIDE_Y,
+              __vec(X, _this.START_Y),
+              __vec(X, UP(_this.START_Y, _this.LENGTH_Y))
+            );
+          }
 
           /*
            * For each plot, draw out their own locations. This
@@ -1201,6 +1227,9 @@ const SVGraph_initializer = (function() {
           });
         }
       };
+
+      /* OnXChange callback -> goes to client */
+      _this.cb_OnXChange(SEMI_LOG_MODE ? Math.pow(10, _x) : _x);
 
       tracer_guide('ORIGIN_Y1', fpoints1, _this.ORIGIN_Y1,
         ylb1, yub1, sample_amt1);
