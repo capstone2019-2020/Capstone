@@ -8,8 +8,8 @@ const SAMPLE_RATE = 10, SAMPLE_INTERVAL = 50; /* ms */
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
 const GRID_MODE = true;
 const SEMI_LOG_MODE = true;
-const START_X = 100, START_Y = 470;
-const LENGTH_X = 600, LENGTH_Y = 400;
+const MAX_WIDTH = 800, MIN_WIDTH = 400;
+const MAX_HEIGHT = 700, MIN_HEIGHT = 300;
 
 const LOG_LEVEL = 1;
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
@@ -35,6 +35,7 @@ const RGB = (r, g, b) => `rgb(${r},${g},${b})`;
 const DEFINED = (v) => (typeof v !== 'undefined') && (v !== null);
 const INFINITY = (v) => Math.abs(v) === Infinity;
 const RANGE = (n, l, u) => n >= l && n < u;
+const CLAMP = (s, lb, ub) => MIN(MAX(s, lb), ub);
 
 /* loggers */
 const __LOG = (l, msg, ...p) => {
@@ -70,8 +71,8 @@ const COLOR = (() => {
 })();
 
 /* SVG grid related macros */
-const __X = (x, xlb, xub) => (x-START_X)/RATIO(LENGTH_X, xub-xlb)+xlb;
-const __Y = (y, ylb, yub) => (START_Y-y)/RATIO(LENGTH_Y, yub-ylb)+ylb;
+const __X = (x, xlb, xub, startx, lenx) => (x-startx)/RATIO(lenx, xub-xlb)+xlb;
+const __Y = (y, ylb, yub, starty, leny) => (starty-y)/RATIO(leny, yub-ylb)+ylb;
 const __gX = (ORIGIN_X, x, ratio) => RIGHT(ORIGIN_X, SCALE(x, ratio));
 const __gY = (y, ratio, ORIGIN) => UP(ORIGIN, SCALE(y, ratio));
 
@@ -115,8 +116,8 @@ const __Tracer = function(tracerId, xval, yval, xratio, yratio, ylb) {
   const tracerCirc = ELEM(`${tracerId}-circle`);
   const gx = __gX(this.ORIGIN_X, xval, xratio);
   const gy = MAX(
-    MIN(__gY(yval-ylb, yratio, START_Y), START_Y),
-    START_Y-LENGTH_Y
+    MIN(__gY(yval-ylb, yratio, this.START_Y), this.START_Y),
+    this.START_Y-this.LENGTH_Y
   );
   const coords = `(${FIXED(xval, 2)}, ${FIXED(yval, 2)})`;
 
@@ -288,7 +289,8 @@ function polyline(points, config={}, cb) {
   });
 }
 
-function plot(ORIGIN_X, dp, x_cratio, y_cratio, color, ylb) {
+function plot(ORIGIN_X, dp, x_cratio, y_cratio, color, ylb,
+              START_X, START_Y, LENGTH_X) {
   let points = '';
   let i;
   let x_coord, y_coord;
@@ -320,7 +322,8 @@ function plot(ORIGIN_X, dp, x_cratio, y_cratio, color, ylb) {
 }
 
 function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio,
-                 ORIGIN_Y1, ORIGIN_X},
+                 ORIGIN_Y1, ORIGIN_X,
+                 START_X, START_Y, LENGTH_X},
                logvals=[]) {
   const partitions = [];
   let i, x_coord, xval;
@@ -406,7 +409,9 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio,
 }
 
 function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
-                 label, grid, label_postfix}, is_left=true) {
+                 label, grid, label_postfix,
+                 START_X, START_Y, LENGTH_X},
+               is_left=true) {
   /* Re-adjust LENGTH_Y */
   leny = START_Y-leny < 0 ? START_Y : leny;
 
@@ -495,7 +500,7 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
   ]
 }
 
-function legend(fpoints, ID_LEGEND) {
+function legend(fpoints, ID_LEGEND, START_X) {
   let width = 10, height = 50, rownum = 2;
   let fontsize = 14; // pixels
 
@@ -881,7 +886,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       ub: xub,
       offset: x_offset,
       parts: xgrid
-    } = init_plot(xlb, xub, LENGTH_X, xgrid,
+    } = init_plot(xlb, xub, this.LENGTH_X, xgrid,
       !DEFINED(changeSet)));
     if (funcs1.length !== 0) {
       ({
@@ -889,7 +894,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
         ub: yub1,
         offset: y_offset1,
         parts: ygrid1
-      } = init_plot(ylb1, yub1, LENGTH_Y, ygrid1,
+      } = init_plot(ylb1, yub1, this.LENGTH_Y, ygrid1,
         !DEFINED(changeSet)));
     } else {
       ({
@@ -897,7 +902,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
         ub: yub2,
         offset: y_offset2,
         parts: ygrid2
-      } = init_plot(ylb2, yub2, LENGTH_Y, ygrid2,
+      } = init_plot(ylb2, yub2, this.LENGTH_Y, ygrid2,
         !DEFINED(changeSet), y_offset1));
     }
     let wrapper = ELEM('wrapper');
@@ -912,11 +917,11 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
     };
   }
 
-  this.ORIGIN_X = RIGHT(START_X, x_offset);
+  this.ORIGIN_X = RIGHT(this.START_X, x_offset);
   if (!y_offset1) {
-    y_offset1 = __ROUND(START_Y/2);
+    y_offset1 = __ROUND(this.START_Y/2);
   }
-  this.ORIGIN_Y1 = UP(START_Y, y_offset1);
+  this.ORIGIN_Y1 = UP(this.START_Y, y_offset1);
   this.ORIGIN_Y2 = this.ORIGIN_Y1;
 
   let _svg = svg('wrapper');
@@ -927,49 +932,58 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
     undefined,
     ...fpoints1.map(({points, color}) => g(
       'plot', ...plot(this.ORIGIN_X, points,
-        RATIO(LENGTH_X, xub-xlb),
-        RATIO(LENGTH_Y, yub1-ylb1), color,
-        ylb1)
+        RATIO(this.LENGTH_X, xub-xlb),
+        RATIO(this.LENGTH_Y, yub1-ylb1), color,
+        ylb1, this.START_X, this.START_Y, this.LENGTH_X)
     )),
     ...fpoints2.map(({points, color}) => g(
       'plot', ...plot(this.ORIGIN_X, points,
-        RATIO(LENGTH_X, xub-xlb),
-        RATIO(LENGTH_Y, yub2-ylb2), color,
-        ylb2)
+        RATIO(this.LENGTH_X, xub-xlb),
+        RATIO(this.LENGTH_Y, yub2-ylb2), color,
+        ylb2, this.START_X, this.START_Y, this.LENGTH_X)
     )),
     g('x-axis', ...xaxis({
-      leny: LENGTH_Y,
-      lenx: LENGTH_X,
+      leny: this.LENGTH_Y,
+      lenx: this.LENGTH_X,
       lb: xlb,
       ub: xub,
       parts: xgrid,
       label: config.x_axis.label,
       grid: GRID_MODE,
-      x_cratio: RATIO(LENGTH_X, xub-xlb),
+      x_cratio: RATIO(this.LENGTH_X, xub-xlb),
       ORIGIN_Y1: this.ORIGIN_Y1,
-      ORIGIN_X: this.ORIGIN_X
+      ORIGIN_X: this.ORIGIN_X,
+      START_X: this.START_X,
+      START_Y: this.START_Y,
+      LENGTH_X: this.LENGTH_X
     }, generate_logvals(xlb, xub))),
     g('y-axis-1', ...yaxis({
-      leny: LENGTH_Y,
-      lenx: LENGTH_X,
+      leny: this.LENGTH_Y,
+      lenx: this.LENGTH_X,
       AXIS_XPOS: this.AXIS_XPOS_1,
       lb: ylb1,
       ub: yub1,
       parts: ygrid1,
       label: config.left_y_axis.label,
       grid: GRID_MODE,
-      label_postfix: ' dB'
+      label_postfix: ' dB',
+      START_X: this.START_X,
+      START_Y: this.START_Y,
+      LENGTH_X: this.LENGTH_X
     }, true, false)),
     g('y-axis-2', ...yaxis({
-      leny: LENGTH_Y,
-      lenx: LENGTH_X,
+      leny: this.LENGTH_Y,
+      lenx: this.LENGTH_X,
       AXIS_XPOS: this.AXIS_XPOS_2,
       lb: ylb2,
       ub: yub2,
       parts: ygrid2,
       label: config.right_y_axis.label,
       grid: GRID_MODE,
-      label_postfix: '°'
+      label_postfix: '°',
+      START_X: this.START_X,
+      START_Y: this.START_Y,
+      LENGTH_X: this.LENGTH_X
     }, false, true)),
   );
 
@@ -979,8 +993,12 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
     if (legend_elem) {
       this.get_Svgraph().removeChild(legend_elem);
     }
-    this.get_Svgraph().appendChild(g('legend',
-      ...legend([...fpoints1, ...fpoints2], this.ID_LEGEND)
+    this.get_Svgraph().appendChild(
+      g('legend', ...legend(
+        [...fpoints1, ...fpoints2],
+        this.ID_LEGEND,
+        this.START_X
+      )
     ));
   }
 
@@ -997,9 +1015,6 @@ const SVGraph_initializer = (function() {
     this.ORIGIN_Y1 = 450;
     this.ORIGIN_Y2 = 450; /* These change depending on graph */
 
-    this.AXIS_XPOS_1 = START_X;
-    this.AXIS_XPOS_2 = START_X+LENGTH_X;
-
     this.ID_GRAPH_SVG = ID_GRAPH_SVG;
     this.ID_GUIDE_X = `${ID_GRAPH_SVG}-x-guide`;
     this.ID_GUIDE_Y = `${ID_GRAPH_SVG}-y-guide`;
@@ -1009,6 +1024,47 @@ const SVGraph_initializer = (function() {
       throw new Error(`Cannot initialize svgraph, 
         element with ID \"${this.ID_GRAPH_SVG}\" does not exist`);
     }
+
+    /*
+      Original values:
+      const START_X = 100, START_Y = 470;
+      const LENGTH_X = 600, LENGTH_Y = 400;
+     */
+    let {
+      width, height
+    } = this.get_Svgraph().getBoundingClientRect();
+
+    /*
+     * Padding/spacing & dimensions:
+     * 			                    width
+     *         left				                       right
+     *        -----------------------------------------
+     *        |   |				                       |    | top
+     *        |---+------------------------------+----|
+     *        |   |				                       |	  |
+     * height	|   |		        SVGraph		         |    |
+     *        |   |				                       |    |
+     *        |---+------------------------------+----|
+     *        |   |				                       |    | bottom
+     *        -----------------------------------------
+     */
+
+    /* Everything is in pixels */
+    let padding = {
+      right: 75,
+      left: 100,
+      top: 70,
+      bottom: 40
+    };
+    this.WIDTH = CLAMP(width, MIN_WIDTH, MAX_WIDTH);
+    this.HEIGHT = CLAMP(height, MIN_HEIGHT, MAX_HEIGHT);
+    this.START_X = padding.left;
+    this.LENGTH_X = this.WIDTH - padding.right - padding.left;
+    this.START_Y = this.HEIGHT - padding.bottom;
+    this.LENGTH_Y = this.HEIGHT - padding.bottom - padding.top;
+
+    this.AXIS_XPOS_1 = this.START_X;
+    this.AXIS_XPOS_2 = this.START_X+this.LENGTH_X;
   }
 
   const __proto__ = SVGraph.prototype;
@@ -1061,8 +1117,8 @@ const SVGraph_initializer = (function() {
     let X, Y;
     _this.get_Svgraph().addEventListener('mousemove', event => {
       X = event.offsetX; Y = event.offsetY;
-      if (Y > START_Y || Y < START_Y-LENGTH_Y
-        || X > START_X+LENGTH_X || X < START_X) {
+      if (Y > _this.START_Y || Y < _this.START_Y-_this.LENGTH_Y
+        || X > _this.START_X+_this.LENGTH_X || X < _this.START_X) {
         return;
       }
 
@@ -1075,13 +1131,13 @@ const SVGraph_initializer = (function() {
        */
       const tracer_guide = (id, fpoints, ORIGIN, ylb, yub,
                             sample_amt) => {
-        let idx;
+        let idx, _x;
+        _x = __X(X, xlb, xub, _this.START_X, _this.LENGTH_X);
         if (!SEMI_LOG_MODE) {
-          idx = RATIO(__X(X, xlb, xub) - xlb, sample_amt);
+          idx = RATIO(_x - xlb, sample_amt);
         } else {
-          let _x, _base, _d, _add=0;
+          let _base, _d, _add=0;
 
-          _x = __X(X, xlb, xub);
           _base = Math.floor(_x);
           _d = _x - _base;
 
@@ -1119,11 +1175,11 @@ const SVGraph_initializer = (function() {
         if (FIXED(idx%1, 1) === '0.0') {
           idx = Math.floor(idx);
 
-          __Guide.bind(_this)(_this.ID_GUIDE_X, __vec(START_X, Y),
-            __vec(RIGHT(START_X, LENGTH_X), Y)
+          __Guide.bind(_this)(_this.ID_GUIDE_X, __vec(_this.START_X, Y),
+            __vec(RIGHT(_this.START_X, _this.LENGTH_X), Y)
           );
-          __Guide.bind(_this)(_this.ID_GUIDE_Y, __vec(X, START_Y),
-            __vec(X, UP(START_Y, LENGTH_Y))
+          __Guide.bind(_this)(_this.ID_GUIDE_Y, __vec(X, _this.START_Y),
+            __vec(X, UP(_this.START_Y, _this.LENGTH_Y))
           );
 
           /*
@@ -1137,8 +1193,8 @@ const SVGraph_initializer = (function() {
             if (DEFINED(vec)) {
               __Tracer.bind(_this)(`tracer-${id}-${i}`,
                 vec.x, vec.y,
-                RATIO(LENGTH_X, xub - xlb),
-                RATIO(LENGTH_Y, yub - ylb),
+                RATIO(_this.LENGTH_X, xub - xlb),
+                RATIO(_this.LENGTH_Y, yub - ylb),
                 ylb
               );
             }
@@ -1155,8 +1211,8 @@ const SVGraph_initializer = (function() {
     let intervalId = 0;
     _this.get_Svgraph().addEventListener('mousedown', event => {
       X = event.offsetX; Y = event.offsetY;
-      if (Y > START_Y || Y < START_Y-LENGTH_Y
-        || X > START_X+LENGTH_X || X < START_X) {
+      if (Y > _this.START_Y || Y < _this.START_Y-_this.LENGTH_Y
+        || X > _this.START_X+_this.LENGTH_X || X < _this.START_X) {
         return;
       }
       const cb_setup = (xory, y1ory2) => {
@@ -1170,19 +1226,23 @@ const SVGraph_initializer = (function() {
           DEBUG('=======CB_SETUP=======');
           DEBUG(`(${X},${Y}) | OLD:(${oldX},${oldY})`);
           let x_offset=0, y_offset=0;
+          let _lenx = _this.LENGTH_X;
+          let _leny = _this.LENGTH_Y;
+          let _startx = _this.START_X;
+          let _starty = _this.START_Y;
           if (xory) { /* X-axis */
             if (DELTA(X, oldX) > 5) {
               x_offset = 2;
-              if (Math.abs(__X(oldX, xlb, xub)) <
-                Math.abs(__X(X, xlb, xub))) {
+              if (Math.abs(__X(oldX, xlb, xub, _startx, _lenx)) <
+                Math.abs(__X(X, xlb, xub, _startx, _lenx))) {
                 x_offset *= -1;
               }
             }
           } else { /* Y-axis */
             if (DELTA(Y, oldY) > 5) {
               y_offset = 2;
-              if (Math.abs(__Y(oldY, ylb, yub)) <
-                Math.abs(__Y(Y, ylb, yub))) {
+              if (Math.abs(__Y(oldY, ylb, yub, _starty, _leny)) <
+                Math.abs(__Y(Y, ylb, yub, _starty, _leny))) {
                 y_offset *= -1;
               }
             }
@@ -1212,8 +1272,8 @@ const SVGraph_initializer = (function() {
 
       let _X = X, _Y = Y;
       intervalId = setInterval(() => {
-        if (Y > START_Y || Y < START_Y-LENGTH_Y
-          || X > START_X+LENGTH_X || X < START_X) {
+        if (Y > _this.START_Y || Y < _this.START_Y-_this.LENGTH_Y
+          || X > _this.START_X+_this.LENGTH_X || X < _this.START_X) {
           clearInterval(intervalId);
           intervalId = 0;
           return;
