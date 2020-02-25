@@ -120,7 +120,7 @@ async function sendNext(event) {
         errorMes.innerHTML = "Must Upload a netlist File";
     }
     else {
-        location.href='./index2.html'
+        location.href='./index.html'
     }
 }
 

@@ -10,8 +10,7 @@ const GRID_MODE = true;
 const SEMI_LOG_MODE = true;
 const MAX_WIDTH = 800, MIN_WIDTH = 400;
 const MAX_HEIGHT = 700, MIN_HEIGHT = 300;
-const IS_SHOW_X_GUIDE = false;
-const IS_SHOW_Y_GUIDE = true;
+const SHOW_TRACER_GUIDE = true;
 
 const LOG_LEVEL = 1;
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
@@ -92,7 +91,7 @@ const ROUND_UP = (f, n) => {
   return f < 0 ? - (Math.abs(f) - r) : (f+n-r);
 };
 
-const __Guide = function(guideId, vec1, vec2) {
+const __Guide = function(guideId, vec1, vec2, config={}) {
   const guide = document.getElementById(guideId);
   if (!vec1 || !vec2) return guide;
 
@@ -100,9 +99,10 @@ const __Guide = function(guideId, vec1, vec2) {
     this.get_Svgraph().appendChild(
       line(vec1, vec2, {
         id: guideId,
-        'stroke': 'red',
+        'stroke': 'purple',
         'stroke-opacity': 0.5,
-        'stroke-width': 2
+        'stroke-width': 1,
+        ...config
       })
     );
   } else {
@@ -1023,6 +1023,7 @@ const SVGraph_initializer = (function() {
     this.ID_GUIDE_X = `${ID_GRAPH_SVG}-x-guide`;
     this.ID_GUIDE_Y = `${ID_GRAPH_SVG}-y-guide`;
     this.ID_LEGEND = `${ID_GRAPH_SVG}-legend`;
+    this.ID_FREQUENCY_SWEEPER = `${ID_GRAPH_SVG}-freq-guide';`;
 
     if (this.get_Svgraph() === null) {
       throw new Error(`Cannot initialize svgraph, 
@@ -1081,6 +1082,10 @@ const SVGraph_initializer = (function() {
     return document.getElementById(this.ID_GRAPH_SVG);
   };
 
+  __proto__.get_BB = function() {
+    return this.get_Svgraph().getBoundingClientRect();
+  };
+
   __proto__.onXChange = function(cb) {
     DEBUG('Binded onXChange() callback function', cb);
     this.cb_OnXChange = cb;
@@ -1115,7 +1120,8 @@ const SVGraph_initializer = (function() {
       xlb, xub, ylb1, yub1, ylb2, yub2,
       xgrid, ygrid1, ygrid2,
       sample_amt1, sample_amt2, fpoints1, fpoints2
-    } = render.bind(this)(config, undefined, [], [],
+    } = render.bind(this)(config, undefined,
+      [], [],
       xlb, xub, ylb1, yub1, ylb2, yub2,
       xgrid, ygrid1, ygrid2,
       sample_amt1, sample_amt2,
@@ -1129,7 +1135,8 @@ const SVGraph_initializer = (function() {
     let _this = this;
     let X, Y;
     _this.get_Svgraph().addEventListener('mousemove', event => {
-      X = event.offsetX; Y = event.offsetY;
+      let {left, top} = _this.get_BB();
+      X = event.clientX-left; Y = event.clientY-top;
       if (Y > _this.START_Y
           || Y < _this.START_Y-_this.LENGTH_Y
           || X > _this.START_X+_this.LENGTH_X
@@ -1190,23 +1197,19 @@ const SVGraph_initializer = (function() {
           idx = 9*_base + _add;
         }
 
-        if (FIXED(idx%1, 1) === '0.0') {
+        if (FIXED(idx%1, 1) === '0.0' && SHOW_TRACER_GUIDE) {
           idx = Math.floor(idx);
 
-          if (IS_SHOW_X_GUIDE) {
-            __Guide.bind(_this)(
-              _this.ID_GUIDE_X,
-              __vec(_this.START_X, Y),
-              __vec(RIGHT(_this.START_X, _this.LENGTH_X), Y)
-            );
-          }
-          if (IS_SHOW_Y_GUIDE) {
-            __Guide.bind(_this)(
-              _this.ID_GUIDE_Y,
-              __vec(X, _this.START_Y),
-              __vec(X, UP(_this.START_Y, _this.LENGTH_Y))
-            );
-          }
+          __Guide.bind(_this)(
+            _this.ID_GUIDE_X,
+            __vec(_this.START_X, Y),
+            __vec(RIGHT(_this.START_X, _this.LENGTH_X), Y)
+          );
+          __Guide.bind(_this)(
+            _this.ID_GUIDE_Y,
+            __vec(X, _this.START_Y),
+            __vec(X, UP(_this.START_Y, _this.LENGTH_Y))
+          );
 
           /*
            * For each plot, draw out their own locations. This
@@ -1228,9 +1231,6 @@ const SVGraph_initializer = (function() {
         }
       };
 
-      /* OnXChange callback -> goes to client */
-      _this.cb_OnXChange(SEMI_LOG_MODE ? Math.pow(10, _x) : _x);
-
       tracer_guide('ORIGIN_Y1', fpoints1, _this.ORIGIN_Y1,
         ylb1, yub1, sample_amt1);
       tracer_guide('ORIGIN_Y2', fpoints2,
@@ -1239,12 +1239,16 @@ const SVGraph_initializer = (function() {
 
     let intervalId = 0;
     _this.get_Svgraph().addEventListener('mousedown', event => {
-      X = event.offsetX; Y = event.offsetY;
-      if (Y > _this.START_Y || Y < _this.START_Y-_this.LENGTH_Y
-        || X > _this.START_X+_this.LENGTH_X || X < _this.START_X) {
+      let {left, top} = _this.get_BB();
+      X = event.clientX-left; Y = event.clientY-top;
+      if (Y > _this.START_Y
+          || Y < _this.START_Y-_this.LENGTH_Y
+          || X > _this.START_X+_this.LENGTH_X
+          || X < _this.START_X) {
         return;
       }
-      const cb_setup = (xory, y1ory2) => {
+
+      const cb_render_setup = (xory, y1ory2) => {
         return (X, Y, oldX, oldY) => {
           let ylb = y1ory2 ? ylb1 : ylb2;
           let yub = y1ory2 ? yub1 : yub2;
@@ -1286,13 +1290,45 @@ const SVGraph_initializer = (function() {
         }
       };
 
+      let cb_sweep_setup = () => {
+        return () => {
+          __Guide.bind(_this)(
+            _this.ID_FREQUENCY_SWEEPER,
+            __vec(X, _this.START_Y),
+            __vec(X, UP(_this.START_Y, _this.LENGTH_Y)),
+            {
+              'stroke': 'red',
+              'stroke-opacity': 0.6,
+              'stroke-width': 2
+            }
+          );
+
+          /* OnXChange callback -> goes to client */
+          let _x;
+          _x = __X(X, xlb, xub, _this.START_X, _this.LENGTH_X);
+          _x = SEMI_LOG_MODE ? Math.pow(10, _x) : _x;
+
+          _this.cb_OnXChange(_x);
+        };
+      };
+
       let cb = undefined;
-      if (APPROX(Y, _this.ORIGIN_Y1, 5)) { /* X-axis */
-        cb = cb_setup(true, true);
-      } else if (APPROX(X, _this.AXIS_XPOS_1, 5)) { /* Y-axis 1 */
-        cb = cb_setup(false, true);
-      } else if (APPROX(X, _this.AXIS_XPOS_2, 5)) { /* Y-axis 2 */
-        cb = cb_setup(false, false);
+
+      /* X-axis */
+      if (APPROX(Y, _this.ORIGIN_Y1, 5)) {
+        cb = cb_render_setup(true, true);
+      }
+      /* Y-axis 1 */
+      else if (APPROX(X, _this.AXIS_XPOS_1, 5)) {
+        cb = cb_render_setup(false, true);
+      }
+      /* Y-axis 2 */
+      else if (APPROX(X, _this.AXIS_XPOS_2, 5)) {
+        cb = cb_render_setup(false, false);
+      }
+      /* Anywhere but on axis -> change tracer */
+      else {
+        cb = cb_sweep_setup();
       }
 
       if (!DEFINED(cb) || intervalId !== 0) {
@@ -1301,34 +1337,40 @@ const SVGraph_initializer = (function() {
 
       let _X = X, _Y = Y;
       intervalId = setInterval(() => {
-        if (Y > _this.START_Y || Y < _this.START_Y-_this.LENGTH_Y
-          || X > _this.START_X+_this.LENGTH_X || X < _this.START_X) {
+        if (Y > _this.START_Y
+            || Y < _this.START_Y-_this.LENGTH_Y
+            || X > _this.START_X+_this.LENGTH_X
+            || X < _this.START_X) {
           clearInterval(intervalId);
           intervalId = 0;
           return;
         }
 
+        /* Call CB */
         let c = cb(X, Y, _X, _Y);
-        _X = X; _Y = Y;
+        if (!DEFINED(c)
+          || (c.xm === 0 && c.ym1 === 0 && c.ym2 === 0)) {
+          return;
+        }
 
+        _X = X; _Y = Y;
         /*
          * Re-render with update to x/y components.
          * Render returns the updated copies of every
          * core component, so we reassign them to keep
          * up to date.
          */
-        if (c.xm !== 0 || c.ym1 !== 0 || c.ym2 !== 0) {
-          ({
-              xlb, xub, ylb1, yub1, ylb2, yub2,
-              xgrid, ygrid1, ygrid2,
-              sample_amt1, sample_amt2, fpoints1, fpoints2
-            } = render.bind(_this)(config, c, axis1_funcs, axis2_funcs,
-              xlb, xub, ylb1, yub1, ylb2, yub2,
-              xgrid, ygrid1, ygrid2,
-              sample_amt1, sample_amt2,
-              fpoints1, fpoints2)
-          );
-        }
+        ({
+            xlb, xub, ylb1, yub1, ylb2, yub2,
+            xgrid, ygrid1, ygrid2,
+            sample_amt1, sample_amt2, fpoints1, fpoints2
+          } = render.bind(_this)(config, c,
+            axis1_funcs, axis2_funcs,
+            xlb, xub, ylb1, yub1, ylb2, yub2,
+            xgrid, ygrid1, ygrid2,
+            sample_amt1, sample_amt2,
+            fpoints1, fpoints2)
+        );
       }, SAMPLE_INTERVAL);
     });
 

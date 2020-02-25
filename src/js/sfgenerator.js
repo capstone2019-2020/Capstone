@@ -11,7 +11,7 @@ let svgraph = null;
 
 function initSvgraph() {
   let initializer = new SVGraph_initializer('svg-graph');
-  initializer.onXChange(onSvgraphXChange);
+  initializer.onXChange(xval => onSvgraphXChange('w', xval));
 
   svgraph = initializer.init({
     "x_axis": {
@@ -41,18 +41,33 @@ function initSvgraph() {
   });
 }
 
-function onSvgraphXChange(xval) {
-  // cy.nodes().forEach(n => {
-  //   n.data({
-  //     value: xval.toString()
-  //   });
-  //   console.log(n);
-  // });
-  // cy.edges().forEach(e => {
-  //   e.data({
-  //     edgeWeight: xval.toString()
-  //   })
-  // })
+function onSvgraphXChange(varName, replaceWith) {
+  console.log(varName, replaceWith);
+  return;
+  const replace = (eles, dataName) => {
+    let json, expr, evaluated;
+    eles.forEach(ele => {
+      json = ele.json().data;
+      try {
+        expr = new Expression(json[dataName]);
+        evaluated = expr.eval({
+          [varName]: replaceWith
+        });
+      } catch (err) {
+        console.error(err);
+        return;
+      }
+
+      if (!isNaN(evaluated)) {
+        ele.data({
+          [dataName]: evaluated.toString()
+        });
+      }
+    });
+  };
+
+  replace(cy.nodes(), 'value');
+  replace(cy.edges(), 'edgeWeight');
 }
 
 /**
