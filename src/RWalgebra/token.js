@@ -2,7 +2,10 @@
  * Constants Required for tokenizing expression
  */
 const IMAG_NUM = 'j';
+const EXPONENTIAL_REGEX = new RegExp(/\d+\.?\d*e[+-]\d+/g);
 const _E_ = 'e';
+const _NEG_ = '-';
+const _POS_ = '+';
 
 /* Supported functions, operators, and special characters */
 const SUPPORTED_FUNCS = ['sin', 'cos', 'tan', 'log'];
@@ -49,6 +52,9 @@ const tokenize = (exp) => {
   let in_var = false;     // boolean to determine if we are currently tokenizing a variable
   let tokens = [];        // return value
   exp = exp.replace(/\(\-/g, '(0-');
+
+  // need to replace instances of scientific notation
+  exp = replaceSciNotation(exp);
 
   const chars = exp.split(''); // split into characters
   chars.forEach(ch => {
@@ -124,6 +130,48 @@ const tokenize = (exp) => {
   return tokens;
 };
 
+
+/**
+ * Helper function to remove all instances of scientific notation
+ * from expression string
+ * Example:
+ *  10.0e+11 -> 10.0^11
+ *  10.0e-11 -> 10.0^(0-11)
+ *
+ * @param exp
+ */
+const replaceSciNotation = (exp) => {
+  // find all instances of scientific notation
+  let exponents =  exp.match(EXPONENTIAL_REGEX);
+  if (!exponents)
+    return exp;
+
+  /*
+   * For each instance, convert string to the correct format
+   * BASE * 10^ EXPONENT
+   */
+  let sci_str, components, b, p;
+  exponents.forEach( ex => {
+    components = ex.split(_E_);
+    if (components.length !== 2)
+      console.log( `ERROR! ${ex}`);
+
+    // get base and exponent components
+    b = components[0];
+    p = components[1];
+    if (p.indexOf(_NEG_) === -1) {
+      p = p.replace(_POS_, '');
+    } else {
+      let pow = p.substring(1);
+      p = `(0 - ${pow})`;
+    }
+    sci_str = `${b}*10^${p}`;
+    exp = exp.replace(ex, sci_str);
+  });
+
+  console.log(exp);
+  return exp;
+};
 
 /**
  * Helper functions to help determine type of token

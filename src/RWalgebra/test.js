@@ -13,7 +13,7 @@ function main() {
   const bracket_test = '(x1 + x2) * (x3 - x4) + 1 / (x1 + x2 * x3) + (x1 + x2) /(x1 + x3)';
   const circuit_test = '(15 - n2) / 12000';
   const imaginary = 'x + x_7j + 5 + 6j + j + (x2 - 10)/(x * j * j)';
-  const pow = 'e^(0-10)';
+  const pow = '((0.002) / (((1.6e-11) / (1.6e-11*w^ 4))*w^ 4))*n2*w*j';
   // const imaginary = '(-x)*j + (2j) + x1 + 5' ;
 
 
@@ -45,6 +45,7 @@ function main() {
 
   let ex = new Expression(pow);
   console.log(JSON.stringify(ex));
+
 
   // let ex = new Expression('24*x2 - 98*x1 - x2');
   // console.log(JSON.stringify(ex));
