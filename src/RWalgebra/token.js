@@ -169,7 +169,6 @@ const replaceSciNotation = (exp) => {
     exp = exp.replace(ex, sci_str);
   });
 
-  console.log(exp);
   return exp;
 };
 
