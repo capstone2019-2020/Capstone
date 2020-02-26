@@ -58,49 +58,54 @@ app.post("/input-file", (req, res) => {
         first.forEach((second) => second.forEach((eqns) => 
             {
                 if (eqns.lhs.real.terms.length !== 1 && eqns.lhs.imag.terms.length !== 1) {
-                    let newlhs, location, found = false, finaleqn;
-                    if (eqns.lhs.real.terms.length !== 0) {
-                        newlhs = new Expression(eqns.lhs.real.terms[0].toString());
-                    } else {
-                        newlhs = new Expression(eqns.lhs.imag.terms[0].toString());
-                    }
-                    
-                    // Check if the variable already exits
-                    for (var i = 0; i < equations.length; i++) {
-                        if (equations[i].lhs.real.terms.length !== 0) {
-                            if (equations[i].lhs.real.terms[0].toString() === newlhs.toString()) {
-                                found = true;
-                                location = i;
-                            }
+                    if (eqns.lhs.real.terms.length !== 0 || eqns.lhs.imag.terms.length !== 0) {
+                        let newlhs, location, found = false, finaleqn;
+                        if (eqns.lhs.real.terms.length !== 0) {
+                            newlhs = new Expression(eqns.lhs.real.terms[0].toString());
                         } else {
-                            if (equations[i].lhs.imag.terms[0].toString() === newlhs.toString()) {
-                                found = true;
-                                location = i;
+                            newlhs = new Expression(eqns.lhs.imag.terms[0].toString());
+                        }
+
+                        // Check if the variable already exits
+                        for (var i = 0; i < equations.length; i++) {
+                            if (equations[i].lhs.real.terms.length !== 0) {
+                                if (equations[i].lhs.real.terms[0].toString() === newlhs.toString()) {
+                                    found = true;
+                                    location = i;
+                                }
+                            } else {
+                                if (equations[i].lhs.imag.terms[0].toString() === newlhs.toString()) {
+                                    found = true;
+                                    location = i;
+                                }
                             }
                         }
-                    }
 
-                    // Split the string of the expression 
-                    let strOflhs = eqns.toString().split(newlhs.toString());
-                    strOflhs = strOflhs[1].split("=");
-                    strOflhs = strOflhs[0];
-                    if (strOflhs.toString().substring(0, 2).indexOf('+') != -1) {
-                        strOflhs = strOflhs.substring(3, strOflhs.length);
-                    }
-                    let temprhs = new Expression(strOflhs.toString());
-                    
-                    temprhs.multiply(-1);
-                    if (found === true) {
-                        let replacetemp = equations[location].toString().split('=');
-                        replacetemp = new Expression (replacetemp[1]);
-                        replacetemp.add(temprhs);
-                        finaleqn = newlhs.toString() + " = " + replacetemp;
-                        equations[location] = algebra.parse(finaleqn.toString());
-                    } else {
-                        finaleqn = newlhs.toString() + " = " + temprhs.toString();
-                        equations.push(algebra.parse(finaleqn.toString()));
+                        // Split the string of the expression
+                        let strOflhs = eqns.toString().split(newlhs.toString());
+                        strOflhs = strOflhs[1].split("=");
+                        strOflhs = strOflhs[0];
+                        if (strOflhs.toString().substring(0, 2).indexOf('+') != -1) {
+                            strOflhs = strOflhs.substring(3, strOflhs.length);
+                        }
+                        let temprhs = new Expression(strOflhs.toString());
+
+                        temprhs.multiply(-1);
+                        if (found === true) {
+                            let replacetemp = equations[location].toString().split('=');
+                            replacetemp = new Expression (replacetemp[1]);
+                            replacetemp.add(temprhs);
+                            finaleqn = newlhs.toString() + " = " + replacetemp;
+                            // console.log(finaleqn.toString());
+                            equations[location] = algebra.parse(finaleqn.toString());
+                        } else {
+                            finaleqn = newlhs.toString() + " = " + temprhs.toString();
+                            // console.log(finaleqn.toString());
+                            equations.push(algebra.parse(finaleqn.toString()));
+                        }
                     }
                 } else {
+                    // console.log(equations.toString());
                     equations.push(algebra.parse(eqns.toString()));
                 }
             }
