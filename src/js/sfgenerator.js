@@ -8,10 +8,13 @@ let startNode = null;
 let endNode = null;
 let cy = null;
 let svgraph = null;
+let loopgraph = null;
 
 function initSvgraph() {
   let initializer = new SVGraph_initializer('svg-graph');
+  let initate = new SVGraph_initializer('loop-graph');
   initializer.onXChange(xval => onSvgraphXChange('w', xval));
+  initate.onXChange(xval => onSvgraphXChange('w', xval));
 
   svgraph = initializer.init({
     "x_axis": {
@@ -38,6 +41,32 @@ function initSvgraph() {
       "ub": 0,
       "num_grids": 9
     }
+  });
+
+  loopgraph = initate.init({
+    "x_axis": {
+      "label": "frequency (Hz)",
+      "scale": "log-log",
+      "fixed": true,
+      "lb": 0,
+      "ub": 10,
+      "num_grids": 10
+    },
+    "left_y_axis": {
+      "label": "magnitude (dB)",
+      "scale": "linear",
+      "fixed": true,
+      "lb": -60,
+      "ub": 30,
+      "num_grids": 9
+    },
+    "right_y_axis": {
+      "label": "phase (degrees)",
+      "scale": "linear",
+      "fixed": true,
+      "lb": -90,
+      "ub": 0,
+      "num_grids": 9 }
   });
 }
 
@@ -158,9 +187,13 @@ function highlightStartEndPath() {
  */
 async function generateSFG() {
   const sfg = localStorage.getItem('sfg_nodes');
+  const gain = localStorage.getItem('loop_gain');
+
   console.log(sfg);
   console.log(localStorage.getItem('loop_gain'));
   const elements = sfgToCyto(JSON.parse(sfg));
+  const elements = sfgToCyto(JSON.parse(sfg));
+  
   cy = cytoscape({
     container: document.getElementById('sfg-canvas'), // container to render in
     elements,
@@ -214,6 +247,7 @@ async function generateSFG() {
     console.log(clickedNodes);
   });
 
+  loopgraph.put([`f(w) = ${loopElements.magnitude}`], [`f(w) = ${loopElements.phase}`]);
 }
 
 /**
