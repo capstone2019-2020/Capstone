@@ -33,21 +33,21 @@
   background-color: #ffe4dc;
   display: inline-block;
   width: 100%;
-  height: 100%;
+  height: 50%;
   float: left;
   border-color: black;
   margin: 0;
 }
 
-/*.right-bottom-panel {*/
-/*  background-color: aqua;*/
-/*  display: inline-block;*/
-/*  width: 100%;*/
-/*  height: 50%;*/
-/*  float: left;*/
-/*  border: none;*/
-/*  margin: 0;*/
-/*}*/
+.right-bottom-panel {
+  background-color: #ffe4dc;
+  display: inline-block;
+  width: 100%;
+  height: 50%;
+  float: left;
+  border: none;
+  margin: 0;
+}
 
 .footer-bar {
   background-color: darkslategray;
