@@ -192,7 +192,7 @@ async function generateSFG() {
   console.log(sfg);
   console.log(localStorage.getItem('loop_gain'));
   const elements = sfgToCyto(JSON.parse(sfg));
-  const elements = sfgToCyto(JSON.parse(sfg));
+  const loopElements = JSON.parse(gain);
   
   cy = cytoscape({
     container: document.getElementById('sfg-canvas'), // container to render in
