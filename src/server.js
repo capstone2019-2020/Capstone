@@ -220,6 +220,7 @@ app.post("/input-file", (req, res) => {
         return res.status(400).send("Missing contents of file");
     }
 
+
     // Read the netlist file and save the content
     return res.status(200).send(equations);
 });
