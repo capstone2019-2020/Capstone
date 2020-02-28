@@ -223,7 +223,7 @@ function computeSFG (params) {
 
             // Imaginary number case
             if (tempTermOfrhs[k].imag === true) {
-              weight = weight + "j";
+              weight = weight + "*j";
             }
 
             if (check === termsoflhs[i].toString()) {
@@ -348,7 +348,7 @@ function computeSFG (params) {
               }
   
               if (tempTerm[j].imag === true) {
-                weight = weight + "j";
+                weight = weight + "*j";
               }
 
               // console.log(`The term of the LHS will be: ${termsoflhs[i].toString()}`);
