@@ -36,7 +36,7 @@ Variable.prototype.toString = function () {
     // Exponent on the variable is 1
     return variable;
   } else {
-    return variable + "^ " + degree;
+    return variable + "^" + degree;
   }
 };
 
