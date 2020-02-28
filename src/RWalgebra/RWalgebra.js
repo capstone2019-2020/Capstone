@@ -752,7 +752,6 @@ const parse = (str) => {
     return new Expression(str);
 
 };
-
-module.exports = { Expression, Equation, parse };
-
+const rwalgebra = { Expression, Equation, parse };
+module.exports = rwalgebra;
 

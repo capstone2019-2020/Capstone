@@ -1,5 +1,4 @@
 const { Fraction } = require('./Fraction.js');
-const math = require('mathjs');
 
 // Variable Data structure
 var Variable = function (variable) {
@@ -107,15 +106,15 @@ Term.prototype.toString = function () {
   var str = "";
 
   // Coefficient is not 1
-  if (math.abs(Number(this.coefficient)) !== 1 && math.abs(Number(this.coefficient)) !== 0) {
+  if (Math.abs(Number(this.coefficient)) !== 1 && Math.abs(Number(this.coefficient)) !== 0) {
     // str += math.abs(this.coefficient).toString();
     str += (Number(this.coefficient).valueOf() < 0 ? "(" + this.coefficient.toString() + ")" : this.coefficient.toString());
   } 
 
   // There exists a fraction in the term
-  if (math.abs(Number(this.fraction.numer)) !== 1 || math.abs(Number(this.fraction.denom)) !== 1) {
+  if (Math.abs(Number(this.fraction.numer)) !== 1 || Math.abs(Number(this.fraction.denom)) !== 1) {
     // The numerator is one which can be replaced with the coefficient number
-    if (math.abs(Number(this.fraction.numer)) === 1 && math.abs(Number(this.coefficient)) !== 1) {
+    if (Math.abs(Number(this.fraction.numer)) === 1 && Math.abs(Number(this.coefficient)) !== 1) {
       str = "((" + str + ") / (" + this.fraction.denom.toString() + "))";  
     } else {
       str += "((" + this.fraction.numer.toString() + ") / (" + this.fraction.denom.toString() + "))";

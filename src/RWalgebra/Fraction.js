@@ -1,5 +1,3 @@
-const { Expression } = require('./RWalgebra.js');
-
 var Fraction = function (n, d) {
   // Error if the denominator is zero
   if (d === 0) {
