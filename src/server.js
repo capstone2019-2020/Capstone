@@ -55,7 +55,7 @@ app.post("/input-file", (req, res) => {
     circuit = circuitjs.createCircuit(c);
     let temp = circuit.nodalAnalysis();
 
-    temp.currentEquations.forEach(first => first.forEach(second => second.forEach(eqns => console.log(eqns.toString()))));
+//     temp.currentEquations.forEach(first => first.forEach(second => second.forEach(eqns => console.log(eqns.toString()))));
     temp.currentEquations.forEach((first) => 
         first.forEach((second) => second.forEach((eqns) => 
             {
