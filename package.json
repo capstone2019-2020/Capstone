@@ -23,6 +23,7 @@
   "homepage": "https://github.com/capstone2019-2020/Capstone#readme",
   "devDependencies": {
     "algebra.js": "^0.2.6",
+    "browserify": "^16.5.0",
     "jsonschema": "^1.2.4",
     "mathjs": "^6.2.1",
     "mocha": "^6.2.0"
