@@ -4,4 +4,4 @@ node_modules/
 *.results
 test/m5/output.txt
 output.txt
-/src/dist/rwalgebra-min.js
+*-min.js

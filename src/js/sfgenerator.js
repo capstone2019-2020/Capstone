@@ -76,24 +76,26 @@ function onSvgraphXChange(varName, replaceWith) {
     let json, expr, evaluated;
     eles.forEach(ele => {
       json = ele.json().data;
+      let d = json[eqnName];
+      let str = d;
       try {
-        let d = json[eqnName];
         if (d.includes(varName)) {
           expr = new Expression(d);
-          evaluated = expr.eval({
-            [varName]: replaceWith
-          });
+          evaluated = expr.eval({[varName]: replaceWith});
+          if (expr.isComplex()) {
+            str = evaluated.toPolar();
+          } else {
+            str = evaluated.toString();
+          }
+        } else {
+          return;
         }
       } catch (err) {
         console.error(err);
         return;
       }
 
-      if (!isNaN(evaluated)) {
-        ele.data({
-          [dataName]: evaluated.toString()
-        });
-      }
+      ele.data({[dataName]: str});
     });
   };
 

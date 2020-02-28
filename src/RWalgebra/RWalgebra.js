@@ -679,7 +679,7 @@ Expression.prototype.toPolar = function() {
   console.log(`angle: ${angle}`);
   angle = angle < 0 ? angle + 360.0 : angle;
 
-  return `${magnitude}&ang;${angle.toFixed(3)}`;
+  return `${magnitude}∠${angle.toFixed(3)}°`;
 };
 
 
