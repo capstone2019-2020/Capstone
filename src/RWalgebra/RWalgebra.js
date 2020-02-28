@@ -2,6 +2,7 @@ const { Variable, Term } = require('./TermVariable.js');
 const { TOKEN_TYPES, tokenize } = require ('./token.js');
 const { shuntingYard } = require('./parseHelper.js');
 
+const RAD_TO_DEG = 180 / Math.PI;
 const ADD = '+';
 const SUB = '-';
 const MULT = '*';
@@ -55,6 +56,17 @@ Expression.prototype.copy = function() {
   copy.real.constant = this.real.constant;
   copy.imag.constant = this.imag.constant;
   return copy;
+};
+
+
+/**
+ * Returns TRUE if the expression contains an imaginary portion
+ * FALSE otherwise
+ *
+ * @returns {number | boolean}
+ */
+Expression.prototype.isComplex = function() {
+  return (this.imag.terms.length !== 0 || (this.imag.constant !== null && this.imag.constant !== 0))
 };
 
 
@@ -646,6 +658,30 @@ Expression.prototype.magnitude = function() {
   /* |T(jw)| = 20 * log10 ( sqrt(real^2 + imag^2)) */
   return `20 * ${LOG_10} ( ${SQRT}( ${sum.toString()} ))`;
 };
+
+
+/**
+ * Returns polar representation of expression
+ * NOTE: will return NULL if the Expression object contains
+ *       variables
+ *
+ * @returns {string}
+ */
+Expression.prototype.toPolar = function() {
+  if (this.imag.terms.length || this.real.terms.length)
+    return null;
+
+  const _real = this.real.constant;
+  const _imag = this.imag.constant;
+
+  const magnitude = Math.sqrt(_real*_real + _imag*_imag).toFixed(3);
+  let angle = Math.atan(_imag/_real) * RAD_TO_DEG;
+  console.log(`angle: ${angle}`);
+  angle = angle < 0 ? angle + 360.0 : angle;
+
+  return `${magnitude}&ang;${angle.toFixed(3)}`;
+};
+
 
 Expression.prototype.toString = function () {
   let str = "";
