@@ -71,17 +71,19 @@ function initSvgraph() {
 }
 
 function onSvgraphXChange(varName, replaceWith) {
-  // console.log(varName, replaceWith);
-  return;
-  const replace = (eles, dataName) => {
+  const {Expression} = rwalgebra;
+  const replace = (eles, eqnName, dataName) => {
     let json, expr, evaluated;
     eles.forEach(ele => {
       json = ele.json().data;
       try {
-        expr = new Expression(json[dataName]);
-        evaluated = expr.eval({
-          [varName]: replaceWith
-        });
+        let d = json[eqnName];
+        if (d.includes(varName)) {
+          expr = new Expression(d);
+          evaluated = expr.eval({
+            [varName]: replaceWith
+          });
+        }
       } catch (err) {
         console.error(err);
         return;
@@ -95,8 +97,8 @@ function onSvgraphXChange(varName, replaceWith) {
     });
   };
 
-  replace(cy.nodes(), 'value');
-  replace(cy.edges(), 'edgeWeight');
+  replace(cy.nodes(), 'eqn', 'value');
+  replace(cy.edges(), 'eqn', 'edgeWeight');
 }
 
 /**
@@ -114,17 +116,23 @@ function sfgToCyto(sfg) {
   const nodes = [], edges = [];
   sfg.forEach(n => {
     let _id = n.value !== null ? n.value.toString() : n.id;
-    console.log(_id);
+    let _value = _id.substring(0, 7);
     nodes.push({
-      data: {id: n.id, value: _id.substring(0, 7)},
+      data: {
+        id: n.id,
+        value: _value,
+        eqn: _value
+      },
       classes: ['unselected-node']
     });
 
     n.outgoingEdges.forEach(e => {
+      let _value = e.weight.substring(0, 7);
       edges.push({
         data: {
           id: e.id,
-          edgeWeight: e.weight.substring(0, 7),
+          edgeWeight: _value,
+          eqn: _value,
           source: e.startNode,
           target: e.endNode
         }

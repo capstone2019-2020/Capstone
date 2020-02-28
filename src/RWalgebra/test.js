@@ -43,8 +43,9 @@ function main() {
   // console.log(ex.magnitude());
   // console.log(ex.phase());
 
-  let ex = new Expression(pow);
-  console.log(JSON.stringify(ex));
+  let ex = new Expression('x + 5j');
+  console.log(ex.toPolar());
+  console.log(ex.isComplex());
 
 
   // let ex = new Expression('24*x2 - 98*x1 - x2');

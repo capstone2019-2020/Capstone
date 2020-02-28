@@ -1,8 +1,62 @@
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.rwalgebra = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+var Fraction = function (n, d) {
+  // Error if the denominator is zero
+  if (d === 0) {
+    throw new EvalError("Dividing by Zero");
+  } else {
+    // this.numer = new Expression(n);
+    // this.denom = new Expression(d);
+    this.numer = n;
+    this.denom = d;
+  }
+};
+
+// In case it needs to be modified 
+// Without touching the actual object
+Fraction.prototype.copy = function () {
+  let numer = this.numer;
+  let denom = this.denom;
+
+  if (typeof this.denom !== 'number')
+    denom = this.denom.copy();
+  return new Fraction(numer, denom);
+};
+
+
+Fraction.prototype.toString = function () {
+  var numer = this.numer;
+  var denom = this.denom;
+
+  // Numerator is 0 then the fraction itself is 0
+  if (numer === 0) {
+    return "0";
+  } else {
+    return numer + "/" + denom;
+  }
+};
+
+// (function main() {
+//   var n = [
+//     '3',
+//     'A + B + x1'  ];
+//   var d = [
+//     'D - C - x2',
+//     'E - B - x2',];
+
+//   for (let i = 0; i < n.length; i++) {
+//     test = new Fraction(n[i], d[i]);
+//     console.log(test);
+//     // console.log(test.toString);
+//   }
+// })();
+
+module.exports = { Fraction };
+
+},{}],2:[function(require,module,exports){
 const { Variable, Term } = require('./TermVariable.js');
 const { TOKEN_TYPES, tokenize } = require ('./token.js');
 const { shuntingYard } = require('./parseHelper.js');
 
-const RAD_TO_DEG = 180 / Math.PI;
 const ADD = '+';
 const SUB = '-';
 const MULT = '*';
@@ -56,17 +110,6 @@ Expression.prototype.copy = function() {
   copy.real.constant = this.real.constant;
   copy.imag.constant = this.imag.constant;
   return copy;
-};
-
-
-/**
- * Returns TRUE if the expression contains an imaginary portion
- * FALSE otherwise
- *
- * @returns {number | boolean}
- */
-Expression.prototype.isComplex = function() {
-  return (this.imag.terms.length !== 0 || (this.imag.constant !== null && this.imag.constant !== 0))
 };
 
 
@@ -659,30 +702,6 @@ Expression.prototype.magnitude = function() {
   return `20 * ${LOG_10} ( ${SQRT}( ${sum.toString()} ))`;
 };
 
-
-/**
- * Returns polar representation of expression
- * NOTE: will return NULL if the Expression object contains
- *       variables
- *
- * @returns {string}
- */
-Expression.prototype.toPolar = function() {
-  if (this.imag.terms.length || this.real.terms.length)
-    return null;
-
-  const _real = this.real.constant;
-  const _imag = this.imag.constant;
-
-  const magnitude = Math.sqrt(_real*_real + _imag*_imag).toFixed(3);
-  let angle = Math.atan(_imag/_real) * RAD_TO_DEG;
-  console.log(`angle: ${angle}`);
-  angle = angle < 0 ? angle + 360.0 : angle;
-
-  return `${magnitude}&ang;${angle.toFixed(3)}`;
-};
-
-
 Expression.prototype.toString = function () {
   let str = "";
   
@@ -791,3 +810,447 @@ const parse = (str) => {
 const rwalgebra = { Expression, Equation, parse };
 module.exports = rwalgebra;
 
+
+},{"./TermVariable.js":3,"./parseHelper.js":4,"./token.js":5}],3:[function(require,module,exports){
+const { Fraction } = require('./Fraction.js');
+
+// Variable Data structure
+var Variable = function (variable) {
+  // Type should be a string 
+  if (typeof(variable) === "string") {
+    if (variable.search(/\^/) != -1) {
+      var v = variable.split("^");
+      this.degree = Number(v[1]);
+      this.name = v[0];
+    } else {
+      this.degree = 1;
+      this.name = variable;
+    }
+  } else {
+    throw new TypeError("Invalid Argument of Variable Initialization");
+  }
+};
+
+Variable.prototype.copy = function () {
+  let copy = new Variable(this.name);
+  copy.degree = this.degree;
+  return copy;
+};
+
+// Converting the variable to string function 
+Variable.prototype.toString = function () {
+  var degree = this.degree;
+  var variable = this.name;
+
+  // Exponent is 0 for the variable then return nothing
+  if (degree === 0) {
+    return "1";
+  } else if (degree === 1) {
+    // Exponent on the variable is 1
+    return variable;
+  } else {
+    return variable + "^" + degree;
+  }
+};
+
+var Term = function (variable) {
+  if (variable instanceof Variable) {
+    this.variables = [variable];
+    this.coefficient = 1;
+    this.fraction = new Fraction (1, 1);
+    this.imag = false;
+  }
+  else if (typeof(variable) === "string") {
+    this.variables = [new Variable(variable)];
+    this.coefficient = 1;
+    this.fraction = new Fraction(1, 1);
+    this.imag = false;
+  }
+  else if (variable === undefined) {
+    this.variables = [];
+    this.coefficient = 1;
+    this.fraction = new Fraction(1, 1);
+    this.imag = false;
+  }
+  else {
+    throw new TypeError("Invalid Argument for Term");
+  }
+
+};
+
+Term.prototype.eval = function(sub) {
+  let copy = this.copy();
+  const vars = Object.keys(sub);
+  copy.variables.forEach((v, i) => {
+    if (vars.includes(v.name)) {
+      if (typeof sub[v.name] !== 'number')
+        throw new ArgumentsError('ERROR: eval() only accepts floating point numbers!');
+      copy.coefficient *= Math.pow(sub[v.name], v.degree);
+    }
+  });
+
+  copy.variables = copy.variables.filter(v => !vars.includes(v.name));
+
+  // evaluate fraction
+  if (typeof copy.fraction.denom !== 'number'){
+    let denom = copy.fraction.denom.eval(sub);
+
+    if (typeof denom === 'number') {
+      if (denom === 0)
+        throw new Error('ERROR: Dividing by ZERO');
+      copy.coefficient = copy.coefficient / denom;
+      copy.fraction = new Fraction(1, 1);
+    } else
+      copy.fraction.denom = denom;
+  }
+
+  return copy;
+};
+
+Term.prototype.copy = function() {
+  let term = new Term();
+  term.coefficient = this.coefficient;
+  term.variables = this.variables.map(v => v.copy());
+  term.fraction = this.fraction.copy();
+  term.imag = this.imag;
+  return term;
+};
+
+Term.prototype.toString = function () {
+  var str = "";
+
+  // Coefficient is not 1
+  if (Math.abs(Number(this.coefficient)) !== 1 && Math.abs(Number(this.coefficient)) !== 0) {
+    // str += math.abs(this.coefficient).toString();
+    str += (Number(this.coefficient).valueOf() < 0 ? "(" + this.coefficient.toString() + ")" : this.coefficient.toString());
+  } 
+
+  // There exists a fraction in the term
+  if (Math.abs(Number(this.fraction.numer)) !== 1 || Math.abs(Number(this.fraction.denom)) !== 1) {
+    // The numerator is one which can be replaced with the coefficient number
+    if (Math.abs(Number(this.fraction.numer)) === 1 && Math.abs(Number(this.coefficient)) !== 1) {
+      str = "((" + str + ") / (" + this.fraction.denom.toString() + "))";  
+    } else {
+      str += "((" + this.fraction.numer.toString() + ") / (" + this.fraction.denom.toString() + "))";
+    }
+  }
+
+  // From algebra.js
+  str = this.variables.reduce(function (p, c) {
+      if (!!p) {
+          var vStr = c.toString();
+          return !!vStr ? p + "*" + vStr : p;
+      } else
+          return p.concat(c.toString());
+  }, str);
+  str = (str.substring(0, 3) === " * " ? str.substring(3, str.length) : str);
+  // str = (str.substring(0, 1) === "-" ? str.substring(1, str.length) : str);
+
+  if (Number(this.coefficient) === -1 && str !== "") {
+    str = "(-" + str + ")";
+  } else if (str === "" && Number(this.coefficient) === -1) {
+    str = this.coefficient;
+  }
+
+  return str;
+};
+
+module.exports = {
+  Variable: Variable, 
+  Term: Term
+};
+
+},{"./Fraction.js":1}],4:[function(require,module,exports){
+const { Variable, Term } = require('./TermVariable.js');
+const { Fraction } = require('./Fraction.js');
+const { TOKEN_TYPES, tokenize } = require ('./token.js');
+
+const PRECEDENCE = {
+  '+': 2,
+  '-': 2,   // Left
+  '/': 3,   // Left
+  '*': 3,   // Left
+  '^': 4    // Right
+};
+
+/**
+ * Executes the Shunting-Yard algorithm
+ * Reorders tokens into POSTFIX notation - facilitates parsing expressions with parentheses
+ *
+ * Reference: https://en.wikipedia.org/wiki/Shunting-yard_algorithm#The_algorithm_in_detail
+ *
+ * @param tokens
+ */
+const shuntingYard = (tokens) => {
+  let output_q = [];  // list of tokens in post-fix notation
+  let op_stack = [];  // operator stack
+
+  let t, op_top;
+  while(tokens.length) {
+    t = tokens.shift();
+    if (t.type === TOKEN_TYPES.LITERAL || t.type === TOKEN_TYPES.VAR || t.type === TOKEN_TYPES.IMAG_LIT || t.type === TOKEN_TYPES.IMAG_VAR)
+      output_q.push(t);
+
+    else if (t.type === TOKEN_TYPES.FUNC)
+      op_stack.push(t);
+
+    else if (t.type === TOKEN_TYPES.OP) {
+      op_top = op_stack[op_stack.length-1];
+      while(op_stack.length && (op_top.type === TOKEN_TYPES.FUNC || PRECEDENCE[t.value] < PRECEDENCE[op_top.value]
+        || (PRECEDENCE[t.value] === PRECEDENCE[op_top.value] && op_top.value !== '^'))
+        && op_top.type !== TOKEN_TYPES.LEFTPAR) {
+        output_q.push(op_stack.pop());
+        op_top = op_stack[op_stack.length-1];
+      }
+      op_stack.push(t);
+    }
+
+    else if (t.type === TOKEN_TYPES.LEFTPAR) {
+      op_stack.push(t);
+    }
+
+    else if (t.type === TOKEN_TYPES.RIGHTPAR) {
+      op_top = op_stack[op_stack.length-1];
+      while (op_stack.length && op_top.type !== TOKEN_TYPES.LEFTPAR) {
+        output_q.push(op_stack.pop());
+        op_top = op_stack[op_stack.length-1];
+      }
+      if (op_top.type === TOKEN_TYPES.LEFTPAR) {
+        op_stack.pop()
+      } else {
+        throw new ArgumentsError('Mismatched Parentheses!!!');
+      }
+    }
+  }
+
+  if (!tokens.length) {
+    while (op_stack.length) {
+      output_q.push(op_stack.pop());
+    }
+  }
+  return output_q;
+};
+
+module.exports = { shuntingYard };
+},{"./Fraction.js":1,"./TermVariable.js":3,"./token.js":5}],5:[function(require,module,exports){
+/**
+ * Constants Required for tokenizing expression
+ */
+const IMAG_NUM = 'j';
+const EXPONENTIAL_REGEX = new RegExp(/\d+\.?\d*e[+-]\d+/g);
+const _E_ = 'e';
+const _NEG_ = '-';
+const _POS_ = '+';
+
+/* Supported functions, operators, and special characters */
+const SUPPORTED_FUNCS = ['sin', 'cos', 'tan', 'log'];
+const SUPPORTED_OPS = ['+', '-', '/', '*', '^'];
+const SUPPORTED_VAR_CHARS = ['_']; // special chars that are allowed in variable names
+
+/* Token Types */
+const TOKEN_TYPES = {
+  VAR: 'Variable',
+  OP: 'Operator',
+  LEFTPAR: 'Left Parenthesis',
+  RIGHTPAR: 'Right Parenthesis',
+  LITERAL: 'Literal',
+  FUNC: 'Function',
+  IMAG_LIT: 'Imag Constant',
+  IMAG_VAR: 'Imag Variable'
+};
+
+
+
+/**
+ * Token Class
+ */
+const Token = function (_type, _val) {
+  this.type = _type;
+  this.value = _val;
+};
+
+/**
+ * Tokenizer - separates the Expression string into an array of tokens
+ * Each token has a type (defined above):
+ * - Literal: Constant number
+ * - Variable
+ * - Operator (+ - * / ^)
+ * - Imaginary: Constant imaginary number
+ * - Left/Right Parenthesis
+ *
+ * @param exp
+ * @returns {Array}
+ */
+const tokenize = (exp) => {
+  let num_buff = '';      // buffer to contain digits
+  let char_buff = '';     // buffer to contain characters
+  let in_var = false;     // boolean to determine if we are currently tokenizing a variable
+  let tokens = [];        // return value
+  exp = exp.replace(/\(\-/g, '(0-');
+
+  // need to replace instances of scientific notation
+  exp = replaceSciNotation(exp);
+
+  const chars = exp.split(''); // split into characters
+  chars.forEach(ch => {
+    if (ch === ' ') // Ignore spaces
+      return;
+
+    if (isImag(ch)) {
+      if (char_buff)
+        char_buff += ch;
+      else
+        num_buff += ch;
+    }
+    else if (isLetter(ch)){
+      char_buff += ch;
+      in_var = true;
+    }
+    else if (isDigit(ch)){
+      if (in_var)
+        char_buff += ch;
+      else{
+        num_buff += ch;
+      }
+    }
+    else if (isDecimal(ch)) {
+      num_buff += ch;
+    }
+    else if (isSpecialChar(ch)) {
+      if (in_var)
+        char_buff += ch;
+      else
+        throw new SyntaxError('Special characters: "_" are not allowed at the beginning of a variable name');
+    }
+    else if (isOperator(ch)){
+      if (char_buff || num_buff)
+        tokens.push(getTermFromNBOrCB(num_buff, char_buff));
+      tokens.push(new Token(TOKEN_TYPES.OP, ch));
+
+      in_var = false;
+      char_buff = '';
+      num_buff = '';
+    }
+    else if (isLeftParenthesis(ch)) {
+      if (char_buff) {
+        if (isSupportedFunc(char_buff))
+          tokens.push(new Token(TOKEN_TYPES.FUNC, char_buff));
+        else
+          throw new SyntaxError(`${char_buff} is not a supported function!`);
+        char_buff = '';
+      }
+      else if (num_buff) {
+        tokens.push(new Token(getTermFromNB(num_buff)));
+        num_buff = '';
+      }
+      tokens.push(new Token(TOKEN_TYPES.LEFTPAR, ch));
+      in_var = false;
+    }
+    else if (isRightParenthesis(ch)) {
+      if (char_buff || num_buff)
+        tokens.push(getTermFromNBOrCB(num_buff, char_buff));
+      tokens.push(new Token(TOKEN_TYPES.RIGHTPAR, ch));
+
+      in_var = false;
+      char_buff = '';
+      num_buff = '';
+    } else
+      throw new ArgumentsError('Invalid expression string!');
+  });
+
+  // add final tokens
+  if (char_buff || num_buff){
+    tokens.push(getTermFromNBOrCB(num_buff, char_buff));
+  }
+  return tokens;
+};
+
+
+/**
+ * Helper function to remove all instances of scientific notation
+ * from expression string
+ * Example:
+ *  10.0e+11 -> 10.0^11
+ *  10.0e-11 -> 10.0^(0-11)
+ *
+ * @param exp
+ */
+const replaceSciNotation = (exp) => {
+  // find all instances of scientific notation
+  let exponents =  exp.match(EXPONENTIAL_REGEX);
+  if (!exponents)
+    return exp;
+
+  /*
+   * For each instance, convert string to the correct format
+   * BASE * 10^ EXPONENT
+   */
+  let sci_str, components, b, p;
+  exponents.forEach( ex => {
+    components = ex.split(_E_);
+    if (components.length !== 2)
+      console.log( `ERROR! ${ex}`);
+
+    // get base and exponent components
+    b = components[0];
+    p = components[1];
+    if (p.indexOf(_NEG_) === -1) {
+      p = p.replace(_POS_, '');
+    } else {
+      let pow = p.substring(1);
+      p = `(0 - ${pow})`;
+    }
+    sci_str = `${b}*10^${p}`;
+    exp = exp.replace(ex, sci_str);
+  });
+
+  return exp;
+};
+
+/**
+ * Helper functions to help determine type of token
+ * @param ch
+ * @returns {boolean}
+ */
+const isDigit = (ch) => { return /\d/.test(ch); };
+const isImag = (ch) => { return ch === IMAG_NUM; };
+const isDecimal = (ch) => { return ch === '.'; };
+const isLetter = (ch) => { return /[a-zA-Z]/i.test(ch); };
+const isOperator = (ch) => { return SUPPORTED_OPS.includes(ch); };
+const isLeftParenthesis = (ch) => { return ch === '('; };
+const isRightParenthesis = (ch) => { return ch === ')'; };
+const isSpecialChar = (ch) => { return SUPPORTED_VAR_CHARS.includes(ch); };
+const isSupportedFunc = (str) = (str) => { return SUPPORTED_FUNCS.includes(str); };
+
+/**
+ * Helper functions to get Literal, Imaginary, and Variable tokens from char_buffer and num_buffers
+ * @param num_buff
+ * @returns {Token}
+ */
+const getTermFromNB = (num_buff) => {
+  if (num_buff.indexOf(IMAG_NUM) === -1)
+    return new Token(TOKEN_TYPES.LITERAL, num_buff);
+  else {
+    num_buff = num_buff.replace(IMAG_NUM, '');
+    return new Token(TOKEN_TYPES.IMAG_LIT, num_buff ? num_buff : '1');
+  }
+};
+
+const getTermFromCB = (char_buff) => {
+  if (char_buff.indexOf(IMAG_NUM) === -1)
+    return new Token(TOKEN_TYPES.VAR, char_buff);
+  else
+    return new Token(TOKEN_TYPES.IMAG_VAR, char_buff.replace(IMAG_NUM, ''));
+};
+
+const getTermFromNBOrCB = (num_buff, char_buff) => {
+  if (char_buff) {
+    return getTermFromCB(char_buff);
+  } else if (num_buff) {
+    return getTermFromNB(num_buff);
+  }
+};
+
+module.exports = { tokenize, TOKEN_TYPES };
+},{}]},{},[2])(2)
+});

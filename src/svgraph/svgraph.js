@@ -4,7 +4,7 @@ const MATHML_NS = 'http://www.w3.org/1998/Math/MathML';
 const MIN_XGRID = 8, MIN_YGRID = 8, MIN_X = 1, MIN_Y = 1;
 const MAX_XGRID = 15, MAX_YGRID = 15;
 const MAX_LOG_XGRID = 5;
-const SAMPLE_RATE = 10, SAMPLE_INTERVAL = 50; /* ms */
+const SAMPLE_RATE = 10, SAMPLE_INTERVAL = 200; /* ms */
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
 const GRID_MODE = true;
 const SEMI_LOG_MODE = true;
@@ -1366,6 +1366,7 @@ const SVGraph_initializer = (function()
       /* Anywhere but on axis -> change tracer */
       else {
         cb = cb_sweep_setup();
+        cb(); // call it instantly upon mousedown
       }
 
       if (!DEFINED(cb) || intervalId !== 0) {

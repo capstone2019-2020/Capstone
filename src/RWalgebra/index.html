@@ -35,7 +35,7 @@
       </ul>
    </li>
 </ul>
-<h2>Example</h2>
+<h2>Example: eval</h2>
 <p><b>Test Expression:</b></p>
 <p id="expression"></p><br>
 <p><b>Evaluating</b> {x_1: 1, x_2: 2}</p>
@@ -49,12 +49,23 @@
    document.getElementById('eval').innerHTML = ex.eval({x_1:1, x_2:2});<br>
 </p>
 
+
+<h2>Example: polar</h2>
+<p><b>Test Expression:</b></p>
+<p id="cartesian-ex"></p><br>
+<p><b>Polar Notation:</b></p>
+<p id="polar-ex"></p><br>
+
 <script type="text/javascript" src="../dist/rwalgebra-min.js"></script>
 <script>
    const {Expression} = rwalgebra;
    let ex = new Expression('(x_1+1)-(x_2+2)');
    document.getElementById('expression').innerHTML = ex.toString();
    document.getElementById('eval').innerHTML = ex.eval({x_1:1, x_2:2});
+
+   let complex = new Expression('7-5j');
+   document.getElementById('cartesian-ex').innerHTML = complex.toString();
+   document.getElementById('polar-ex').innerHTML = complex.toPolar();
 </script>
 </body>
 </html>
