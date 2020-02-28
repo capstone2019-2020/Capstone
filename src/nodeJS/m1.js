@@ -171,7 +171,6 @@ function computeSFG (params) {
     }
   }   
 
-  // termsofrhs.forEach(eqns => {console.log(`Terms of rhs ${eqns}`)});
   // To store into the nodes, go thorugh the termsoflhs list array
   for (let i = 0; i < termsoflhs.length; i++) {
     newNode = new datamodel.Node(termsoflhs[i].toString(), null);
@@ -194,12 +193,15 @@ function computeSFG (params) {
               check = startNode[startNode.length-1].toString();
               var toBeWeight = startNode.toString().split(termsoflhs[i].toString());
 
-              if (weight > 0) {
+              // console.log("TO BE WEIGHT = " + toBeWeight[0]);
+              if (weight === 1) {
                 weight = toBeWeight[0];
-              } else if (weight < 0) {
+              } else if (weight === -1) {
                 weight = "-"+toBeWeight[0];
               } else {
-                weight = weight.toString()+toBeWeight[0];
+                if (toBeWeight[0] !== "") {
+                  weight = weight.toString() + "*" + toBeWeight[0];
+                }
               }
                 
               // Get rid of the commas in the weight string
@@ -225,6 +227,7 @@ function computeSFG (params) {
             }
 
             if (check === termsoflhs[i].toString()) {
+              // console.log(weight.toString());
               newNode.outgoingEdges.push(new datamodel.Edge(weight.toString(), termsoflhs[i].toString(), termsoflhs[j].toString()));
             }
           }
@@ -238,6 +241,7 @@ function computeSFG (params) {
   nodesNum = nodes.length;
   for (let i = 0; i < termsofrhs.length; i++) {
     var tempTerm = termsofrhs[i];
+    // console.log("RHS equation being looked at: " + tempTerm.toString());
     
     if (tempTerm !== null) {
       for (let j = 0; j < tempTerm.length; j++) {
@@ -245,32 +249,51 @@ function computeSFG (params) {
   
         for (let numOfNodes = 0; numOfNodes < nodes.length; numOfNodes++) {
           if (tempTerm[j].toString().search(nodes[numOfNodes].id) === -1) {
-            vNodeNotFound += 1;
+              vNodeNotFound += 1;
           }
         }
-  
+
         // Create only the missing node
         if (vNodeNotFound === nodes.length) {
+          // console.log(vNodeNotFound);
+          // console.log(nodes.length);
+          // console.log("ENTERED THE IF STATMENT");
           var tempVariable = tempTerm[j].variables;
           var value = null;
           needToSearchRelation = true;
   
           // Means there is an alphabet as part of the coefficient
-          if (tempVariable.length != 1) {
+          if (tempVariable.length != 1 && tempVariable.length != 0) {
             startNode = tempVariable[tempVariable.length-1];
+              // console.log(typeof(startNode));
+              // console.log(startNode);
+              if (startNode.toString().search("w") != -1) {
+                startNode = tempVariable[tempVariable.length-2];
+              }
           } 
           else if (tempVariable.length === 1) {
             startNode = tempVariable;
           }
-  
-          newNode = new datamodel.Node(startNode.toString(), value); 
-          nodes.push(newNode);
+
+          // console.log(`NEW NODE IS: ${startNode}`);
+          if (startNode.toString().search("w") == -1) {
+            // console.log("ENTERED TO ADD IN THE NODE");
+            // console.log(`NEW NODE IS: ${startNode}`);
+            newNode = new datamodel.Node(startNode.toString(), value);
+            nodes.push(newNode);
+          }
+
+          if (termsoflhs.length < termsofrhs.length) {
+            // console.log(`INPUTTING INTO LHS ARRAY: ${startNode.toString()}`);
+            termsoflhs.push(startNode.toString());
+          }
         }
       }
     }
   }
 
   // Searching through the rhs of the eqns again to ensure the new nodes are also connected
+  // nodes.forEach(eqns => console.log(eqns.id.toString()));
   if (needToSearchRelation === true) {
     for (let searchNeeded = nodesNum; searchNeeded < nodes.length; searchNeeded++) {
       for (let i = 0; i < termsofrhs.length; i++) {
@@ -281,19 +304,32 @@ function computeSFG (params) {
             if (tempTerm[j].toString().search(nodes[searchNeeded].id) != -1) {
               var weight = tempTerm[j].coefficient;
               var tempVariable = tempTerm[j].variables;
-  
-              if (tempVariable.length != 1) {
-                var temp = tempVariable[tempVariable.length-1].toString();
-                var toBeWeight = tempVariable.toString().split(temp);
-  
-                if (weight > 0) {
+              // console.log("------------------------------------------");
+              // console.log(`Weight of the term: ${weight}`);
+              // console.log(`Variable of the term: ${tempVariable}`);
+
+              if (tempVariable.length != 1 && tempVariable.length != 0) {
+                // console.log("ENTERED THE IF STATEMENT");
+                var temp = tempVariable[tempVariable.length - 1].toString(), toBeWeight;
+                if (temp.search("w") !== -1) {
+                  temp = tempVariable[tempVariable.length - 2].toString();
+                }
+                toBeWeight = tempVariable.toString().split(temp);
+                // console.log(temp);
+                // console.log(`The numbers to become weight: ${toBeWeight[0]}`);
+
+                if (weight === 1) {
                   weight = toBeWeight[0];
-                } else if (weight < 0) {
+                } else if (weight === -1) {
                   weight = "-"+toBeWeight[0];
                 } else {
-                  weight = weight.toString()+toBeWeight[0];
+                  if (toBeWeight[0] !== "") {
+                    weight = weight.toString() + "*" + toBeWeight[0];
+                  }
                 }
-                  
+
+                // console.log("TO BE WEIGHT = " + toBeWeight[0]);
+
                 // Get rid of the commas in the weight string
                 if (weight.toString().search(',') != -1) {
                   weight = weight.toString().replace(/,/g, '');
@@ -314,8 +350,12 @@ function computeSFG (params) {
               if (tempTerm[j].imag === true) {
                 weight = weight + "j";
               }
-              
+
+              // console.log(`The term of the LHS will be: ${termsoflhs[i].toString()}`);
+
               if (temp === nodes[searchNeeded].id) {
+                // console.log("NEW NODE TO BE ADDED");
+                console.log(weight.toString());
                 nodes[searchNeeded].outgoingEdges.push(new datamodel.Edge (weight.toString(), nodes[searchNeeded].id, termsoflhs[i].toString()));
               }
             }
