@@ -247,6 +247,7 @@ async function generateSFG() {
     console.log(clickedNodes);
   });
 
+  console.log(loopgraph);
   loopgraph.put([`f(w) = ${loopElements.magnitude}`], [`f(w) = ${loopElements.phase}`]);
 }
 

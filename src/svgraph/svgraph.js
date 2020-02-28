@@ -909,9 +909,9 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       } = init_plot(ylb2, yub2, this.LENGTH_Y, ygrid2,
         !DEFINED(changeSet), y_offset1));
     }
-    let wrapper = ELEM('wrapper');
+    let wrapper = ELEM(this.ID_SVG_WRAPPER);
     if (wrapper) {
-      this.get_Svgraph().removeChild(ELEM('wrapper'));
+      this.get_Svgraph().removeChild(ELEM(this.ID_SVG_WRAPPER));
     }
   } catch (err) {
     return {
@@ -928,25 +928,37 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
   this.ORIGIN_Y1 = UP(this.START_Y, y_offset1);
   this.ORIGIN_Y2 = this.ORIGIN_Y1;
 
-  let _svg = svg('wrapper');
+  let _svg = svg(this.ID_SVG_WRAPPER);
 
   INFO(`yub1: ${yub1}, ylb1: ${ylb1}`);
   /* plot */
   __ns(_svg,
     undefined,
-    ...fpoints1.map(({points, color}) => g(
-      'plot', ...plot(this.ORIGIN_X, points,
-        RATIO(this.LENGTH_X, xub-xlb),
-        RATIO(this.LENGTH_Y, yub1-ylb1), color,
-        ylb1, this.START_X, this.START_Y, this.LENGTH_X)
-    )),
-    ...fpoints2.map(({points, color}) => g(
-      'plot', ...plot(this.ORIGIN_X, points,
-        RATIO(this.LENGTH_X, xub-xlb),
-        RATIO(this.LENGTH_Y, yub2-ylb2), color,
-        ylb2, this.START_X, this.START_Y, this.LENGTH_X)
-    )),
-    g('x-axis', ...xaxis({
+    ...fpoints1.map(({points, color}) =>
+      g(this.ID_LEFT_PLOTS,
+        ...plot(
+          this.ORIGIN_X,
+          points,
+          RATIO(this.LENGTH_X, xub-xlb),
+          RATIO(this.LENGTH_Y, yub1-ylb1),
+          color, ylb1,
+          this.START_X, this.START_Y, this.LENGTH_X
+        )
+      )
+    ),
+    ...fpoints2.map(({points, color}) =>
+      g(this.ID_RIGHT_PLOTS,
+        ...plot(
+          this.ORIGIN_X,
+          points,
+          RATIO(this.LENGTH_X, xub-xlb),
+          RATIO(this.LENGTH_Y, yub2-ylb2),
+          color, ylb2,
+          this.START_X, this.START_Y, this.LENGTH_X
+        )
+      )
+    ),
+    g(this.ID_X_AXIS, ...xaxis({
       leny: this.LENGTH_Y,
       lenx: this.LENGTH_X,
       lb: xlb,
@@ -961,7 +973,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       START_Y: this.START_Y,
       LENGTH_X: this.LENGTH_X
     }, generate_logvals(xlb, xub))),
-    g('y-axis-1', ...yaxis({
+    g(this.ID_LEFT_Y_AXIS, ...yaxis({
       leny: this.LENGTH_Y,
       lenx: this.LENGTH_X,
       AXIS_XPOS: this.AXIS_XPOS_1,
@@ -975,7 +987,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       START_Y: this.START_Y,
       LENGTH_X: this.LENGTH_X
     }, true, false)),
-    g('y-axis-2', ...yaxis({
+    g(this.ID_RIGHT_Y_AXIS, ...yaxis({
       leny: this.LENGTH_Y,
       lenx: this.LENGTH_X,
       AXIS_XPOS: this.AXIS_XPOS_2,
@@ -993,12 +1005,12 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
 
   this.get_Svgraph().appendChild(_svg);
   if (is_update) {
-    let legend_elem = ELEM('legend');
+    let legend_elem = ELEM(this.ID_LEGEND);
     if (legend_elem) {
       this.get_Svgraph().removeChild(legend_elem);
     }
     this.get_Svgraph().appendChild(
-      g('legend', ...legend(
+      g(this.ID_LEGEND, ...legend(
         [...fpoints1, ...fpoints2],
         this.ID_LEGEND,
         this.START_X
@@ -1013,21 +1025,46 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
   };
 }
 
-const SVGraph_initializer = (function() {
+const SVGraph_initializer = (function()
+{
+  /*****************************************************
+   * Constructor for SVGraph.
+   *****************************************************
+   * The constructor takes in 1 argument: a string ID.
+   * Please make sure that this ID matches the ID on the
+   * element that was created in the first step. This ID
+   * will be adopted by the top-level DOM element of this
+   * SVGraph instance - child elements of SVGraph will use
+   * this ID as a unique namespace identifier
+   * (e.g. svg-graph-legend, svg-graph-xaxis, etc.).
+   *
+   * @param ID_GRAPH_SVG
+   * @constructor
+   */
   function SVGraph(ID_GRAPH_SVG='svg-graph') {
     this.ORIGIN_X = 100;
     this.ORIGIN_Y1 = 450;
     this.ORIGIN_Y2 = 450; /* These change depending on graph */
 
     this.ID_GRAPH_SVG = ID_GRAPH_SVG;
-    this.ID_GUIDE_X = `${ID_GRAPH_SVG}-x-guide`;
-    this.ID_GUIDE_Y = `${ID_GRAPH_SVG}-y-guide`;
-    this.ID_LEGEND = `${ID_GRAPH_SVG}-legend`;
-    this.ID_FREQUENCY_SWEEPER = `${ID_GRAPH_SVG}-freq-guide';`;
+    this.NS = ID_GRAPH_SVG;
+    this.ID_GUIDE_X = `${this.NS}-x-guide`;
+    this.ID_GUIDE_Y = `${this.NS}-y-guide`;
+
+    this.ID_LEGEND = `${this.NS}-legend`;
+    this.ID_SVG_WRAPPER = `${this.NS}-wrapper`;
+    this.ID_FREQUENCY_SWEEPER = `${this.NS}-freq-guide';`;
+
+    this.ID_LEFT_PLOTS = `${this.NS}-left-plots`;
+    this.ID_RIGHT_PLOTS = `${this.NS}-right-plots`;
+    this.ID_X_AXIS = `${this.NS}-x-axis`;
+    this.ID_LEFT_Y_AXIS = `${this.NS}-left-y-axis`;
+    this.ID_RIGHT_Y_AXIS = `${this.NS}-right-y-axis`;
 
     if (this.get_Svgraph() === null) {
-      throw new Error(`Cannot initialize svgraph, 
-        element with ID \"${this.ID_GRAPH_SVG}\" does not exist`);
+      throw new Error(
+        `Cannot initialize svgraph, `
+          + `cannot find element with ID \"${ID_GRAPH_SVG}\"`);
     }
 
     /*
@@ -1042,17 +1079,17 @@ const SVGraph_initializer = (function() {
     /*
      * Padding/spacing & dimensions:
      *
-     *                         width
-     *        -----------------------------------------
-     *        |   |				                       |    | top
-     *        |---+------------------------------+----|
-     *        |   |				                       |	  |
-     * height	|   |		        SVGraph		         |    |
-     *        |   |				                       |    |
-     *        |---+------------------------------+----|
-     *        |   |				                       |    | bottom
-     *        -----------------------------------------
-     *         left				                       right
+     *                     width
+     *    -----------------------------------------
+     *    |   |				                       |    | top
+     * h  |---+------------------------------+----|
+     * e  |   |				                       |	  |
+     * i	|   |		        SVGraph		         |    |
+     * g  |   |				                       |    |
+     * h  |---+------------------------------+----|
+     * t  |   |				                       |    | bottom
+     *    -----------------------------------------
+     *     left				                       right
      */
 
     /* Everything is in pixels */
