@@ -217,7 +217,7 @@ function computeSFG (params) {
               if (math.abs(Number(tempTermOfrhs[k].fraction.numer)) == 1 && math.abs(Number(tempTermOfrhs[k].coefficient)) !== 1) {
                 weight = weight + "/" + tempTermOfrhs[k].fraction.denom.toString();
               } else {
-                weight += "*((" + tempTermOfrhs[k].fraction.numer.toString() + ") / (" + tempTermOfrhs[k].fraction.denom.toString() + "))";
+                weight += "*(" + tempTermOfrhs[k].fraction.numer.toString() + ") / (" + tempTermOfrhs[k].fraction.denom.toString() + ")";
               }
             }
 
@@ -343,7 +343,7 @@ function computeSFG (params) {
                 if (math.abs(Number(tempTerm[j].fraction.numer)) == 1 && math.abs(Number(tempTerm[j].coefficient)) !== 1) {
                   weight = weight + "/" + tempTerm[j].fraction.denom.toString();
                 } else {
-                  weight += "*((" + tempTerm[j].fraction.numer.toString() + ") / (" + tempTerm[j].fraction.denom.toString() + "))";
+                  weight += "*(" + tempTerm[j].fraction.numer.toString() + ") / (" + tempTerm[j].fraction.denom.toString() + ")";
                 }
               }
   
