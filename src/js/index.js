@@ -126,7 +126,7 @@ async function sendNext(event) {
 }
 
 function setLocalStorage(key, val) {
-    console.log(`Setting cookie: { ${key}=${val} }`);
+    // console.log(`Setting cookie: { ${key}=${val} }`);
     localStorage.setItem(key, val);
 }
 

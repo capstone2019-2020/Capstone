@@ -115,9 +115,9 @@ Term.prototype.toString = function () {
   if (Math.abs(Number(this.fraction.numer)) !== 1 || Math.abs(Number(this.fraction.denom)) !== 1) {
     // The numerator is one which can be replaced with the coefficient number
     if (Math.abs(Number(this.fraction.numer)) === 1 && Math.abs(Number(this.coefficient)) !== 1) {
-      str = "((" + str + ") / (" + this.fraction.denom.toString() + "))";  
+      str = "(" + str + ") / (" + this.fraction.denom.toString() + ")";  
     } else {
-      str += "((" + this.fraction.numer.toString() + ") / (" + this.fraction.denom.toString() + "))";
+      str += "(" + this.fraction.numer.toString() + ") / (" + this.fraction.denom.toString() + ")";
     }
   }
 

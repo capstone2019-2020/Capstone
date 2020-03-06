@@ -138,13 +138,17 @@ Node.prototype.computeShortCircuitCurrent = function(){
                 }
             }
             else{
+                var obj = {};
+                var var_name = "n" + this.id;
+                obj[var_name] = 0; // evaluate nx = 0 (x is a int, a node id)
+                var evaluated_current = r.current.eval(obj);
                 // current goes from pnode->nnode: current going out -> negative by convention
                 if (this.id == r.pnode){
-                    iShortCircuit.subtract(r.current);
+                    iShortCircuit.subtract(evaluated_current);
                 } 
                 else{
                     // Skip (+) sign for the first term
-                    iShortCircuit.add(r.current);
+                    iShortCircuit.add(evaluated_current);
                 }
             }
 
@@ -584,21 +588,22 @@ AnalysisSummary.prototype.addSummary= function(id, dpi, isc, eqs){
     this.currentEquations.push(eqs);
 };
 
-// (function main(){
-//     const voltage_div = 'test/netlist_ann1.txt'
-//     const var_simple = 'test/netlist_ann2.txt'
-//     const curr_src = 'test/netlist_ann_csrc.txt'
-//     const rc = 'test/netlist_ann_rc.txt'
-//     const vcvs = 'test/netlist_ann_vcvs.txt'
-//     const vcvs2 = 'test/netlist_ann_vcvs2.txt'
-//     const amplifier = 'test/netlist_ann_vcvs3.txt'
-//     const vccs = 'test/netlist_ann_vccs.txt'
+(function main(){
+    const voltage_div = 'test/netlist_ann1.txt'
+    const var_simple = 'test/netlist_ann2.txt'
+    const curr_src = 'test/netlist_ann_csrc.txt'
+    const rc = 'test/netlist_ann_rc.txt'
+    const vcvs = 'test/netlist_ann_vcvs.txt'
+    const vcvs2 = 'test/netlist_ann_vcvs2.txt'
+    const amplifier = 'test/netlist_ann_vcvs3.txt'
+    const vccs = 'test/netlist_ann_vccs.txt'
 
-//     c = nl.nlConsume(curr_src);
-//     circuit = createCircuit(c);
-//     var summary = circuit.nodalAnalysis();
-//     console.log(JSON.stringify(summary.currentEquations.toString()));
-// })();
+    c = nl.nlConsume(vcvs);
+    circuit = createCircuit(c);
+    var summary = circuit.nodalAnalysis();
+    console.log(JSON.stringify(summary.dpi.toString()));
+    console.log(JSON.stringify(summary.shorCircuitCurrent.toString()));
+})();
 
 exports.createCircuit = createCircuit;
 exports.setCircuit = (c) => {

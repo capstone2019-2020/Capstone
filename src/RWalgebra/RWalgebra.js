@@ -651,12 +651,14 @@ Expression.prototype.magnitude = function() {
   const real = terms.filter(t => !t.imag);
   const imag = terms.filter(t => t.imag);
   imag.forEach( t => t.imag = false );
-  const real_squared = multiplyTerms(real, real); // compute a^2
-  const imag_squared = multiplyTerms(imag, imag); // compuate b^2
-  const sum = new Expression(addTerms(real_squared, imag_squared));
+  // const real_squared = multiplyTerms(real, real); // compute a^2
+  // const imag_squared = multiplyTerms(imag, imag); // compuate b^2
+  // const sum = new Expression(addTerms(real_squared, imag_squared));
+  const _real = new Expression(real);
+  const _imag = new Expression(imag);
 
   /* |T(jw)| = 20 * log10 ( sqrt(real^2 + imag^2)) */
-  return `20 * ${LOG_10} ( ${SQRT}( ${sum.toString()} ))`;
+  return `20 * ${LOG_10} ( ${SQRT}( (${_real.toString()})^2 + (${_imag.toString()})^2 ))`;
 };
 
 
