@@ -1,17 +1,22 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const ID_SFG = 'svg-sfg';
-const SZ_CIRCLE_RADIUS = 10;
+const SZ_CIRCLE_RADIUS = 6;
+const BEZIER_SAMPLE_RATE = 40;
 
 /* Fake macros */
 const AVG = arr => arr.reduce((total, e) => total+e)/arr.length;
 const CENTER = vecs => __vec(AVG(vecs.map(v => v.x)), AVG(vecs.map(v => v.y)));
 const SHIFT = (v, s) => __vec(v.x+s.x, v.y+s.y);
-const MAG = vec => Math.sqrt(Math.pow(vec.x,2)+Math.pow(vec.y,2));
-const NORM = vec => __vec(vec.x/MAG(vec), vec.y/MAG(vec));
+const MAG = v => Math.sqrt(Math.pow(v.x,2)+Math.pow(v.y,2));
+const NORM = v => __vec(v.x/MAG(v), v.y/MAG(v));
+const MULT = (v, scalar) => __vec(v.x*scalar, v.y*scalar);
+const MULT_X = (v, scalar) => __vec(v.x*scalar, v.y);
+const MULT_Y = (v, scalar) => __vec(v.x, v.y*scalar);
 const DOT = (v1, v2) => v1.x*v2.x + v1.y*v2.y;
 const DET = (v1, v2) => v1.x*v2.y - v1.y*v2.x;
 const SUB = (v1, v2) => __vec(v1.x-v2.x, v1.y-v2.y);
-const ANGLE = (v1, v2) => {
+const ADD = (v1, v2) => __vec(v1.x+v2.x, v1.y+v2.y);
+const CW_ANGLE = (v1, v2) => {
   /* https://stackoverflow.com/questions/14066933/direct-way-of-computing-clockwise-angle-between-2-vectors */
   let n_v1 = NORM(v1), n_v2 = NORM(v2);
 
@@ -61,6 +66,66 @@ function polygon(points, config={}) {
   });
 }
 
+function polyline(points, config={}) {
+  const p = document.createElementNS(SVG_NS, 'polyline');
+
+  return __ns(p, {
+    points,
+    ...config
+  });
+}
+
+function _bezier_(len) {
+  const BEZIER = 'f(x) = 3(1-x)*x^2';
+  const X_LOWER = 0;
+  const X_UPPER = 1;
+  let vecs = [];
+
+  /*
+   * Take samples in the math space of the BEZIER
+   * function. These points will be stored as vecs
+   * for later translation.
+   *
+   * Later steps takes vecs from BEZIER space and
+   * transforms it into coordinate space where it
+   * can be visualized on the SVG canvas.
+   */
+  const parser = math.parser();
+  parser.evaluate(BEZIER);
+  let sample_amt = 1/BEZIER_SAMPLE_RATE;
+  let xval, yval;
+  for (xval=X_LOWER; xval<=X_UPPER; xval+=sample_amt) {
+    yval = parser.evaluate(`f(${xval})`);
+    vecs.push(__vec(xval, yval));
+  }
+
+  /*
+   * Fix-up: might not be exactly divisible by
+   * BEZIER_SAMPLE_RATE which results in a "gaps" in
+   * the vecs. If this is the case, simply evaluate
+   * BEZIER at X_UPPER to seal up this gap.
+   */
+  if (xval-sample_amt < X_UPPER) {
+    yval = parser.evaluate(`f(${X_UPPER})`);
+    vecs.push(__vec(xval, yval));
+  }
+
+  /*
+   * (1) Translate all vecs so the starting point is
+   *     at coordinate space (0,0).
+   *     Note: y-value in each vec remains the same,
+   *     translation only concerns the x-value.
+   * (2) Scale vecs so it fits in the coordinate space.
+   *     This is the transformation from BEZIER space
+   *     to coordinate space.
+   */
+  console.log(VECS_TO_POINTS(vecs));
+  vecs = trans(vecs, __vec(0-X_LOWER, 0));
+  vecs = scale(vecs, __vec(len/(X_UPPER-X_LOWER), 100));
+
+  return vecs;
+}
+
 function _arrow_() {
   let points = [
     __vec(16,16), __vec(24,19), __vec(32,22),
@@ -79,6 +144,16 @@ function trans(vecs, vec_trans) {
   let i;
   for (i=0; i<vecs.length; i++) {
     vecs[i] = SHIFT(vecs[i], vec_trans);
+  }
+
+  return vecs;
+}
+
+function scale(vecs, vec_scale) {
+  let i, v;
+  for (i=0; i<vecs.length; i++) {
+    v = vecs[i];
+    vecs[i] = MULT_Y(MULT_X(v, vec_scale.x), vec_scale.y);
   }
 
   return vecs;
@@ -117,7 +192,9 @@ function line(vecf, vect, config={}) {
 function render(V, E) {
   const nodes = Object.values(V).map(v => {
     return circle(v.vec, SZ_CIRCLE_RADIUS, {
-        fill: 'black'
+        fill: 'transparent',
+        stroke: 'black',
+        'stroke-width': 1
       });
   });
   let edges = [];
@@ -128,23 +205,57 @@ function render(V, E) {
     let i, e;
     for (i=0; i<E_v.length; i++) {
       e = E_v[i];
+
       v_from = V[e.from].vec;
       v_to = V[e.to].vec;
 
-      edges.push(line(v_from, v_to,
-        {stroke: 'red'}
+      /*
+       * Make v_from/v_to start/end outside of the
+       * vertex.
+       */
+      let fuzzy_v = MULT(NORM(SUB(v_to, v_from)),
+        SZ_CIRCLE_RADIUS);
+      v_from = ADD(v_from, fuzzy_v);
+      v_to = SUB(v_to, fuzzy_v);
+
+      /*
+       * Use an approximated BEZIER curve to get
+       * straight/curve edges.
+       * (1) Rotate edge CW by theta
+       * (2) Translate edge so it connects with the nodes
+       */
+      let b_theta = CW_ANGLE(__vec(10, 0), SUB(v_to, v_from));
+      console.log(`Edge-${e.id}: B_THETA = ${b_theta}`);
+
+      let bezier = _bezier_(MAG(SUB(v_to, v_from)));
+      bezier = rot(bezier, b_theta);
+      bezier = trans(bezier, v_from);
+      let green = 0, green_inc = 255/bezier.length;
+      bezier.forEach(bv => {
+        edges.push(circle(bv, 1, {
+          fill: `rgb(255,${green},0)`
+        }));
+        green+=green_inc;
+      });
+      edges.push(polyline(VECS_TO_POINTS(bezier),
+        {
+          stroke: 'black',
+          fill: 'none',
+          'stroke-width': 0.5
+        }
       ));
 
       /*
-       * Find angle between edge vector and the x-axis
-       * vector (as a reference). Then rotate the arrow
-       * to that position.
+       * Find counter-clockwise angle between edge
+       * vector and the x-axis vector (as a reference).
+       * (1) Rotate arrow CW by theta
+       * (2) Translate arrow to center of edge
        */
-      let theta = ANGLE(__vec(-10, 0), SUB(v_to, v_from));
-      console.log(`Edge-${e.id}: THETA = ${theta}`);
+      let a_theta = CW_ANGLE(__vec(-10, 0), SUB(v_to, v_from));
+      console.log(`Edge-${e.id}: B_THETA = ${b_theta}`);
       arrow = _arrow_();
-      arrow = rot(arrow, theta);
-      arrow = trans(arrow, CENTER([v_from, v_to]));
+      arrow = rot(arrow, a_theta);
+      arrow = trans(arrow, bezier[Math.floor(bezier.length/2)]);
       edges.push(polygon(
         VECS_TO_POINTS(arrow),
         {fill: 'black'}
@@ -228,6 +339,27 @@ const _sfg = [
         id: 'e3',
         startNode: 'v3',
         endNode: 'v2'
+      }
+    ]
+  },
+  {
+    id: 'v4',
+    x: 100, y: 300,
+    outgoingEdges: [
+      {
+        id: 'e5',
+        startNode: 'v4',
+        endNode: 'v1'
+      },
+      {
+        id: 'e6',
+        startNode: 'v4',
+        endNode: 'v2'
+      },
+      {
+        id: 'e7',
+        startNode: 'v4',
+        endNode: 'v3'
       }
     ]
   }
