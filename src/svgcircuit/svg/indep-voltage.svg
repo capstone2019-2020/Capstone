@@ -1,0 +1,15 @@
+<svg width="358" height="115" xmlns="http://www.w3.org/2000/svg">
+ <!-- Created with Method Draw - http://github.com/duopixel/Method-Draw/ -->
+ <g>
+  <title>Layer 1</title>
+  <line stroke="#000" stroke-linecap="undefined" stroke-linejoin="undefined" id="svg_1" y2="58.453127" x2="122.504348" y1="58.453127" x1="2.833333" stroke-width="4" fill="none"/>
+  <path id="svg_14" d="m138.750008,274.72657" opacity="0.5" fill-opacity="null" stroke-opacity="null" stroke-width="9" stroke="#000" fill="none"/>
+  <path id="svg_15" d="m103.250008,293.22657" opacity="0.5" fill-opacity="null" stroke-opacity="null" stroke-width="9" stroke="#000" fill="none"/>
+  <line stroke="#000" stroke-linecap="undefined" stroke-linejoin="undefined" id="svg_25" y2="57.953127" x2="354.084873" y1="57.953127" x1="235.080521" stroke-width="4" fill="none"/>
+  <ellipse ry="2.666666" rx="2.666666" id="svg_30" cy="57.635414" cx="4.833347" fill-opacity="null" stroke-opacity="null" stroke-width="4" stroke="#000" fill="none"/>
+  <ellipse ry="2.666666" rx="2.666666" id="svg_32" cy="57.635414" cx="352.849277" fill-opacity="null" stroke-opacity="null" stroke-width="4" stroke="#000" fill="none"/>
+  <ellipse ry="54.999995" rx="54.999995" id="svg_35" cy="57.968756" cx="179.000004" fill-opacity="null" stroke-opacity="null" stroke-width="4" stroke="#000" fill="none"/>
+  <text xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="43" id="svg_37" y="68.968753" x="199.999999" fill-opacity="null" stroke-opacity="null" stroke-width="0" stroke="#000" fill="#000000">+</text>
+  <text xml:space="preserve" text-anchor="start" font-family="Helvetica, Arial, sans-serif" font-size="43" id="svg_38" y="70.302089" x="132.666672" fill-opacity="null" stroke-opacity="null" stroke-width="0" stroke="#000" fill="#000000">-</text>
+ </g>
+</svg>
