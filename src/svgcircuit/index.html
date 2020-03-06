@@ -21,13 +21,12 @@
 
 <body>
 	<textarea rows="10" cols="50" id="netlist" placeholder="Enter netlist..."></textarea> <br>
-	<input type="button" value="generate circuit" onClick="generateCircuit('circuit-canvas')" />
+	<input type="button" value="generate circuit" onClick="generateCircuit('circuit-canvas')" /><br>
 
-	<div id="circuit-canvas"></div>
   <div id="sfg" class="svg">
-    <svg id='svg-sfg' width='100%' height='100%'></svg>
+     <svg id='svg-sfg' width='100%' height='100%'></svg>
   </div>
-  <script src="sfg.js"></script>
+	<div id="circuit-canvas"></div>
   <script src="index.js"></script>
 </body>
 </html>
