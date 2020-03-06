@@ -1,4 +1,4 @@
-const { Expression, parse } = require('./RWalgebra.js');
+const { Equation, Expression, parse } = require('./RWalgebra.js');
 const { Variable } = require('./TermVariable.js');
 const { tokenize } = require('./token.js');
 
@@ -43,9 +43,16 @@ function main() {
   // console.log(ex.magnitude());
   // console.log(ex.phase());
 
-  let ex = new Expression('x + 5j');
-  console.log(ex.toPolar());
-  console.log(ex.isComplex());
+  let eq = new Expression('1/');
+  console.log('------------------BEFORE-----------------------');
+  // console.log(JSON.stringify(eq));
+  console.log(JSON.stringify(eq));
+
+  let str = eq.toString();
+  let ex = eq.inverse();
+  console.log('------------------AFTER-----------------------');
+  console.log(ex.toString());
+  // console.log(JSON.stringify(ex));
 
 
   // let ex = new Expression('24*x2 - 98*x1 - x2');
