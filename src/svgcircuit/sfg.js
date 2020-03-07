@@ -4,6 +4,7 @@ const SZ_CIRCLE_RADIUS = 5;
 const BEZIER_SAMPLE_RATE = 200;
 
 /* Fake macros */
+const ELEM = (id) => document.getElementById(id);
 const AVG = arr => arr.reduce((total, e) => total+e)/arr.length;
 const CENTER = vecs => __vec(AVG(vecs.map(v => v.x)), AVG(vecs.map(v => v.y)));
 const SHIFT = (v, s) => __vec(v.x+s.x, v.y+s.y);
@@ -306,7 +307,6 @@ function render(V, E) {
        * (2) Translate edge so it connects with the nodes
        */
       let b_theta = CW_ANGLE(__vec(10, 0), SUB(v_to, v_from));
-      console.log(`Edge-${e.id}: B_THETA = ${b_theta}`);
 
       let bezier = _bezier_(MAG(SUB(v_to, v_from)));
       bezier = rot(bezier, b_theta);
@@ -334,7 +334,6 @@ function render(V, E) {
        */
       let tan_v = discrete_tan(bezier, Math.floor(bezier.length/2));
       let a_theta = CW_ANGLE(__vec(-10, 0), tan_v);
-      console.log(`Edge-${e.id}: B_THETA = ${b_theta}`);
       arrow = _arrow_();
       arrow = rot(arrow, a_theta);
       arrow = trans(arrow, bezier[Math.floor(bezier.length/2)]);
@@ -391,6 +390,7 @@ function init(sfg) {
 }
 
 function visualize_bezier() {
+  const colors = ['grey', 'blue', 'green', 'orange', 'purple'];
   let P = [
     __vec(0,0), __vec(-0.5,2), __vec(2,2),
     __vec(3,0.5), __vec(3.5,2), __vec(4,0)
@@ -408,9 +408,9 @@ function visualize_bezier() {
     let q_n, v, len;
     let n;
     for (n=0; n<Q.length-1; n++) {
-      let c_dn1 = document.getElementById(`circle-${depth}-${n}`);
-      let c_dn2 = document.getElementById(`circle-${depth}-${n+1}`);
-      let l_dn = document.getElementById(`line-${depth}-${n}`);
+      let c_dn1 = ELEM(`circle-${depth}-${n}`);
+      let c_dn2 = ELEM(`circle-${depth}-${n+1}`);
+      let l_dn = ELEM(`line-${depth}-${n}`);
       if (DEFINED(c_dn1)) {
         getSFG().removeChild(c_dn1);
       }
@@ -423,16 +423,17 @@ function visualize_bezier() {
 
       _Q_svg.push(circle((Q[n]), 2, {
         id: `circle-${depth}-${n}`,
-        fill: `rgb(${255/depth},100,100)`
+        fill: colors[depth % colors.length]
       }));
       _Q_svg.push(circle((Q[n+1]), 2, {
         id: `circle-${depth}-${n+1}`,
-        fill: `rgb(${255/depth},100,100)`
+        fill: colors[depth % colors.length]
       }));
       _Q_svg.push(line((Q[n]), Q[n+1], {
         id: `line-${depth}-${n}`,
         fill: 'none',
-        stroke: `rgb(100,${255/depth},100)`
+        'stroke-width': 0.5,
+        stroke: colors[depth % colors.length]
       }));
 
       v = SUB(Q[n+1], Q[n]);
@@ -458,12 +459,12 @@ function visualize_bezier() {
   let _i = 0;
   let int_num = setInterval(() => {
     if (_i <= BEZIER_SAMPLE_RATE) {
-      let _v = bezier(1, _i, ...P);
+      let _v = bezier(0, _i, ...P);
       vecs.push(_v);
       __ns(getSFG(), {}, polyline(VECS_TO_POINTS(vecs), {
         fill: 'none',
         stroke: 'red',
-        'stroke-width': 1
+        'stroke-width': 3
       }));
       __ns(getSFG(), {}, circle(_v, 1, {
         fill: 'yellow'
@@ -474,10 +475,10 @@ function visualize_bezier() {
       __ns(getSFG(), {}, polyline(VECS_TO_POINTS(vecs), {
         fill: 'none',
         stroke: 'red',
-        'stroke-width': 1
+        'stroke-width': 3
       }));
     }
-  }, 50);
+  }, 20);
 }
 
 const _sfg = [
