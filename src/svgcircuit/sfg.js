@@ -1,7 +1,7 @@
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const ID_SFG = 'svg-sfg';
-const SZ_CIRCLE_RADIUS = 6;
-const BEZIER_SAMPLE_RATE = 40;
+const SZ_CIRCLE_RADIUS = 5;
+const BEZIER_SAMPLE_RATE = 50;
 
 /* Fake macros */
 const AVG = arr => arr.reduce((total, e) => total+e)/arr.length;
@@ -75,10 +75,102 @@ function polyline(points, config={}) {
   });
 }
 
+function line(vecf, vect, config={}) {
+  const l = document.createElementNS(SVG_NS, 'line');
+  l.style.zIndex = '1';
+
+  return __ns(l, {
+    ...config,
+    x1: vecf.x,
+    y1: vecf.y,
+    x2: vect.x,
+    y2: vect.y
+  });
+}
+
+function discrete_tan(vecs, i) {
+  if (vecs.length === 1 || i === 0
+    || i === vecs.length-1) {
+    console.log('cannot calculate discrete tan');
+    return __vec(0,0);
+  }
+
+  /*
+   * Calculates the discrete tangent of a curve
+   * described by an array of points at a point
+   * p (which is also a vector) which can be indexed
+   * using vecs[i].
+   */
+  let p = vecs[i];
+
+  let t1 = SUB(p, vecs[i-1]);
+  let t2 = SUB(vecs[i+1], p);
+
+  return __vec((t1.x+t2.x)/2, (t1.y+t2.y)/2);
+}
+
 function _bezier_(len) {
+  let P = [
+    __vec(0,0), __vec(-0.5,2), __vec(2,2),
+    __vec(3,0.5), __vec(3.5,2), __vec(4,0)
+  ];
+  const X_LOWER = P[0].x;
+  const X_UPPER = P[P.length-1].x;
+
+  /* Recursive inner function */
+  const bezier = (i, ...Q) => {
+    if (!Q.length) return;
+
+    let _Q = [];
+
+    let q_n, v, len;
+    let n;
+    for (n=0; n<Q.length-1; n++) {
+      v = SUB(Q[n+1], Q[n]);
+      len = MAG(v);
+      q_n = ADD(
+        MULT(NORM(v), (len/BEZIER_SAMPLE_RATE)*i),
+        Q[n]
+      );
+
+      _Q.push(q_n);
+    }
+
+    /* Base case */
+    if (_Q.length === 1) {
+      return _Q[0];
+    }
+
+    return bezier(i, ..._Q);
+  };
+
+  let vecs = [];
+  let i;
+  for (i=0; i<=BEZIER_SAMPLE_RATE; i++) {
+    vecs.push(bezier(i, ...P));
+  }
+
+  /*
+   * (1) Translate all vecs so the starting point is
+   *     at coordinate space (0,0).
+   *     Note: y-value in each vec remains the same,
+   *     translation only concerns the x-value.
+   * (2) Scale vecs so it fits in the coordinate space.
+   *     This is the transformation from BEZIER space
+   *     to coordinate space.
+   */
+  console.log(VECS_TO_POINTS(vecs));
+  vecs = trans(vecs, __vec(0-X_LOWER, 0));
+  vecs = scale(vecs, __vec(len/(X_UPPER-X_LOWER), 40));
+
+  return vecs;
+}
+
+function _approx_curve_(len) {
   const BEZIER = 'f(x) = 3(1-x)*x^2';
   const X_LOWER = 0;
   const X_UPPER = 1;
+
   let vecs = [];
 
   /*
@@ -121,7 +213,7 @@ function _bezier_(len) {
    */
   console.log(VECS_TO_POINTS(vecs));
   vecs = trans(vecs, __vec(0-X_LOWER, 0));
-  vecs = scale(vecs, __vec(len/(X_UPPER-X_LOWER), 100));
+  vecs = scale(vecs, __vec(len/(X_UPPER-X_LOWER), 70));
 
   return vecs;
 }
@@ -176,19 +268,6 @@ function rot(vecs, theta) {
   return vecs;
 }
 
-function line(vecf, vect, config={}) {
-  const l = document.createElementNS(SVG_NS, 'line');
-  l.style.zIndex = '1';
-
-  return __ns(l, {
-    ...config,
-    x1: vecf.x,
-    y1: vecf.y,
-    x2: vect.x,
-    y2: vect.y
-  });
-}
-
 function render(V, E) {
   const nodes = Object.values(V).map(v => {
     return circle(v.vec, SZ_CIRCLE_RADIUS, {
@@ -197,6 +276,7 @@ function render(V, E) {
         'stroke-width': 1
       });
   });
+
   let edges = [];
   {
     let E_v = Object.values(E);
@@ -251,7 +331,8 @@ function render(V, E) {
        * (1) Rotate arrow CW by theta
        * (2) Translate arrow to center of edge
        */
-      let a_theta = CW_ANGLE(__vec(-10, 0), SUB(v_to, v_from));
+      let tan_v = discrete_tan(bezier, Math.floor(bezier.length/2));
+      let a_theta = CW_ANGLE(__vec(-10, 0), tan_v);
       console.log(`Edge-${e.id}: B_THETA = ${b_theta}`);
       arrow = _arrow_();
       arrow = rot(arrow, a_theta);
@@ -311,7 +392,7 @@ function init(sfg) {
 const _sfg = [
   {
     id: 'v1',
-    x: 30, y: 30,
+    x: 100, y: 100,
     outgoingEdges: [
       {
         id: 'e2',
