@@ -3,6 +3,7 @@ const _SVG_NS_ = 'http://www.w3.org/2000/svg';
 const _RESISTOR_TYPE_ = 'R';
 const _INDEP_VOLTAGE_TYPE_ = 'V';
 const _INDEP_CURRENT_TYPE_ = 'I';
+const _CAPACITOR_ = 'C';
 
 const _NODE_RADIUS_ = 4;
 const _LINE_WIDTH_ = 2;
@@ -38,6 +39,9 @@ const create = (type, id, coord1, coord2) => {
       break;
     case _INDEP_CURRENT_TYPE_:
       element = IndependentCurrent(id, coord1, coord2);
+      break;
+    case _CAPACITOR_:
+      element = Capacitor(id, coord1, coord2);
       break;
     default:
       break;
@@ -244,6 +248,31 @@ const resistorSymbol = (start, end) => {
   return Path(d);
 };
 
+const capacitorSymbol = (start, end) => {
+  let cap = createSVGGroup();
+  let horiz = isHorizontal(start, end);
+  const OFFSET = 20;
+  let x1, x2, y1, y2;
+  if (horiz) {
+    x1 = start.x;
+    x2 = end.x;
+    y1 = start.y + OFFSET;
+    y2 = end.y - OFFSET;
+    console.log(`${x1}, ${x2}, ${y1}, ${y2}`);
+    cap.appendChild(Line({x: x1, y: y1}, {x: x1, y: y2}));
+    cap.appendChild(Line({x: x2, y: y1}, {x: x2, y: y2}));
+  } else {
+    x1 = start.x + OFFSET;
+    x2 = end.x - OFFSET;
+    y1 = start.y;
+    y2 = end.y;
+    cap.appendChild(Line({x: x1, y: y1}, {x: x2, y: y1}));
+    cap.appendChild(Line({x: x1, y: y2}, {x: x2, y: y2}));
+  }
+
+  return cap;
+};
+
 /**
  * Circle symbol for independent sources
  * NOTE: there will be separate functions to create
@@ -258,10 +287,10 @@ const independentSymbol = (start, end) => {
   let centre;
   if (isHorizontal(start, end)) {
     length = end.x - start.x;
-    centre = { x: start.x + length, y: start.y };
+    centre = { x: start.x + length/2, y: start.y };
   } else {
     length = end.y - start.y;
-    centre = { x: start.x, y: start.y + (end.y - start.y)/2}
+    centre = { x: start.x, y: start.y + length/2}
   }
 
   return Circle(centre, Math.abs(length/2));
@@ -343,12 +372,21 @@ const Resistor = (id, coord1, coord2) => {
   return resistor;
 };
 
+const Capacitor = (id, coord1, coord2) => {
+  console.log('CREATING CAPACITOR...');
+  let capacitor = GenericElement(id, coord1, coord2, 0.45);
+
+  const {start, end} = getSymbolBounds(coord1, coord2, 0.45);
+  capacitor.appendChild(
+    capacitorSymbol(start, end));
+  return capacitor;
+};
 
 const IndependentVoltage = (id, coord1, coord2) => {
   console.log('CREATING INDEPENDENT VOLTAGE SOURCE...');
-  let voltage_src = GenericElement(id, coord1, coord2, 1/3);
+  let voltage_src = GenericElement(id, coord1, coord2, 0.35);
 
-  const {start, end} = getSymbolBounds(coord1, coord2, 1/3);
+  const {start, end} = getSymbolBounds(coord1, coord2, 0.35);
   voltage_src.appendChild(independentSymbol(start, end));
   voltage_src.appendChild(voltageSymbol(start, end));
   return voltage_src;
@@ -356,9 +394,9 @@ const IndependentVoltage = (id, coord1, coord2) => {
 
 const IndependentCurrent = (id, coord1, coord2) => {
   console.log('CREATING INDEPENDENT CURRENT...');
-  let current_src = GenericElement(id, coord1, coord2, 1/3);
+  let current_src = GenericElement(id, coord1, coord2, 0.35);
 
-  const {start, end} = getSymbolBounds(coord1, coord2, 1/3);
+  const {start, end} = getSymbolBounds(coord1, coord2, 0.35);
   current_src.appendChild(independentSymbol(start, end));
   current_src.appendChild(currentSymbol(start, end));
   return current_src;
