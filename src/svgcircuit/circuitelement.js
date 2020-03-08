@@ -148,7 +148,7 @@ const Text = (msg, coord, size='1em') => {
   text.setAttribute('x', coord.x);
   text.setAttribute('y', coord.y);
   text.setAttribute('font-size', size);
-  text.setAttribute('font-family', 'Helvetica sans-serif');
+  text.setAttribute('font-family', 'Calibri');
   text.setAttribute('text-anchor', 'middle');
   text.appendChild(
     document.createTextNode(msg)
@@ -251,7 +251,7 @@ const resistorSymbol = (start, end) => {
 const capacitorSymbol = (start, end) => {
   let cap = createSVGGroup();
   let horiz = isHorizontal(start, end);
-  const OFFSET = 20;
+  const OFFSET = 30;
   let x1, x2, y1, y2;
   if (horiz) {
     x1 = start.x;
@@ -351,6 +351,9 @@ const currentSymbol = (pos, neg) => {
  * @param fract - % of line from coord1 -> coord2 that is used up by the 2 lines
  * @constructor
  */
+const getCenter = (c1, c2) => {return {x: (parseFloat(c1.x) + parseFloat(c2.x))/2,
+  y: (parseFloat(c1.y) + parseFloat(c2.y))/2}};
+
 const GenericElement = (id, coord1, coord2, fract) => {
   let element = createSVGGroup();
   createNodes(coord1, coord2).forEach(
@@ -359,6 +362,14 @@ const GenericElement = (id, coord1, coord2, fract) => {
   createLines(coord1, coord2, fract).forEach(
     l => element.appendChild(l)
   );
+
+  // label the element
+  const center = getCenter(coord1, coord2);
+  if (isHorizontal(coord1, coord2)) {
+    element.appendChild(Text(id, {x: center.x, y: center.y - 40}, '1.5em'));
+  } else {
+    element.append(Text(id, {x: center.x + 50, y: center.y}, '1.5em'));
+  }
   return element;
 };
 
