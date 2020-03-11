@@ -17,7 +17,9 @@ const DOT = (v1, v2) => v1.x*v2.x + v1.y*v2.y;
 const DET = (v1, v2) => v1.x*v2.y - v1.y*v2.x;
 const SUB = (v1, v2) => __vec(v1.x-v2.x, v1.y-v2.y);
 const ADD = (v1, v2) => __vec(v1.x+v2.x, v1.y+v2.y);
+const EQUALS = (v1, v2) => v1.x === v2.x && v1.y === v2.y;
 const DEFINED = (v) => (typeof v !== 'undefined') && (v !== null);
+const DEG_TO_RAD = deg => deg*0.0174533; /* Approximate - avoid divison */
 const CW_ANGLE = (v1, v2) => {
   /* https://stackoverflow.com/questions/14066933/direct-way-of-computing-clockwise-angle-between-2-vectors */
   let n_v1 = NORM(v1), n_v2 = NORM(v2);
@@ -27,6 +29,7 @@ const CW_ANGLE = (v1, v2) => {
   return Math.atan2(det, dot);
 };
 const VECS_TO_POINTS = vecs => vecs.reduce((aggr, v) => aggr+=`${v.x},${v.y} `, '');
+
 
 function getSFG() {
   return document.getElementById(ID_SFG);
@@ -90,7 +93,7 @@ function line(vecf, vect, config={}) {
   });
 }
 
-function discrete_tan(vecs, i) {
+function finite_diff(vecs, i) {
   if (vecs.length === 1 || i === 0
     || i === vecs.length-1) {
     console.log('cannot calculate discrete tan');
@@ -111,11 +114,7 @@ function discrete_tan(vecs, i) {
   return __vec((t1.x+t2.x)/2, (t1.y+t2.y)/2);
 }
 
-function _bezier_(len) {
-  let P = [
-    __vec(0,0), __vec(-0.5,2), __vec(2,2),
-    __vec(3,0.5), __vec(3.5,2), __vec(4,0)
-  ];
+function _bezier_(P, len, factor) {
   const X_LOWER = P[0].x;
   const X_UPPER = P[P.length-1].x;
 
@@ -161,9 +160,9 @@ function _bezier_(len) {
    *     This is the transformation from BEZIER space
    *     to coordinate space.
    */
-  console.log(VECS_TO_POINTS(vecs));
+  console.log(VECS_TO_POINTS(vecs), scale);
   vecs = trans(vecs, __vec(0-X_LOWER, 0));
-  vecs = scale(vecs, __vec(len/(X_UPPER-X_LOWER), 40));
+  vecs = scale(vecs, __vec(len/(X_UPPER-X_LOWER), factor));
 
   return vecs;
 }
@@ -213,7 +212,6 @@ function _approx_curve_(len) {
    *     This is the transformation from BEZIER space
    *     to coordinate space.
    */
-  console.log(VECS_TO_POINTS(vecs));
   vecs = trans(vecs, __vec(0-X_LOWER, 0));
   vecs = scale(vecs, __vec(len/(X_UPPER-X_LOWER), 70));
 
@@ -270,7 +268,30 @@ function rot(vecs, theta) {
   return vecs;
 }
 
+function get_bezier(V, E, v_from, v_to, self_loop) {
+  let bezier;
+  if (self_loop) {
+    bezier = _bezier_(
+      [
+        __vec(0,0), __vec(-25,4),
+        __vec(10,2), __vec(6,6),
+        __vec(30,-1),__vec(3,0)
+      ],
+      MAG(SUB(v_to, v_from)), 15);
+  } else {
+    bezier = _bezier_(
+      [
+        __vec(0,0), __vec(-0.5,2), __vec(2,2),
+        __vec(3,0.5), __vec(3.5,2), __vec(4,0)
+      ],
+      MAG(SUB(v_to, v_from)), 50);
+  }
+
+  return bezier;
+}
+
 function render(V, E) {
+  let v_center = CENTER(Object.values(V).map(v => v.vec));
   const nodes = Object.values(V).map(v => {
     return circle(v.vec, SZ_CIRCLE_RADIUS, {
         fill: 'transparent',
@@ -283,22 +304,38 @@ function render(V, E) {
   {
     let E_v = Object.values(E);
     let arrow;
-    let v_from, v_to;
+    let p_from, p_to;
+    let v_from, v_to, v_dir;
     let i, e;
     for (i=0; i<E_v.length; i++) {
       e = E_v[i];
 
-      v_from = V[e.from].vec;
-      v_to = V[e.to].vec;
+      p_from = V[e.from].vec;
+      p_to = V[e.to].vec;
 
       /*
-       * Make v_from/v_to start/end outside of the
+       * Make p_from/p_to start/end outside of the
        * vertex.
+       * If it's a self-loop, we set an arbitrary
+       * direction for fuzzy_v.
        */
-      let fuzzy_v = MULT(NORM(SUB(v_to, v_from)),
-        SZ_CIRCLE_RADIUS);
-      v_from = ADD(v_from, fuzzy_v);
-      v_to = SUB(v_to, fuzzy_v);
+      let fuzzy_v, self_loop = false;
+      if (EQUALS(p_from, p_to)) {
+        self_loop = true;
+        v_dir = NORM(SUB(p_from, v_center));
+        [v_from] = rot([v_dir], DEG_TO_RAD(45));
+        [v_to] = rot([v_dir], -DEG_TO_RAD(45));
+
+        fuzzy_v = MULT(v_from, SZ_CIRCLE_RADIUS);
+        p_from = ADD(p_from, fuzzy_v);
+        fuzzy_v = MULT(v_to, SZ_CIRCLE_RADIUS);
+        p_to = ADD(p_to, fuzzy_v);
+      } else {
+        fuzzy_v = MULT(NORM(SUB(p_to, p_from)),
+          SZ_CIRCLE_RADIUS);
+        p_from = ADD(p_from, fuzzy_v);
+        p_to = SUB(p_to, fuzzy_v);
+      }
 
       /*
        * Use an approximated BEZIER curve to get
@@ -306,11 +343,11 @@ function render(V, E) {
        * (1) Rotate edge CW by theta
        * (2) Translate edge so it connects with the nodes
        */
-      let b_theta = CW_ANGLE(__vec(10, 0), SUB(v_to, v_from));
+      let b_theta = CW_ANGLE(__vec(10, 0), SUB(p_to, p_from));
 
-      let bezier = _bezier_(MAG(SUB(v_to, v_from)));
+      let bezier = get_bezier(V, E, p_from, p_to, self_loop);
       bezier = rot(bezier, b_theta);
-      bezier = trans(bezier, v_from);
+      bezier = trans(bezier, p_from);
       let green = 0, green_inc = 255/bezier.length;
       bezier.forEach(bv => {
         edges.push(circle(bv, 1, {
@@ -332,7 +369,7 @@ function render(V, E) {
        * (1) Rotate arrow CW by theta
        * (2) Translate arrow to center of edge
        */
-      let tan_v = discrete_tan(bezier, Math.floor(bezier.length/2));
+      let tan_v = finite_diff(bezier, Math.floor(bezier.length/2));
       let a_theta = CW_ANGLE(__vec(-10, 0), tan_v);
       arrow = _arrow_();
       arrow = rot(arrow, a_theta);
@@ -389,98 +426,6 @@ function init(sfg) {
   render(V, E);
 }
 
-function visualize_bezier() {
-  const colors = ['grey', 'blue', 'green', 'orange', 'purple'];
-  let P = [
-    __vec(0,0), __vec(-0.5,2), __vec(2,2),
-    __vec(3,0.5), __vec(3.5,2), __vec(4,0)
-  ];
-  P = scale(P, __vec(50, 50));
-  P = trans(P, __vec(500, 100));
-
-  /* Recursive inner function */
-  const bezier = (depth, i, ...Q) => {
-    if (!Q.length) return;
-
-    let _Q = [];
-    let _Q_svg = [];
-
-    let q_n, v, len;
-    let n;
-    for (n=0; n<Q.length-1; n++) {
-      let c_dn1 = ELEM(`circle-${depth}-${n}`);
-      let c_dn2 = ELEM(`circle-${depth}-${n+1}`);
-      let l_dn = ELEM(`line-${depth}-${n}`);
-      if (DEFINED(c_dn1)) {
-        getSFG().removeChild(c_dn1);
-      }
-      if (DEFINED(c_dn2)) {
-        getSFG().removeChild(c_dn2);
-      }
-      if (DEFINED(l_dn)) {
-        getSFG().removeChild(l_dn);
-      }
-
-      _Q_svg.push(circle((Q[n]), 2, {
-        id: `circle-${depth}-${n}`,
-        fill: colors[depth % colors.length]
-      }));
-      _Q_svg.push(circle((Q[n+1]), 2, {
-        id: `circle-${depth}-${n+1}`,
-        fill: colors[depth % colors.length]
-      }));
-      _Q_svg.push(line((Q[n]), Q[n+1], {
-        id: `line-${depth}-${n}`,
-        fill: 'none',
-        'stroke-width': 0.5,
-        stroke: colors[depth % colors.length]
-      }));
-
-      v = SUB(Q[n+1], Q[n]);
-      len = MAG(v);
-      q_n = ADD(
-        MULT(NORM(v), (len/BEZIER_SAMPLE_RATE)*i),
-        Q[n]
-      );
-
-      _Q.push(q_n);
-    }
-    __ns(getSFG(), {}, ..._Q_svg);
-
-    /* Base case */
-    if (_Q.length === 1) {
-      return _Q[0];
-    }
-
-    return bezier(depth+1, i, ..._Q);
-  };
-
-  let vecs = [];
-  let _i = 0;
-  let int_num = setInterval(() => {
-    if (_i <= BEZIER_SAMPLE_RATE) {
-      let _v = bezier(0, _i, ...P);
-      vecs.push(_v);
-      __ns(getSFG(), {}, polyline(VECS_TO_POINTS(vecs), {
-        fill: 'none',
-        stroke: 'red',
-        'stroke-width': 3
-      }));
-      __ns(getSFG(), {}, circle(_v, 1, {
-        fill: 'yellow'
-      }));
-      _i++;
-    } else {
-      clearInterval(int_num);
-      __ns(getSFG(), {}, polyline(VECS_TO_POINTS(vecs), {
-        fill: 'none',
-        stroke: 'red',
-        'stroke-width': 3
-      }));
-    }
-  }, 20);
-}
-
 const _sfg = [
   {
     id: 'v1',
@@ -533,6 +478,22 @@ const _sfg = [
         id: 'e7',
         startNode: 'v4',
         endNode: 'v3'
+      }
+    ]
+  },
+  {
+    id: 'v5',
+    x: 400, y: 100,
+    outgoingEdges: [
+      {
+        id: 'e8',
+        startNode: 'v5',
+        endNode: 'v4'
+      },
+      {
+        id: 'e9',
+        startNode: 'v5',
+        endNode: 'v5'
       }
     ]
   }
