@@ -2,6 +2,8 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 const ID_SFG = 'svg-sfg';
 const SZ_CIRCLE_RADIUS = 5;
 const BEZIER_SAMPLE_RATE = 200;
+const PI_2 = 1.57079632679;
+const PI = Math.PI;
 
 /* Fake macros */
 const ELEM = (id) => document.getElementById(id);
@@ -20,6 +22,9 @@ const ADD = (v1, v2) => __vec(v1.x+v2.x, v1.y+v2.y);
 const EQUALS = (v1, v2) => v1.x === v2.x && v1.y === v2.y;
 const DEFINED = (v) => (typeof v !== 'undefined') && (v !== null);
 const DEG_TO_RAD = deg => deg*0.0174533; /* Approximate - avoid divison */
+const RAD_TO_DEG = rad => rad*57.2958; /* Approximate - avoid divisoin */
+const IN_RANGE = (v, l, u) => v >= l && v <= u; /* Inclusive on lower and upper: [l, u] */
+const ANGLE = (v1, v2) => Math.acos(DOT(NORM(v1), NORM(v2)));
 const CW_ANGLE = (v1, v2) => {
   /* https://stackoverflow.com/questions/14066933/direct-way-of-computing-clockwise-angle-between-2-vectors */
   let n_v1 = NORM(v1), n_v2 = NORM(v2);
@@ -160,7 +165,6 @@ function _bezier_(P, len, factor) {
    *     This is the transformation from BEZIER space
    *     to coordinate space.
    */
-  console.log(VECS_TO_POINTS(vecs), scale);
   vecs = trans(vecs, __vec(0-X_LOWER, 0));
   vecs = scale(vecs, __vec(len/(X_UPPER-X_LOWER), factor));
 
@@ -268,30 +272,97 @@ function rot(vecs, theta) {
   return vecs;
 }
 
+function reflect_x(vecs) {
+  let i, v;
+  for (i=0; i<vecs.length; i++) {
+    v = vecs[i];
+    vecs[i] = __vec(v.x, -v.y);
+  }
+
+  return vecs;
+}
+
 function get_bezier(V, E, v_from, v_to, self_loop) {
   let bezier;
   if (self_loop) {
-    bezier = _bezier_(
+    return _bezier_(
       [
-        __vec(0,0), __vec(-25,4),
-        __vec(10,2), __vec(6,6),
-        __vec(30,-1),__vec(3,0)
+        __vec(0, 0), __vec(-50, 5),
+        __vec(20, 12), __vec(30, 4),
+        __vec(35, 5), __vec(5,0)
       ],
-      MAG(SUB(v_to, v_from)), 15);
-  } else {
-    bezier = _bezier_(
-      [
-        __vec(0,0), __vec(-0.5,2), __vec(2,2),
-        __vec(3,0.5), __vec(3.5,2), __vec(4,0)
-      ],
-      MAG(SUB(v_to, v_from)), 50);
+      MAG(SUB(v_to, v_from)), 7);
   }
+
+  /*
+   * Conventions to follow:
+   * ----------------------------------------------------
+   * (1) If v_from and v_to are on the horizontal line (e.g.
+   *     within +/-5° of the horizontal line, and vector
+   *     direction is RIGHT, then a straight line is drawn.
+   * (2) If v_from and v_to are on the horizontal line, but
+   *     direction is LEFT, then use wide bezier curve
+   *     facing AWAY from the graph center.
+   * (3) Scale factor is a function of distance and angle
+   *     as follows:
+   *        s(d, θ) = min(50, 40 * d/300 * S_spec)
+   *        S_spec = |cos(θ)|^p, 0 < p < 1000
+   *
+   *     This equation says: the max scale factor is 50.
+   *     Angle is measured based on the vector formed from
+   *     [v = v_to_ - v_from] wrt the horizontal line.
+   *     Separates the unit circle (360°) into 4 quadrants of
+   *     90° each: θ' = θ mod 90°.
+   *     Then, scale the curve according to a Blinn-Phong-like
+   *     specular curve:
+   *     The closer the angle is to 45°, the more 'curve'
+   *     the bezier will have.
+   *
+   */
+  let h = __vec(1,0);
+  let v = SUB(v_to, v_from);
+  let d = MAG(SUB(v_to, v_from));
+  let theta = CW_ANGLE(h, v)%(PI_2);
+  let S_spec = Math.pow(Math.abs(Math.cos(theta/PI_2-1)), 0.3);
+  let s = Math.min(50, 40*d/300*S_spec);
+
+  // (1)
+  {
+    let angle = RAD_TO_DEG(ANGLE(v, h));
+    // Straight line
+    if (angle < 5) {
+      return _bezier_(
+        [__vec(0,0), __vec(10,0)],
+        MAG(SUB(v_to, v_from)), s);
+    }
+    // Wide bezier
+    else if (180-angle < 5) {
+      return _bezier_(
+        [
+          __vec(0,0), __vec(-2,10),
+          __vec(4,10), __vec(2,0)
+        ],
+        MAG(SUB(v_to, v_from)), 12);
+    }
+  }
+
+  // else
+  bezier = _bezier_(
+    [
+      __vec(0,0), __vec(-0.5,2), __vec(2,2),
+      __vec(3,0.5), __vec(3.5,2), __vec(4,0)
+    ],
+    MAG(SUB(v_to, v_from)), s);
 
   return bezier;
 }
 
 function render(V, E) {
   let v_center = CENTER(Object.values(V).map(v => v.vec));
+  __ns(getSFG(), {}, circle(v_center, 5, {
+    fill: 'red',
+
+  }));
   const nodes = Object.values(V).map(v => {
     return circle(v.vec, SZ_CIRCLE_RADIUS, {
         fill: 'transparent',
@@ -322,9 +393,9 @@ function render(V, E) {
       let fuzzy_v, self_loop = false;
       if (EQUALS(p_from, p_to)) {
         self_loop = true;
-        v_dir = NORM(SUB(p_from, v_center));
-        [v_from] = rot([v_dir], DEG_TO_RAD(45));
-        [v_to] = rot([v_dir], -DEG_TO_RAD(45));
+        let vert = __vec(0,1);
+        [v_from] = rot([vert], DEG_TO_RAD(60));
+        [v_to] = rot([vert], -DEG_TO_RAD(60));
 
         fuzzy_v = MULT(v_from, SZ_CIRCLE_RADIUS);
         p_from = ADD(p_from, fuzzy_v);
@@ -342,10 +413,24 @@ function render(V, E) {
        * straight/curve edges.
        * (1) Rotate edge CW by theta
        * (2) Translate edge so it connects with the nodes
+       * (3) Determine orientation of angle wrt center of
+       *     mass. Then determine if the curve needs to
+       *     be reflected.
        */
-      let b_theta = CW_ANGLE(__vec(10, 0), SUB(p_to, p_from));
+      let v, h, pc;
+      let b_theta, v_theta;
+      v = SUB(p_to, p_from);
+      h = __vec(1, 0);
+      b_theta = CW_ANGLE(h, v);
+      pc = SUB(CENTER([p_from, p_to]), v_center);
+      v_theta = RAD_TO_DEG(CW_ANGLE(h, pc));
 
       let bezier = get_bezier(V, E, p_from, p_to, self_loop);
+      bezier = reflect_x(bezier);
+      if (IN_RANGE(v_theta, 225, 360)
+        || IN_RANGE(v_theta, 0,45) && !self_loop) {
+        bezier = reflect_x(bezier);
+      }
       bezier = rot(bezier, b_theta);
       bezier = trans(bezier, p_from);
       let green = 0, green_inc = 255/bezier.length;
@@ -494,10 +579,25 @@ const _sfg = [
         id: 'e9',
         startNode: 'v5',
         endNode: 'v5'
+      },
+      {
+        id: 'e11',
+        startNode: 'v5',
+        endNode: 'v6'
+      }
+    ]
+  },
+  {
+    id: 'v6',
+    x: 550, y: 100,
+    outgoingEdges: [
+      {
+        id: 'e10',
+        startNode: 'v6',
+        endNode: 'v5'
       }
     ]
   }
 ];
 
 init(_sfg);
-visualize_bezier();
