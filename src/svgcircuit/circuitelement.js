@@ -3,11 +3,20 @@ const _SVG_NS_ = 'http://www.w3.org/2000/svg';
 const _RESISTOR_TYPE_ = 'R';
 const _INDEP_VOLTAGE_TYPE_ = 'V';
 const _INDEP_CURRENT_TYPE_ = 'I';
-const _CAPACITOR_ = 'C';
+const _CAPACITOR_TYPE_ = 'C';
+const _DEP_VCVS_TYPE_ = 'E';
+const _DEP_VCCS_TYPE_ = 'G';
+const _DEP_CCVS_TYPE_ = 'H';
+
+const _RESISTOR_L_ = 50;
+const _INDEP_L_ = 50;
+const _CAP_L_ = 25;
+const _DEP_L_ = 50;
 
 const _NODE_RADIUS_ = 4;
 const _LINE_WIDTH_ = 2;
 const _DEFAULT_COLOR_ = '#000';
+const _RESISTOR_HEIGHT_ = 20;
 
 /*
  * Generic SVG element create functions
@@ -40,8 +49,17 @@ const create = (type, id, coord1, coord2) => {
     case _INDEP_CURRENT_TYPE_:
       element = IndependentCurrent(id, coord1, coord2);
       break;
-    case _CAPACITOR_:
+    case _CAPACITOR_TYPE_:
       element = Capacitor(id, coord1, coord2);
+      break;
+    case _DEP_VCVS_TYPE_:
+      element = DependentVoltage(id, coord1, coord2);
+      break;
+    case _DEP_VCCS_TYPE_:
+      element = DependentVoltage(id, coord1, coord2);
+      break;
+    case _DEP_CCVS_TYPE_:
+      element = DependentCurrent(id, coord1, coord2);
       break;
     default:
       break;
@@ -59,7 +77,7 @@ const createNodes = (coord1, coord2) => {
 
 const isHorizontal = (coord1, coord2) => coord1.y === coord2.y;
 
-const createLines = (coord1, coord2, fract) => {
+const createLines = (coord1, coord2, length) => {
   let lines = [];
   let x1 = parseFloat(coord1.x), y1 = parseFloat(coord1.y);
   let x2 = parseFloat(coord2.x), y2 = parseFloat(coord2.y);
@@ -72,12 +90,12 @@ const createLines = (coord1, coord2, fract) => {
 
     /* line 1 */
     line_pos1 = {x: x1, y: y1};
-    line_pos2 = {x: x1 + width*fract, y: y1};
+    line_pos2 = {x: x1 + (width - length)/2, y: y1};
     lines.push(Line(line_pos1, line_pos2));
 
     /* line 2 */
     line_pos1 = {x: x2, y: y2};
-    line_pos2 = {x: x2 - width*fract, y: y2};
+    line_pos2 = {x: x2 - (width-length)/2, y: y2};
     lines.push(Line(line_pos1, line_pos2));
 
   }
@@ -87,11 +105,11 @@ const createLines = (coord1, coord2, fract) => {
 
     /* line 1 */
     line_pos1 = {x: x1, y: y1};
-    line_pos2 = {x: x1, y: y1 + height*fract};
+    line_pos2 = {x: x1, y: y1 + (height-length)/2};
     lines.push(Line(line_pos1, line_pos2));
 
     line_pos1 = {x: x2, y: y2};
-    line_pos2 = {x: x2, y: y2 - height*fract};
+    line_pos2 = {x: x2, y: y2 - (height-length)/2};
     lines.push(Line(line_pos1, line_pos2));
   }
   return lines;
@@ -171,10 +189,10 @@ const Text = (msg, coord, size='1em') => {
  *
  * @param coord1
  * @param coord2
- * @param fract
+ * @param l - predefined length of the element
  * @returns {{start: {x: null, y: null}, end: {x: null, y: null}}}
  */
-const getSymbolBounds = (coord1, coord2, fract) => {
+const getSymbolBounds = (coord1, coord2, l) => {
   /* Get fraction of line that the symbol has to fit in */
   let x1 = parseFloat(coord1.x), y1 = parseFloat(coord1.y);
   let x2 = parseFloat(coord2.x), y2 = parseFloat(coord2.y);
@@ -183,8 +201,8 @@ const getSymbolBounds = (coord1, coord2, fract) => {
   let end = {x: null, y: null};
   if (isHorizontal(coord1, coord2)) {
     const width = x2- x1;
-    start.x = x1 + width*fract;
-    end.x = x2 - width*fract;
+    start.x = x1 + (width-l)/2;
+    end.x = x2 - (width-l)/2;
 
     start.y = y1;
     end.y = y2;
@@ -192,9 +210,9 @@ const getSymbolBounds = (coord1, coord2, fract) => {
   } else {
     const height = y2 - y1;
     start.x = x1;
-    start.y = y1 + height*fract;
+    start.y = y1 + (height-l)/2;
     end.x = x2;
-    end.y = y2 - height*fract;
+    end.y = y2 - (height-l)/2;
   }
   return {start, end};
 };
@@ -241,7 +259,7 @@ const resistorSymbol = (start, end) => {
   let d = 'M';
   for (; i<7; i++) {
     x = startx + i * interval;
-    y = i%2 === 0 ? starty : starty - 30;
+    y = i%2 === 0 ? starty : starty - _RESISTOR_HEIGHT_;
     d += horiz ? `${x},${y} ` : `${y},${x} `;
   }
 
@@ -251,7 +269,7 @@ const resistorSymbol = (start, end) => {
 const capacitorSymbol = (start, end) => {
   let cap = createSVGGroup();
   let horiz = isHorizontal(start, end);
-  const OFFSET = 30;
+  const OFFSET = 20;
   let x1, x2, y1, y2;
   if (horiz) {
     x1 = start.x;
@@ -279,9 +297,6 @@ const capacitorSymbol = (start, end) => {
  * the symbols inside the circle
  * (+/-) -> voltage source
  * -> -> current source
- * @param start
- * @param end
- * @returns {any}
  */
 const independentSymbol = (start, end) => {
   let centre;
@@ -294,6 +309,27 @@ const independentSymbol = (start, end) => {
   }
 
   return Circle(centre, Math.abs(length/2));
+};
+
+/*
+ * Diamond symbol for dependent sources
+ * Uses a <path> element instead of 4 separate lines
+ */
+const dependentSymbol = (start, end) => {
+  let d;
+  let A, B, C, D;
+  const h = isHorizontal(start, end) ?( end.x - start.x)/2 : (end.y - start.y)/2;
+  A = start;
+  B = { x: start.x + h, y: start.y + h };
+  C = end;
+  D = { x: end.x - h, y: end.y - h };
+
+  d = `M${A.x},${A.y} 
+      ${B.x},${B.y} 
+      ${C.x},${C.y} 
+      ${D.x},${D.y} Z`;
+
+  return Path(d);
 };
 
 const voltageSymbol = (pos, neg) => {
@@ -315,7 +351,9 @@ const voltageSymbol = (pos, neg) => {
   msg = orientation === D || orientation == R ? '- +' : '+ -';
   let symbol = Text(msg, center, font_size);
   if (rotate)
-    symbol.setAttribute('transform', `rotate(90, ${center.x}, ${center.y - OFFSET})`);
+    symbol.setAttribute('transform', `rotate(90, ${center.x}, ${center.y - OFFSET}) translate(0 4)`);
+  else
+    symbol.setAttribute('transform', 'translate(0 3)');
   return symbol;
 };
 
@@ -354,12 +392,12 @@ const currentSymbol = (pos, neg) => {
 const getCenter = (c1, c2) => {return {x: (parseFloat(c1.x) + parseFloat(c2.x))/2,
   y: (parseFloat(c1.y) + parseFloat(c2.y))/2}};
 
-const GenericElement = (id, coord1, coord2, fract) => {
+const GenericElement = (id, coord1, coord2, length) => {
   let element = createSVGGroup();
   createNodes(coord1, coord2).forEach(
     n => element.appendChild(n)
   );
-  createLines(coord1, coord2, fract).forEach(
+  createLines(coord1, coord2, length).forEach(
     l => element.appendChild(l)
   );
 
@@ -373,11 +411,19 @@ const GenericElement = (id, coord1, coord2, fract) => {
   return element;
 };
 
+/**
+ * START: Functions to generate specific elements
+ * @param id
+ * @param coord1
+ * @param coord2
+ * @returns {SVGGElement}
+ * @constructor
+ */
 const Resistor = (id, coord1, coord2) => {
   console.log('CREATING RESISTOR...');
-  let resistor = GenericElement(id, coord1, coord2, 0.35);
+  let resistor = GenericElement(id, coord1, coord2, _RESISTOR_L_);
 
-  const {start, end} = getSymbolBounds(coord1, coord2, 0.35);
+  const {start, end} = getSymbolBounds(coord1, coord2, _RESISTOR_L_);
   resistor.appendChild(
     resistorSymbol(start, end));
   return resistor;
@@ -385,9 +431,9 @@ const Resistor = (id, coord1, coord2) => {
 
 const Capacitor = (id, coord1, coord2) => {
   console.log('CREATING CAPACITOR...');
-  let capacitor = GenericElement(id, coord1, coord2, 0.45);
+  let capacitor = GenericElement(id, coord1, coord2, _CAP_L_);
 
-  const {start, end} = getSymbolBounds(coord1, coord2, 0.45);
+  const {start, end} = getSymbolBounds(coord1, coord2, _CAP_L_);
   capacitor.appendChild(
     capacitorSymbol(start, end));
   return capacitor;
@@ -395,9 +441,9 @@ const Capacitor = (id, coord1, coord2) => {
 
 const IndependentVoltage = (id, coord1, coord2) => {
   console.log('CREATING INDEPENDENT VOLTAGE SOURCE...');
-  let voltage_src = GenericElement(id, coord1, coord2, 0.35);
+  let voltage_src = GenericElement(id, coord1, coord2, _INDEP_L_);
 
-  const {start, end} = getSymbolBounds(coord1, coord2, 0.35);
+  const {start, end} = getSymbolBounds(coord1, coord2, _INDEP_L_);
   voltage_src.appendChild(independentSymbol(start, end));
   voltage_src.appendChild(voltageSymbol(start, end));
   return voltage_src;
@@ -405,12 +451,33 @@ const IndependentVoltage = (id, coord1, coord2) => {
 
 const IndependentCurrent = (id, coord1, coord2) => {
   console.log('CREATING INDEPENDENT CURRENT...');
-  let current_src = GenericElement(id, coord1, coord2, 0.35);
+  let current_src = GenericElement(id, coord1, coord2, _INDEP_L_);
 
-  const {start, end} = getSymbolBounds(coord1, coord2, 0.35);
+  const {start, end} = getSymbolBounds(coord1, coord2, _INDEP_L_);
   current_src.appendChild(independentSymbol(start, end));
   current_src.appendChild(currentSymbol(start, end));
   return current_src;
+};
+
+const DependentVoltage = (id, coord1, coord2) => {
+  console.log('CREATING DEPENDENT VOLTAGE SOURCE...');
+  let voltage_src = GenericElement(id, coord1, coord2, _DEP_L_);
+
+  const {start, end} = getSymbolBounds(coord1, coord2, _DEP_L_);
+  voltage_src.appendChild(dependentSymbol(start, end));
+  voltage_src.appendChild(voltageSymbol(start, end));
+  return voltage_src;
+};
+
+const DependentCurrent = (id, coord1, coord2) => {
+  console.log('CREATING DEPENDENT CURRENT SOURCE...');
+  let current_src = GenericElement(id, coord1, coord2, _DEP_L_);
+
+  const {start, end} = getSymbolBounds(coord1, coord2, _DEP_L_);
+  current_src.appendChild(dependentSymbol(start, end));
+  current_src.appendChild(currentSymbol(start, end));
+  return current_src;
+
 };
 
 const Element = { create };
