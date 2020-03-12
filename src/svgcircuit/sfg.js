@@ -305,7 +305,8 @@ function get_bezier(V, E, v_from, v_to, self_loop) {
    *     facing AWAY from the graph center.
    * (3) Scale factor is a function of distance and angle
    *     as follows:
-   *        s(d, θ) = min(50, 40 * d/300 * S_spec)
+   *        s(d, θ) = min(50, 40 * S_mag * S_spec)
+   *        S_mag = (d/300)^3
    *        S_spec = |cos(θ)|^p, 0 < p < 1000
    *
    *     This equation says: the max scale factor is 50.
@@ -324,19 +325,20 @@ function get_bezier(V, E, v_from, v_to, self_loop) {
   let d = MAG(SUB(v_to, v_from));
   let theta = CW_ANGLE(h, v)%(PI_2);
   let S_spec = Math.pow(Math.abs(Math.cos(theta/PI_2-1)), 0.3);
-  let s = Math.min(50, 40*d/300*S_spec);
+  let S_mag = Math.pow(d/300, 2);
+  let s = Math.min(50, 40 * S_mag * S_spec);
 
   // (1)
   {
     let angle = RAD_TO_DEG(ANGLE(v, h));
     // Straight line
-    if (angle < 5) {
+    if (angle < 10) {
       return _bezier_(
         [__vec(0,0), __vec(10,0)],
         MAG(SUB(v_to, v_from)), s);
     }
     // Wide bezier
-    else if (180-angle < 5) {
+    else if (180-angle < 10) {
       return _bezier_(
         [
           __vec(0,0), __vec(-2,10),
@@ -595,6 +597,39 @@ const _sfg = [
         id: 'e10',
         startNode: 'v6',
         endNode: 'v5'
+      }
+    ]
+  },
+  {
+    id: 'v7',
+    x: 600, y: 50,
+    outgoingEdges: [
+      {
+        id: 'e20',
+        startNode: 'v7',
+        endNode: 'v6'
+      }
+    ]
+  },
+  {
+    id: 'v8',
+    x: 650, y: 120,
+    outgoingEdges: [
+      {
+        id: 'e12',
+        startNode: 'v8',
+        endNode: 'v6'
+      }
+    ]
+  },
+  {
+    id: 'v9',
+    x: 680, y: 75,
+    outgoingEdges: [
+      {
+        id: 'e13',
+        startNode: 'v9',
+        endNode: 'v6'
       }
     ]
   }
