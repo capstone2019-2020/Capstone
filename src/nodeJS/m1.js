@@ -148,8 +148,9 @@ function computeSFG (params) {
   let nodes = [];
   let termsoflhs = [];
   let termsofrhs = [];
+  let dpiLocation = [];
   let vNodeNotFound = 0;
-  let needToSearchRelation = false;
+  let needToSearchRelation = false, dpiFound = false;
 
   for (let i = 0; i < params.length; i++) {
     //Access the eqns and split by lhs and rhs
@@ -171,26 +172,44 @@ function computeSFG (params) {
     }
   }   
 
-  // To store into the nodes, go thorugh the termsoflhs list array
+  // console.log(`Length of lhs = ${termsoflhs.length}`);
+  // console.log(`Length of rhs = ${termsofrhs.length}`);
+  // To store into the nodes, go through the termsoflhs list array
   for (let i = 0; i < termsoflhs.length; i++) {
-    newNode = new datamodel.Node(termsoflhs[i].toString(), null);
+    // console.log("------------------------------------------")
+    // console.log(`LHS Term is:  ${termsoflhs[i].toString()}`);
+    // Do not create a node for those that have DPI as term on the lhs
+    // Save the placement of the DPI equation
+    if (termsoflhs[i].toString().search("DPI") != -1) {
+      dpiFound = true;
+      dpiLocation.push(i);
+      // console.log(`DPI name found in: ${i}`);
+    } else {
+      // console.log(`New Node id is ${termsoflhs[i].toString()}`);
+      newNode = new datamodel.Node(termsoflhs[i].toString(), null);
+    }
 
     // Find the Node corresponding to the termsoflhs to determine the outoging edges
     // Divide the rhs into coefficients and variables and store into the edges
     for (let j = 0; j < termsofrhs.length; j++) {
-      if (termsofrhs[j] !== null) {
+      if (termsofrhs[j] !== null && dpiFound == false) {
         var tempTermOfrhs = termsofrhs[j];
         
         // The variable is found in the rhs of the equation then it must be an outgoing node
         // More than one term in the rhs of the equation
         for (k = 0; k < tempTermOfrhs.length; k++) {
           if (tempTermOfrhs[k].toString().search(termsoflhs[i].toString()) != -1) {
+            let wFound = false;
             var weight = tempTermOfrhs[k].coefficient;
             var startNode = tempTermOfrhs[k].variables;
 
             // Means there is an alphabet as part of the coefficient
             if (startNode.length != 1) {
               check = startNode[startNode.length-1].toString();
+              if (check.search("w") !== -1) {
+                check = startNode[startNode.length-2].toString();
+                wFound = true;
+              }
               var toBeWeight = startNode.toString().split(termsoflhs[i].toString());
 
               // console.log("TO BE WEIGHT = " + toBeWeight[0]);
@@ -207,7 +226,10 @@ function computeSFG (params) {
               // Get rid of the commas in the weight string
               if (weight.toString().search(',') != -1) {
                 weight = weight.toString().replace(/,/g, '');
-              } 
+              }
+              if (wFound === true) {
+                weight += "*w";
+              }
             } else {
               check = startNode.toString();
             }
@@ -215,7 +237,9 @@ function computeSFG (params) {
             // Coefficient includes a fraction  
             if (math.abs(Number(tempTermOfrhs[k].fraction.numer)) !== 1 || math.abs(Number(tempTermOfrhs[k].fraction.denom)) !== 1) {
               if (math.abs(Number(tempTermOfrhs[k].fraction.numer)) == 1 && math.abs(Number(tempTermOfrhs[k].coefficient)) !== 1) {
-                weight = weight + "/" + tempTermOfrhs[k].fraction.denom.toString();
+                weight = weight + " / (" + tempTermOfrhs[k].fraction.denom.toString() + ")";
+              } else if (math.abs(Number(tempTermOfrhs[k].fraction.numer)) == 1 && math.abs(Number(tempTermOfrhs[k].coefficient)) == 1) {
+                weight = weight + " / (" + tempTermOfrhs[k].fraction.denom.toString() + ")";
               } else {
                 weight += "*(" + tempTermOfrhs[k].fraction.numer.toString() + ") / (" + tempTermOfrhs[k].fraction.denom.toString() + ")";
               }
@@ -234,58 +258,66 @@ function computeSFG (params) {
         } 
       }   
     }
-    nodes.push(newNode);
+
+    if (dpiFound == false) {
+      nodes.push(newNode);
+    }
+    dpiFound = false;
   }
 
+  // console.log("-----------------------------------");
+  // nodes.forEach(eqns => console.log(eqns.id.toString()));
   // Corner case: the Node only has outgoing edges
   nodesNum = nodes.length;
   for (let i = 0; i < termsofrhs.length; i++) {
-    var tempTerm = termsofrhs[i];
-    // console.log("RHS equation being looked at: " + tempTerm.toString());
-    
-    if (tempTerm !== null) {
-      for (let j = 0; j < tempTerm.length; j++) {
-        vNodeNotFound = 0;
-  
-        for (let numOfNodes = 0; numOfNodes < nodes.length; numOfNodes++) {
-          if (tempTerm[j].toString().search(nodes[numOfNodes].id) === -1) {
-              vNodeNotFound += 1;
-          }
-        }
+    if (termsofrhs[i] !== null) {
+      var tempTerm = termsofrhs[i];
+      // console.log("RHS equation being looked at: " + tempTerm.toString());
 
-        // Create only the missing node
-        if (vNodeNotFound === nodes.length) {
-          // console.log(vNodeNotFound);
-          // console.log(nodes.length);
-          // console.log("ENTERED THE IF STATMENT");
-          var tempVariable = tempTerm[j].variables;
-          var value = null;
-          needToSearchRelation = true;
-  
-          // Means there is an alphabet as part of the coefficient
-          if (tempVariable.length != 1 && tempVariable.length != 0) {
-            startNode = tempVariable[tempVariable.length-1];
+      if (tempTerm !== null) {
+        for (let j = 0; j < tempTerm.length; j++) {
+          vNodeNotFound = 0;
+
+          for (let numOfNodes = 0; numOfNodes < nodes.length; numOfNodes++) {
+            if (tempTerm[j].toString().search(nodes[numOfNodes].id) === -1) {
+              vNodeNotFound += 1;
+            }
+          }
+
+          // Create only the missing node
+          if (vNodeNotFound === nodes.length) {
+            // console.log(vNodeNotFound);
+            // console.log(nodes.length);
+            // console.log("ENTERED THE IF STATMENT");
+            var tempVariable = tempTerm[j].variables;
+            var value = null;
+            needToSearchRelation = true;
+
+            // Means there is an alphabet as part of the coefficient
+            if (tempVariable.length != 1 && tempVariable.length != 0) {
+              startNode = tempVariable[tempVariable.length-1];
               // console.log(typeof(startNode));
               // console.log(startNode);
               if (startNode.toString().search("w") != -1) {
                 startNode = tempVariable[tempVariable.length-2];
               }
-          } 
-          else if (tempVariable.length === 1) {
-            startNode = tempVariable;
-          }
+            }
+            else if (tempVariable.length === 1) {
+              startNode = tempVariable;
+            }
 
-          // console.log(`NEW NODE IS: ${startNode}`);
-          if (startNode.toString().search("w") == -1) {
-            // console.log("ENTERED TO ADD IN THE NODE");
             // console.log(`NEW NODE IS: ${startNode}`);
-            newNode = new datamodel.Node(startNode.toString(), value);
-            nodes.push(newNode);
-          }
+            if (startNode.toString().search("w") == -1) {
+              // console.log("ENTERED TO ADD IN THE NODE");
+              // console.log(`NEW NODE IS: ${startNode}`);
+              newNode = new datamodel.Node(startNode.toString(), value);
+              nodes.push(newNode);
+            }
 
-          if (termsoflhs.length < termsofrhs.length) {
-            // console.log(`INPUTTING INTO LHS ARRAY: ${startNode.toString()}`);
-            termsoflhs.push(startNode.toString());
+            if (termsoflhs.length < termsofrhs.length) {
+              // console.log(`INPUTTING INTO LHS ARRAY: ${startNode.toString()}`);
+              termsoflhs.push(startNode.toString());
+            }
           }
         }
       }
@@ -302,6 +334,7 @@ function computeSFG (params) {
         if (tempTerm !== null) {
           for (let j = 0; j < tempTerm.length; j++) {
             if (tempTerm[j].toString().search(nodes[searchNeeded].id) != -1) {
+              let wFound = false;
               var weight = tempTerm[j].coefficient;
               var tempVariable = tempTerm[j].variables;
               // console.log("------------------------------------------");
@@ -313,6 +346,7 @@ function computeSFG (params) {
                 var temp = tempVariable[tempVariable.length - 1].toString(), toBeWeight;
                 if (temp.search("w") !== -1) {
                   temp = tempVariable[tempVariable.length - 2].toString();
+                  wFound = true;
                 }
                 toBeWeight = tempVariable.toString().split(temp);
                 // console.log(temp);
@@ -329,11 +363,13 @@ function computeSFG (params) {
                 }
 
                 // console.log("TO BE WEIGHT = " + toBeWeight[0]);
-
                 // Get rid of the commas in the weight string
                 if (weight.toString().search(',') != -1) {
                   weight = weight.toString().replace(/,/g, '');
-                } 
+                }
+                if (wFound === true) {
+                  weight += "*w";
+                }
               } else {
                 temp = tempVariable.toString();
               }
@@ -341,7 +377,9 @@ function computeSFG (params) {
               // Coefficient includes a fraction  
               if (math.abs(Number(tempTerm[j].fraction.numer)) !== 1 || math.abs(Number(tempTerm[j].fraction.denom)) !== 1) {
                 if (math.abs(Number(tempTerm[j].fraction.numer)) == 1 && math.abs(Number(tempTerm[j].coefficient)) !== 1) {
-                  weight = weight + "/" + tempTerm[j].fraction.denom.toString();
+                  weight = weight + " / (" + tempTerm[j].fraction.denom.toString() + ")";
+                } else if (math.abs(Number(tempTerm[j].fraction.numer)) == 1 && math.abs(Number(tempTerm[j].coefficient)) == 1) {
+                  weight = weight + " / (" + tempTerm[j].fraction.denom.toString() + ")";
                 } else {
                   weight += "*(" + tempTerm[j].fraction.numer.toString() + ") / (" + tempTerm[j].fraction.denom.toString() + ")";
                 }
@@ -351,11 +389,11 @@ function computeSFG (params) {
                 weight = weight + "*j";
               }
 
-              // console.log(`The term of the LHS will be: ${termsoflhs[i].toString()}`);
-
               if (temp === nodes[searchNeeded].id) {
                 // console.log("NEW NODE TO BE ADDED");
-                console.log(weight.toString());
+                // console.log(`Start Node: ${nodes[searchNeeded].id.toString()}`);
+                // console.log(`End Node: ${termsoflhs[i].toString()}`);
+                // console.log(weight.toString());
                 nodes[searchNeeded].outgoingEdges.push(new datamodel.Edge (weight.toString(), nodes[searchNeeded].id, termsoflhs[i].toString()));
               }
             }
@@ -367,24 +405,69 @@ function computeSFG (params) {
 
   // Deal with the constants in the rhs of the equation
   for (let i = 0; i < params.length; i++) {
-    // Constant exist in the equation - y1&i as the id for imaginary constants
-    if (params[i].rhs.imag.constant !== null) {
-      if (params[i].rhs.imag.constant.toString() !== "0") {
-        var id = "y1"+i;
-        var value = params[i].rhs.imag.constant+"j";
-        newNode = new datamodel.Node(id, value); 
-        newNode.outgoingEdges.push(new datamodel.Edge("1", id, termsoflhs[i].toString()));
-        nodes.push(newNode);
+    // Constant exist in the equation - y1&i as the id for imaginary constants with terms
+    if (params[i].rhs.imag.terms.length !== 0 || params[i].rhs.real.terms.length !== 0) {
+      if (params[i].rhs.imag.constant !== 0) {
+        if (params[i].rhs.imag.constant.toString() !== "0") {
+          var id = "y1"+i;
+          var value = params[i].rhs.imag.constant+"j";
+          newNode = new datamodel.Node(id, value);
+          newNode.outgoingEdges.push(new datamodel.Edge("1", id, termsoflhs[i].toString()));
+          nodes.push(newNode);
+        }
+      }
+
+      if (params[i].rhs.real.constant !== 0) {
+        if (params[i].rhs.real.constant.toString() !== "0") {
+          var id = "y2"+i;
+          newNode = new datamodel.Node(id, params[i].rhs.real.constant.toString());
+          newNode.outgoingEdges.push(new datamodel.Edge("1", id, termsoflhs[i].toString()));
+          nodes.push(newNode);
+        }
       }
     }
-
-    if (params[i].rhs.real.constant !== null) {
-      if (params[i].rhs.real.constant.toString() !== "0") {
-        var id = "y2"+i;
-        newNode = new datamodel.Node(id, params[i].rhs.real.constant.toString()); 
-        newNode.outgoingEdges.push(new datamodel.Edge("1", id, termsoflhs[i].toString()));
-        nodes.push(newNode);
+    // No terms exists in the rhs then the value must be given to existing node
+    // example v1 = 8 or v1 = 5j
+    else if (params[i].rhs.imag.terms.length === 0 || params[i].rhs.real.terms.length === 0) {
+      for (let j = 0; j < nodes.length; j++) {
+        if (params[i].lhs.real.terms.toString() === nodes[j].id.toString()) {
+          // console.log("---------------------------------------------");
+          // console.log(`Node being looked at: ${nodes[j].id.toString()}`);
+          // console.log(`Value updated to: ${params[i].rhs.real.constant}`)
+          nodes[j].value = params[i].rhs.real.constant.toString();
+        } else if (params[i].lhs.imag.terms.toString() === nodes[j].id.toString()) {
+          // console.log("---------------------------------------------");
+          // console.log(`Node being looked at: ${nodes[j].id.toString()}`);
+          // console.log(`Value updated to: ${params[i].rhs.imag.constant}`)
+          nodes[j].value = params[i].rhs.imag.constant.toString();
+        }
       }
+    }
+  }
+
+  // Replace the DPI value in the weight
+  for (let i = 0; i < dpiLocation.length; i++) {
+    let nodeID = params[dpiLocation[i]], value = "";
+    // console.log(`Node ID is : ${nodeID.lhs.real.terms.toString()}`);
+    if (nodeID.rhs.real.constant !== 0) {
+      value = nodeID.rhs.real.constant.toString();
+    }
+
+    if (nodeID.rhs.imag.constant !== 0) {
+      if (value !== "") {
+        value += " + " + nodeID.rhs.imag.constant.toString();
+      } else {
+        value = nodeID.rhs.imag.constant.toString();
+      }
+    }
+    // console.log(`Value being updated is : ${value}`);
+    for(let j = 0; j < nodes.length; j++) {
+      nodes[j].outgoingEdges.forEach(n => {
+        if (n.weight.toString() === nodeID.lhs.real.terms.toString()) {
+          // console.log("Successfully found");
+          n.weight = value;
+        }
+      });
     }
   }
 
@@ -405,7 +488,77 @@ function outputSFG (sfgnodes) {
     }
 };
 
-// getUserInput();
+// // getUserInput();
+// (function main(){
+//   // let testEquations = [
+//   //   "V_n1 = 8",
+//   //   "V_n2 = DPI_n2 * ISC_n2",
+//   //   "DPI_n2 = 9",
+//   //   "ISC_n2 = V_n1/R1 + V_n3/R3"];
+//   // let testEquations = [
+//   //   "V_n1 = 8",
+//   //   "V_n2 = DPI_n2 * ISC_n2",
+//   //   "DPI_n2 = 10",
+//   //   "ISC_n2 = V_n1/R1 + V_n3/R3",
+//   //   "V_n3 = DPI_n3 * ISC_n3",
+//   //   "DPI_n3 = 3000",
+//   //   "ISC_n3 = V_n2/3000 + 0.001"
+//   // ]
+//   // let testEquations = [
+//   //   "V_n1 = 5",
+//   //   "V_n2 = DPI_n2 * ISC_n2",
+//   //   "DPI_n2 = 40",
+//   //   "ISC_n2 = V_n1/R1"
+//   // ];
+//   let testEquations = [
+//     "Vn1 = 9",
+//     "Vn2 = DPI_n2 * ISC_n2",
+//     "DPI_n2 = 10*jw",
+//     "ISC_n2 = Vn1/R1 + 10*Vn0*jw"
+//   ];
+//   // let testEquations = [
+//   //   "V_n1 = 8*V_n2",
+//   //   "V_n2 = DPI_n2 * ISC_n2",
+//   //   "DPI_n2 = 9",
+//   //   "ISC_n2 = V_n1/R1 + V_n3/R3",
+//   //   "V_n3 = (-2)"
+//   // ];
+//   // let testEquations = [
+//   //   "V_n1 = 8",
+//   //   "V_n2 = DPI_n2 * ISC_n2",
+//   //   "DPI_n2 = 20",
+//   //   "ISC_n2 = V_n1/1000 + V_n3/3000",
+//   //   "V_n3 = DPI_n3 * ISC_n3",
+//   //   "DPI_n3 = 3000",
+//   //   "ISC_n3 = V_n2/3000",
+//   //   "ISC_n3 = 3*V_n2"
+//   // ]
+//   // let testEquations = [
+//   //   "V_n1 = 0.1",
+//   //   "V_n2 = DPI_n2 * ISC_n2",
+//   //   "DPI_n2 = 10",
+//   //   "ISC_n2 = V_n1/R1",
+//   //   "V_n3 = 100 * V_n2",
+//   //   "V_n4 = DPI_n4 * ISC_n4",
+//   //   "DPI_n4 = 20",
+//   //   "ISC_n4 = V_n3/R3"
+//   // ];
+//   // let testEquations = [
+//   //   "V_n1 = 20",
+//   //   "V_n2 = DPI_n2 * ISC_n2",
+//   //   "DPI_n2 = 15",
+//   //   "ISC_n2 = V_n1/R1 + V_n3/R3",
+//   //   "V_n3 = DPI_n3 * ISC_n3",
+//   //   "DPI_n3 = 10",
+//   //   "ISC_n3 = V_n2/R3 + V_n4/R5",
+//   //   "V_n4 = 8*(V_n2 - V_n3)"
+//   // ]
+
+//   let input = [];
+//   testEquations.forEach(eqns => input.push(algebra.parse(eqns)));
+//   let sfgnodes = computeSFG(input);
+//   outputSFG(sfgnodes);
+// })();
 
 /**
  * Export functions as part of m1 module
