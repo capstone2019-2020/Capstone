@@ -148,32 +148,42 @@ function computeSFG (params) {
   let nodes = [];
   let termsoflhs = [];
   let termsofrhs = [];
-  let dpiLocation = [];
+  let dpiLocation = [], haveBothRealAndImag = [];
   let vNodeNotFound = 0;
   let needToSearchRelation = false, dpiFound = false;
 
   for (let i = 0; i < params.length; i++) {
+    let counter = 0;
     //Access the eqns and split by lhs and rhs
     if (params[i].lhs.real.terms.length !== 0) {
       termsoflhs.push(params[i].lhs.real.terms);
     }
+
     if (params[i].lhs.imag.terms.length !== 0) {
       termsoflhs.push(params[i].lhs.imag.terms);
     }
+
     if (params[i].rhs.imag.terms.length !== 0) {
       termsofrhs.push(params[i].rhs.imag.terms);
+      counter++;
     }
+
     if (params[i].rhs.real.terms.length !== 0) {
       termsofrhs.push(params[i].rhs.real.terms);
+      counter++;
     }
+
+    if (counter === 2) {
+      haveBothRealAndImag.push(termsofrhs.length-1);
+    }
+
     // Right hand side has no terms
     if (params[i].rhs.real.terms.length === 0 && params[i].rhs.imag.terms.length === 0) {
       termsofrhs.push(null);
     }
-  }   
+  }
 
-  // console.log(`Length of lhs = ${termsoflhs.length}`);
-  // console.log(`Length of rhs = ${termsofrhs.length}`);
+  // termsoflhs.forEach(eq => console.log(eq.toString()));
   // To store into the nodes, go through the termsoflhs list array
   for (let i = 0; i < termsoflhs.length; i++) {
     // console.log("------------------------------------------")
@@ -183,7 +193,6 @@ function computeSFG (params) {
     if (termsoflhs[i].toString().search("DPI") != -1) {
       dpiFound = true;
       dpiLocation.push(i);
-      // console.log(`DPI name found in: ${i}`);
     } else {
       // console.log(`New Node id is ${termsoflhs[i].toString()}`);
       newNode = new datamodel.Node(termsoflhs[i].toString(), null);
@@ -194,7 +203,8 @@ function computeSFG (params) {
     for (let j = 0; j < termsofrhs.length; j++) {
       if (termsofrhs[j] !== null && dpiFound == false) {
         var tempTermOfrhs = termsofrhs[j];
-        
+        // console.log(tempTermOfrhs.length);
+
         // The variable is found in the rhs of the equation then it must be an outgoing node
         // More than one term in the rhs of the equation
         for (k = 0; k < tempTermOfrhs.length; k++) {
@@ -204,7 +214,7 @@ function computeSFG (params) {
             var startNode = tempTermOfrhs[k].variables;
 
             // Means there is an alphabet as part of the coefficient
-            if (startNode.length != 1) {
+            if (startNode.length !== 1) {
               check = startNode[startNode.length-1].toString();
               if (check.search("w") !== -1) {
                 check = startNode[startNode.length-2].toString();
@@ -251,8 +261,20 @@ function computeSFG (params) {
             }
 
             if (check === termsoflhs[i].toString()) {
-              // console.log(weight.toString());
-              newNode.outgoingEdges.push(new datamodel.Edge(weight.toString(), termsoflhs[i].toString(), termsoflhs[j].toString()));
+              let endNode, foundNewEndNode = false;
+
+              for (let l = 0; l < haveBothRealAndImag.length; l++) {
+                if (haveBothRealAndImag[l] === j) {
+                  endNode = termsoflhs[j-1];
+                  foundNewEndNode = true;
+                  break;
+                }
+              }
+
+              if (foundNewEndNode == false) {
+                endNode = termsoflhs[j];
+              }
+              newNode.outgoingEdges.push(new datamodel.Edge(weight.toString(), termsoflhs[i].toString(), endNode.toString()));
             }
           }
         } 
@@ -307,16 +329,16 @@ function computeSFG (params) {
             }
 
             // console.log(`NEW NODE IS: ${startNode}`);
-            if (startNode.toString().search("w") == -1) {
+            if (startNode.toString().search("w") == -1 && startNode.toString().search("DPI") == -1) {
               // console.log("ENTERED TO ADD IN THE NODE");
               // console.log(`NEW NODE IS: ${startNode}`);
               newNode = new datamodel.Node(startNode.toString(), value);
               nodes.push(newNode);
-            }
 
-            if (termsoflhs.length < termsofrhs.length) {
-              // console.log(`INPUTTING INTO LHS ARRAY: ${startNode.toString()}`);
-              termsoflhs.push(startNode.toString());
+              if (termsoflhs.length < termsofrhs.length) {
+                // console.log(`INPUTTING INTO LHS ARRAY: ${startNode.toString()}`);
+                termsoflhs.push(startNode.toString());
+              }
             }
           }
         }
@@ -325,7 +347,7 @@ function computeSFG (params) {
   }
 
   // Searching through the rhs of the eqns again to ensure the new nodes are also connected
-  // nodes.forEach(eqns => console.log(eqns.id.toString()));
+  nodes.forEach(eqns => console.log(eqns.id.toString()));
   if (needToSearchRelation === true) {
     for (let searchNeeded = nodesNum; searchNeeded < nodes.length; searchNeeded++) {
       for (let i = 0; i < termsofrhs.length; i++) {
@@ -337,9 +359,6 @@ function computeSFG (params) {
               let wFound = false;
               var weight = tempTerm[j].coefficient;
               var tempVariable = tempTerm[j].variables;
-              // console.log("------------------------------------------");
-              // console.log(`Weight of the term: ${weight}`);
-              // console.log(`Variable of the term: ${tempVariable}`);
 
               if (tempVariable.length != 1 && tempVariable.length != 0) {
                 // console.log("ENTERED THE IF STATEMENT");
@@ -349,8 +368,6 @@ function computeSFG (params) {
                   wFound = true;
                 }
                 toBeWeight = tempVariable.toString().split(temp);
-                // console.log(temp);
-                // console.log(`The numbers to become weight: ${toBeWeight[0]}`);
 
                 if (weight === 1) {
                   weight = toBeWeight[0];
@@ -362,7 +379,6 @@ function computeSFG (params) {
                   }
                 }
 
-                // console.log("TO BE WEIGHT = " + toBeWeight[0]);
                 // Get rid of the commas in the weight string
                 if (weight.toString().search(',') != -1) {
                   weight = weight.toString().replace(/,/g, '');
@@ -460,11 +476,27 @@ function computeSFG (params) {
         value = nodeID.rhs.imag.constant.toString();
       }
     }
+
+    if (nodeID.rhs.real.terms.length !== 0) {
+      if (value !== "") {
+        value += " + " + nodeID.rhs.real.terms.toString();
+      } else {
+        value = nodeID.rhs.real.terms.toString();
+      }
+    }
+
+    if (nodeID.rhs.imag.terms.length !== 0) {
+      if (value !== "") {
+        value += " + " + nodeID.rhs.imag.terms.toString();
+      } else {
+        value = nodeID.rhs.imag.terms.toString();
+      }
+    }
+
     // console.log(`Value being updated is : ${value}`);
     for(let j = 0; j < nodes.length; j++) {
       nodes[j].outgoingEdges.forEach(n => {
         if (n.weight.toString() === nodeID.lhs.real.terms.toString()) {
-          // console.log("Successfully found");
           n.weight = value;
         }
       });
