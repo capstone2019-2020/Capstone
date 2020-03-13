@@ -305,9 +305,11 @@ function get_bezier(V, E, v_from, v_to, self_loop) {
    *     facing AWAY from the graph center.
    * (3) Scale factor is a function of distance and angle
    *     as follows:
-   *        s(d, θ) = min(50, 40 * S_mag * S_spec)
-   *        S_mag = (d/300)^3
-   *        S_spec = |cos(θ)|^p, 0 < p < 1000
+   *        s(d, θ) = min(50, 40 * S_mag(d) * S_spec(θ))
+   *
+   *        Where:
+   *        S_mag(d) = (d/300)^3
+   *        S_spec(θ) = |cos(θ)|^p, 0<p<1000
    *
    *     This equation says: the max scale factor is 50.
    *     Angle is measured based on the vector formed from
@@ -361,10 +363,6 @@ function get_bezier(V, E, v_from, v_to, self_loop) {
 
 function render(V, E) {
   let v_center = CENTER(Object.values(V).map(v => v.vec));
-  __ns(getSFG(), {}, circle(v_center, 5, {
-    fill: 'red',
-
-  }));
   const nodes = Object.values(V).map(v => {
     return circle(v.vec, SZ_CIRCLE_RADIUS, {
         fill: 'transparent',
@@ -435,13 +433,6 @@ function render(V, E) {
       }
       bezier = rot(bezier, b_theta);
       bezier = trans(bezier, p_from);
-      let green = 0, green_inc = 255/bezier.length;
-      bezier.forEach(bv => {
-        edges.push(circle(bv, 1, {
-          fill: `rgb(255,${green},0)`
-        }));
-        green+=green_inc;
-      });
       edges.push(polyline(VECS_TO_POINTS(bezier),
         {
           stroke: 'black',
