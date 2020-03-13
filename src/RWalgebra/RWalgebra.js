@@ -712,7 +712,11 @@ Expression.prototype.toString = function () {
   if (this.imag.constant !== null) {
     // No variables exist
     if (str === "" && this.imag.constant !== 0) {
-      str += this.imag.constant + "j";
+      if (this.imag.constant < 0) {
+        str += "(" + this.imag.constant + "j)"
+      } else {
+        str += this.imag.constant + "j";
+      }
     } else if (this.imag.constant !== 0) {
       str = str + (this.imag.constant.valueOf() < 0 ? " + " + this.imag.constant + "*j" : " + " + this.imag.constant + "*j");
     } 
@@ -721,7 +725,11 @@ Expression.prototype.toString = function () {
   if (this.real.constant !== null) {
     // No variables exist
     if (str === "" && this.real.constant !== 0) {
-      str += this.real.constant;
+      if (this.real.constant < 0) {
+        str += "(" + this.real.constant + ")";
+      } else {
+        str += this.real.constant;
+      }
     } else if (this.real.constant !== 0) {
       str = str + (this.real.constant.valueOf() < 0 ? this.real.constant : " + " + this.real.constant);
     }
