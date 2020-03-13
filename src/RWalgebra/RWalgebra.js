@@ -651,14 +651,12 @@ Expression.prototype.magnitude = function() {
   const real = terms.filter(t => !t.imag);
   const imag = terms.filter(t => t.imag);
   imag.forEach( t => t.imag = false );
-  // const real_squared = multiplyTerms(real, real); // compute a^2
-  // const imag_squared = multiplyTerms(imag, imag); // compuate b^2
-  // const sum = new Expression(addTerms(real_squared, imag_squared));
-  const _real = new Expression(real);
-  const _imag = new Expression(imag);
+  const real_squared = multiplyTerms(real, real); // compute a^2
+  const imag_squared = multiplyTerms(imag, imag); // compuate b^2
+  const sum = new Expression(addTerms(real_squared, imag_squared));
 
   /* |T(jw)| = 20 * log10 ( sqrt(real^2 + imag^2)) */
-  return `20 * ${LOG_10} ( ${SQRT}( (${_real.toString()})^2 + (${_imag.toString()})^2 ))`;
+  return `20 * ${LOG_10} ( ${SQRT}( ${sum.toString()} ))`;
 };
 
 
@@ -678,7 +676,6 @@ Expression.prototype.toPolar = function() {
 
   const magnitude = Math.sqrt(_real*_real + _imag*_imag).toFixed(3);
   let angle = Math.atan(_imag/_real) * RAD_TO_DEG;
-  console.log(`angle: ${angle}`);
   angle = angle < 0 ? angle + 360.0 : angle;
 
   return `${magnitude}∠${angle.toFixed(3)}°`;

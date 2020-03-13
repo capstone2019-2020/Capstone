@@ -1,5 +1,6 @@
 const _SVG_NS_ = 'http://www.w3.org/2000/svg';
 
+/* All of the supported netlist types */
 const _RESISTOR_TYPE_ = 'R';
 const _INDEP_VOLTAGE_TYPE_ = 'V';
 const _INDEP_CURRENT_TYPE_ = 'I';
@@ -8,11 +9,13 @@ const _DEP_VCVS_TYPE_ = 'E';
 const _DEP_VCCS_TYPE_ = 'G';
 const _DEP_CCVS_TYPE_ = 'H';
 
+/* Fixed length of each symbol */
 const _RESISTOR_L_ = 50;
 const _INDEP_L_ = 50;
 const _CAP_L_ = 25;
 const _DEP_L_ = 50;
 
+/* General constants applied to each element*/
 const _NODE_RADIUS_ = 4;
 const _LINE_WIDTH_ = 2;
 const _DEFAULT_COLOR_ = '#000';
@@ -23,7 +26,6 @@ const _RESISTOR_HEIGHT_ = 20;
  */
 const createSVGGroup = () => document.createElementNS(_SVG_NS_, 'g');
 const createSVGElem = (elem) => document.createElementNS(_SVG_NS_, elem);
-
 
 /**
  * Creates element specified by 'type'
