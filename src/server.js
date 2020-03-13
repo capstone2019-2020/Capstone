@@ -47,13 +47,13 @@ app.post("/input-file", (req, res) => {
     }
 
     // The eqns array is emptied every time the input post is used
-    if (equations.length != 0) {
+    if (equations.length !== 0) {
         equations.length = 0;
     }
 
     // Create circuit
     circuit = circuitjs.createCircuit(c);
-    let temp = circuit.nodalAnalysis();
+    let temp = circuit.dpiAnalysis();
 
 //     temp.currentEquations.forEach(first => first.forEach(second => second.forEach(eqns => console.log(eqns.toString()))));
 //     temp.currentEquations.forEach((first) => 
@@ -203,17 +203,22 @@ app.post("/input-file", (req, res) => {
 
     // Combine DPI and shortcircuit - ERROR WITH DPI * SHORCIRCUIT
     // ONLY USE THIS CASE DONT USE NODAL CASE
-    for (var i = 0; i < temp.dpi.length; i++) {
-        // let lhs = new Expression(`V${temp.nodeId[i]}`);
-        // let rhs = temp.dpi[i].multiply(temp.shorCircuitCurrent[i]);
-        // let tempEqn = new Equation(lhs, rhs);
-//         console.log(temp.dpi[i].toString());
-        equations.push(algebra.parse(temp.dpi[i].toString()));
-    }
-
-    for (var i = 0; i < temp.shorCircuitCurrent.length; i++) {
-//         console.log(temp.shorCircuitCurrent[i].toString());
-        equations.push(algebra.parse(temp.shorCircuitCurrent[i].toString()));
+    // for (var i = 0; i < temp.dpi.length; i++) {
+    //     // let lhs = new Expression(`V${temp.nodeId[i]}`);
+    //     // let rhs = temp.dpi[i].multiply(temp.shorCircuitCurrent[i]);
+    //     // let tempEqn = new Equation(lhs, rhs);
+    //     console.log(temp.dpi[i].toString());
+    //     equations.push(algebra.parse(temp.dpi[i].toString()));
+    // }
+    //
+    // for (var i = 0; i < temp.shorCircuitCurrent.length; i++) {
+    //     console.log(temp.shorCircuitCurrent[i].toString());
+    //     equations.push(algebra.parse(temp.shorCircuitCurrent[i].toString()));
+    // }
+    console.log(temp.length);
+    for (var i = 0; i < temp.length; i++) {
+        console.log(temp[i].toString());
+        equations.push(algebra.parse(temp[i].toString()));
     }
 
     if(!circuit) {
