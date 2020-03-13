@@ -30,12 +30,19 @@ const generateCircuit_deprecated = (canvas_id) => {
 	});
 };
 
-const generateCircuit = (canvas_id, circuit_elems) => {
+const generateCircuit = (canvas_id) => {
+	let circuit_elems =[{"id":"wire-2","type":"W","R":0,"p_from":{"x":256,"y":16},"p_to":{"x":128,"y":16}},{"id":"wire-3","type":"W","R":0,"p_from":{"x":432,"y":16},"p_to":{"x":336
+			,"y":16}},{"id":"wire-4","type":"W","R":0,"p_from":{"x":128,"y":112},"p_to":{"x":128,"y":16}},{"id":"wire-5","type":"W","R":0,"p_from":{"x":432,"y":128},"p_to":{"x":432,"y":16}}
+		,{"id":"wire-6","type":"W","R":0,"p_from":{"x":128,"y":256},"p_to":{"x":128,"y":192}},{"id":"wire-7","type":"W","R":0,"p_from":{"x":432,"y":256},"p_to":{"x":432,"y":192}},{"id":
+				"V1","type":"V","R":0,"p_center":{"x":128,"y":96}},{"id":"R1","type":"R","R":90,"p_center":{"x":352,"y":0}},{"id":"C1","type":"C","R":0,"p_center":{"x":416,"y":128}},{"id":"G1",
+			"type":"G","R":0,"p_center":{"x":0,"y":16}}];
+
+	console.log(circuit_elems);
 	let circuit_canvas = document.getElementById(canvas_id);
 	let elem;
 	circuit_elems.forEach( c => {
 		elem = Element.create(c.type, c.id, c.p_center, c.R,
-			c.from, c.to);
+			c.p_from, c.p_to);
 
 		circuit_canvas.appendChild(elem);
 	});
