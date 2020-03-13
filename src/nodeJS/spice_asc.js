@@ -126,7 +126,7 @@ function toNetlist(arr) {
   return components;
 }
 
-function fromAsc(buf) {
+function fromAsc(buf, dim={x:1500,y:1000}) {
   let lines = buf.split('\n');
   let netlist, asc;
   let _asc_lines = [];
@@ -146,6 +146,7 @@ function fromAsc(buf) {
     netlist = toNetlist(_netlist_lines);
   }
 
+  let xDim, yDim;
   {
     asc = [];
     let line, elem, isInsert;
@@ -163,6 +164,10 @@ function fromAsc(buf) {
       };
 
       switch(line[0]) {
+        case 'SHEET':
+          xDim = parseInt(line[2]);
+          yDim = parseInt(line[3]);
+          break;
         case 'WIRE':
           isInsert = true;
           elem.id = `wire-${i}`;
@@ -182,11 +187,89 @@ function fromAsc(buf) {
           if (!elem.type) {
             throw new Error(`Unsupported type: ${line[1]}`);
           }
-          elem.p_center = {
-            x: parseInt(line[2]),
-            y: parseInt(line[3])
-          };
           elem.R = parseInt(line[4].slice(1));
+
+          // adjust center position
+          switch(elem.type) {
+            case V_t:
+            case VCCS_t:
+            case VCVS_t:
+            case I_t:
+              if (elem.R === 0) {
+                elem.p_center = {
+                  x: parseInt(line[2]),
+                  y: parseInt(line[3]) + 56
+                };
+              } else if (elem.R === 90) {
+                elem.p_center = {
+                  x: parseInt(line[2]) - 56,
+                  y: parseInt(line[3])
+                };
+              } else if (elem.R === 180) {
+                elem.p_center = {
+                  x: parseInt(line[2]),
+                  y: parseInt(line[3]) - 56
+                };
+              } else {
+                elem.p_center = {
+                  x: parseInt(line[2]) + 56,
+                  y: parseInt(line[3])
+                };
+              }
+              break;
+            case R_t:
+              if (elem.R === 0) {
+                elem.p_center = {
+                  x: parseInt(line[2]) + 16,
+                  y: parseInt(line[3]) + 56
+                };
+              } else if (elem.R === 90) {
+                elem.p_center = {
+                  x: parseInt(line[2]) - 56,
+                  y: parseInt(line[3]) + 16
+                };
+              } else if (elem.R === 180) {
+                elem.p_center = {
+                  x: parseInt(line[2]) - 16,
+                  y: parseInt(line[3]) - 56
+                };
+              } else {
+                elem.p_center = {
+                  x: parseInt(line[2]) + 56,
+                  y: parseInt(line[3]) - 16
+                };
+              }
+              break;
+            case C_t:
+            case L_t:
+              if (elem.R === 0) {
+                elem.p_center = {
+                  x: parseInt(line[2]) + 16,
+                  y: parseInt(line[3]) + 26
+                };
+              } else if (elem.R === 90) {
+                elem.p_center = {
+                  x: parseInt(line[2]) - 26,
+                  y: parseInt(line[3]) + 16
+                };
+              } else if (elem.R === 180) {
+                elem.p_center = {
+                  x: parseInt(line[2]) - 16,
+                  y: parseInt(line[3]) - 26
+                };
+              } else {
+                elem.p_center = {
+                  x: parseInt(line[2]) - 26,
+                  y: parseInt(line[3]) + 16
+                };
+              }
+              break;
+            default:
+              elem.p_center = {
+                x: parseInt(line[2]),
+                y: parseInt(line[3])
+              };
+          }
           let _line;
           do {
             i++;
@@ -211,6 +294,8 @@ function fromAsc(buf) {
 
   {
     let minX = Infinity, minY = Infinity;
+    let xScale = Math.min(1,dim.x/xDim);
+    let yScale = Math.min(1, dim.y/yDim);
     const setMin = (vec) => {
       if (DEFINED(vec)) {
         minX = Math.min(vec.x, minX);
@@ -220,8 +305,18 @@ function fromAsc(buf) {
     const adjustPoint = (vec) => {
       if (DEFINED(vec)) {
         return {
-          x: vec.x - minX,
-          y: vec.y - minY
+          x: vec.x - minX + 50,
+          y: vec.y - minY + 100
+        };
+      } else {
+        return vec;
+      }
+    };
+    const adjustScale = (vec) => {
+      if (DEFINED(vec)) {
+        return {
+          x: Math.floor(vec.x * xScale),
+          y: Math.floor(vec.y * yScale)
         };
       } else {
         return vec;
@@ -243,6 +338,13 @@ function fromAsc(buf) {
       elem.p_center = adjustPoint(elem.p_center);
       elem.p_from = adjustPoint(elem.p_from);
       elem.p_to = adjustPoint(elem.p_to);
+    }
+
+    for (i=0; i<asc.length; i++) {
+      elem = asc[i];
+      elem.p_center = adjustScale(elem.p_center);
+      elem.p_from = adjustScale(elem.p_from);
+      elem.p_to = adjustScale(elem.p_to);
     }
   }
 
