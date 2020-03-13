@@ -39,9 +39,9 @@ const createSVGElem = (elem) => document.createElementNS(_SVG_NS_, elem);
  * @param neg_node - coordinate of negative node {x: _x, y: _y}
  */
 const create = (type, id, centre, R, coord1, coord2) => {
-  const { pos_node, neg_node} = computeStartEndPosition(centre, R);
-  console.log(`Creating element: {type: ${type}, id: ${id}, 
-    coord1: (${pos_node.x}, ${pos_node.y}), coord2: (${neg_node.x}, ${neg_node.y})`);
+  const { pos_node, neg_node} = centre !== undefined ? computeStartEndPosition(centre, R) : -1;
+  // console.log(`Creating element: {type: ${type}, id: ${id},
+  //   coord1: (${pos_node.x}, ${pos_node.y}), coord2: (${neg_node.x}, ${neg_node.y})`);
 
   let element = createSVGGroup();
   switch(type) {
