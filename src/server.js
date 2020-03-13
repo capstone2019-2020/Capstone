@@ -56,160 +56,164 @@ app.post("/input-file", (req, res) => {
     let temp = circuit.nodalAnalysis();
 
 //     temp.currentEquations.forEach(first => first.forEach(second => second.forEach(eqns => console.log(eqns.toString()))));
-    temp.currentEquations.forEach((first) => 
-        first.forEach((second) => second.forEach((eqns) => 
-            {
-                // This is a replacement for solveFor of algebra.js to make all the equations have a format of
-                // x1 = x2 +..... => one variable on the LHS and the rest on the RHS
-                if (eqns.lhs.real.terms.length !== 1 && eqns.lhs.imag.terms.length !== 1) {
-                    let newlhs, location, found = false, finaleqn, lhsIsConstant = false, coeff;
+//     temp.currentEquations.forEach((first) => 
+//         first.forEach((second) => second.forEach((eqns) => 
+//             {
+//                 // This is a replacement for solveFor of algebra.js to make all the equations have a format of
+//                 // x1 = x2 +..... => one variable on the LHS and the rest on the RHS
+//                 if (eqns.lhs.real.terms.length !== 1 && eqns.lhs.imag.terms.length !== 1) {
+//                     let newlhs, location, found = false, finaleqn, lhsIsConstant = false, coeff;
 
-                    // For the case where LHS only has constant and no terms
-                    if (eqns.lhs.real.terms.length === 0 && eqns.lhs.imag.terms.length === 0) {
-                        if (eqns.lhs.real.constant !== null || eqns.lhs.imag.constant !== null) {
-                            // Pick a variable from rhs (first variable)
-                            if (eqns.rhs.real.terms.length !== 0) {
-                                newlhs = new Expression(eqns.rhs.real.terms[0].toString());
-                                coeff = eqns.rhs.real.terms[0].coefficient;
-                            } else {
-                                newlhs = new Expression(eqns.rhs.imag.terms[0].toString());
-                                coeff = eqns.rhs.imag.terms[0].coefficient;
-                            }
-                            lhsIsConstant = true;
-                        }
-                    }
+//                     // For the case where LHS only has constant and no terms
+//                     if (eqns.lhs.real.terms.length === 0 && eqns.lhs.imag.terms.length === 0) {
+//                         if (eqns.lhs.real.constant !== null || eqns.lhs.imag.constant !== null) {
+//                             // Pick a variable from rhs (first variable)
+//                             if (eqns.rhs.real.terms.length !== 0) {
+//                                 newlhs = new Expression(eqns.rhs.real.terms[0].toString());
+//                                 coeff = eqns.rhs.real.terms[0].coefficient;
+//                             } else {
+//                                 newlhs = new Expression(eqns.rhs.imag.terms[0].toString());
+//                                 coeff = eqns.rhs.imag.terms[0].coefficient;
+//                             }
+//                             lhsIsConstant = true;
+//                         }
+//                     }
 
-                    // LHS has terms
-                    if (eqns.lhs.real.terms.length !== 0) {
-                        newlhs = new Expression(eqns.lhs.real.terms[0].toString());
-                        coeff = eqns.lhs.real.terms[0].coefficient;
-                    } else if (eqns.lhs.imag.terms.length !== 0) {
-                        newlhs = new Expression(eqns.lhs.imag.terms[0].toString());
-                        coeff = eqns.lhs.imag.terms[0].coefficient;
-                    }
+//                     // LHS has terms
+//                     if (eqns.lhs.real.terms.length !== 0) {
+//                         newlhs = new Expression(eqns.lhs.real.terms[0].toString());
+//                         coeff = eqns.lhs.real.terms[0].coefficient;
+//                     } else if (eqns.lhs.imag.terms.length !== 0) {
+//                         newlhs = new Expression(eqns.lhs.imag.terms[0].toString());
+//                         coeff = eqns.lhs.imag.terms[0].coefficient;
+//                     }
 
-                    // Check if the variable already exits
-                    for (var i = 0; i < equations.length; i++) {
-                        if (equations[i].lhs.real.terms.length !== 0) {
-                            if (equations[i].lhs.real.terms[0].toString() === newlhs.toString()) {
-                                found = true;
-                                location = i;
-                            }
-                        } else {
-                            if (equations[i].lhs.imag.terms[0].toString() === newlhs.toString()) {
-                                found = true;
-                                location = i;
-                            }
-                        }
-                    }
+//                     // Check if the variable already exits
+//                     for (var i = 0; i < equations.length; i++) {
+//                         if (equations[i].lhs.real.terms.length !== 0) {
+//                             if (equations[i].lhs.real.terms[0].toString() === newlhs.toString()) {
+//                                 found = true;
+//                                 location = i;
+//                             }
+//                         } else {
+//                             if (equations[i].lhs.imag.terms[0].toString() === newlhs.toString()) {
+//                                 found = true;
+//                                 location = i;
+//                             }
+//                         }
+//                     }
 
-                    // Split the string of the expression
-                    let strOflhs, temprhs, existingRHS;
-                    if (lhsIsConstant === true) {
-                        // console.log("ENTERED HERE");
-                        strOflhs = eqns.toString().split(newlhs.toString());
-                        // console.log(strOflhs);
-                        existingRHS = strOflhs[1];
-                        // console.log(`Existing RHS: ${existingRHS.toString()}}`);
-                        strOflhs = strOflhs[0].split("=");
-                        strOflhs = strOflhs[0];
-                        // console.log(`To become RHS terms: ${strOflhs.toString()}`)
+//                     // Split the string of the expression
+//                     let strOflhs, temprhs, existingRHS;
+//                     if (lhsIsConstant === true) {
+//                         // console.log("ENTERED HERE");
+//                         strOflhs = eqns.toString().split(newlhs.toString());
+//                         // console.log(strOflhs);
+//                         existingRHS = strOflhs[1];
+//                         // console.log(`Existing RHS: ${existingRHS.toString()}}`);
+//                         strOflhs = strOflhs[0].split("=");
+//                         strOflhs = strOflhs[0];
+//                         // console.log(`To become RHS terms: ${strOflhs.toString()}`)
 
-                        if (existingRHS.toString().substring(0, 2).indexOf('+') != -1) {
-                            existingRHS = existingRHS.substring(3, existingRHS.length);
-                        }
+//                         if (existingRHS.toString().substring(0, 2).indexOf('+') != -1) {
+//                             existingRHS = existingRHS.substring(3, existingRHS.length);
+//                         }
 
-                        // The RHS was not 0
-                        if (existingRHS.length !== 0) {
-                            temprhs = new Expression(existingRHS.toString());
-                            temprhs.multiply(-1);
-                            // console.log(temprhs.toString());
-                            // temprhs = temprhs.add(strOflhs.toString());
-                            temprhs = temprhs.toString() + (strOflhs > 0 ? "+" : "") + strOflhs.toString();
-                            // console.log(temprhs.toString());
-                            temprhs = new Expression(temprhs.toString());
-                        } else {
-                            temprhs = strOflhs;
-                        }
-                        // console.log(temprhs.toString());
-                    } else {
-                        // console.log("Entered THERE");
-                        strOflhs = eqns.toString().split(newlhs.toString());
-                        strOflhs = strOflhs[1].split("=");
-                        existingRHS = strOflhs[1];
-                        strOflhs = strOflhs[0];
-                        if (strOflhs.toString().substring(0, 2).indexOf('+') !== -1) {
-                            strOflhs = strOflhs.substring(3, strOflhs.length);
-                        }
+//                         // The RHS was not 0
+//                         if (existingRHS.length !== 0) {
+//                             temprhs = new Expression(existingRHS.toString());
+//                             temprhs.multiply(-1);
+//                             // console.log(temprhs.toString());
+//                             // temprhs = temprhs.add(strOflhs.toString());
+//                             temprhs = temprhs.toString() + (strOflhs > 0 ? "+" : "") + strOflhs.toString();
+//                             // console.log(temprhs.toString());
+//                             temprhs = new Expression(temprhs.toString());
+//                         } else {
+//                             temprhs = strOflhs;
+//                         }
+//                         // console.log(temprhs.toString());
+//                     } else {
+//                         // console.log("Entered THERE");
+//                         strOflhs = eqns.toString().split(newlhs.toString());
+//                         strOflhs = strOflhs[1].split("=");
+//                         existingRHS = strOflhs[1];
+//                         strOflhs = strOflhs[0];
+//                         if (strOflhs.toString().substring(0, 2).indexOf('+') !== -1) {
+//                             strOflhs = strOflhs.substring(3, strOflhs.length);
+//                         }
 
-                        if (existingRHS.toString().substring(0, 2).indexOf('+') !== -1) {
-                            existingRHS = existingRHS.substring(3, existingRHS.length);
-                        }
-                        temprhs = new Expression(strOflhs.toString());
-                        temprhs.multiply(-1);
+//                         if (existingRHS.toString().substring(0, 2).indexOf('+') !== -1) {
+//                             existingRHS = existingRHS.substring(3, existingRHS.length);
+//                         }
+//                         temprhs = new Expression(strOflhs.toString());
+//                         temprhs.multiply(-1);
 
-                        // The RHS was not 0
-                        if (existingRHS.length !== 0) {
-                            temprhs = temprhs.add(new Expression(existingRHS.toString()));
-                        }
-                    }
+//                         // The RHS was not 0
+//                         if (existingRHS.length !== 0) {
+//                             temprhs = temprhs.add(new Expression(existingRHS.toString()));
+//                         }
+//                     }
 
-                    // The coefficient of the term was not 1
-                    if (coeff !== 1 && typeof(temprhs) !== "string") {
-                        // console.log("ENTERED HERE!!!!!")
-                        temprhs.divide(coeff.toString());
-                        newlhs = newlhs.divide(coeff.toString());
-                    }
-                    // console.log(`New LHS: ${newlhs} and new RHS: ${temprhs}`);
+//                     // The coefficient of the term was not 1
+//                     if (coeff !== 1 && typeof(temprhs) !== "string") {
+//                         // console.log("ENTERED HERE!!!!!")
+//                         temprhs.divide(coeff.toString());
+//                         newlhs = newlhs.divide(coeff.toString());
+//                     }
+//                     // console.log(`New LHS: ${newlhs} and new RHS: ${temprhs}`);
 
-                    if (found === true) {
-                        let replacetemp = equations[location].toString().split('=');
-                        replacetemp = new Expression (replacetemp[1]);
-                        replacetemp.add(temprhs);
-                        finaleqn = newlhs.toString() + " = " + replacetemp;
-                        // console.log(finaleqn.toString());
-                        equations[location] = algebra.parse(finaleqn.toString());
-                    } else {
-                        finaleqn = newlhs.toString() + " = " + temprhs.toString();
-                        // console.log(finaleqn.toString());
-                        equations.push(algebra.parse(finaleqn.toString()));
-                    }
-                } else {
-                    let temp;
+//                     if (found === true) {
+//                         let replacetemp = equations[location].toString().split('=');
+//                         replacetemp = new Expression (replacetemp[1]);
+//                         replacetemp.add(temprhs);
+//                         finaleqn = newlhs.toString() + " = " + replacetemp;
+//                         // console.log(finaleqn.toString());
+//                         equations[location] = algebra.parse(finaleqn.toString());
+//                     } else {
+//                         finaleqn = newlhs.toString() + " = " + temprhs.toString();
+//                         // console.log(finaleqn.toString());
+//                         equations.push(algebra.parse(finaleqn.toString()));
+//                     }
+//                 } else {
+//                     let temp;
 
-                    // There is a coefficient in the lhs
-                    if (eqns.lhs.real.terms.length !== 0) {
-                        if (eqns.lhs.real.terms[0].coefficient !== 1) {
-                            temp = new Equation(eqns.toString());
-                            temp.lhs.divide(eqns.lhs.real.terms[0].coefficient);
-                            temp.rhs.divide(eqns.lhs.real.terms[0].coefficient);
-                            eqns = new Equation(temp.lhs, temp.rhs);
-                        }
-                    } else if (eqns.lhs.imag.terms.length !== 0) {
-                        if (eqns.lhs.imag.terms[0].coefficient !== 1) {
-                            temp = new Equation(eqns.toString());
-                            temp.lhs.divide(eqns.lhs.imag.terms[0].coefficient);
-                            temp.rhs.divide(eqns.lhs.imag.terms[0].coefficient);
-                            eqns = new Equation(temp.lhs, temp.rhs);
-                        }
-                    }
+//                     // There is a coefficient in the lhs
+//                     if (eqns.lhs.real.terms.length !== 0) {
+//                         if (eqns.lhs.real.terms[0].coefficient !== 1) {
+//                             temp = new Equation(eqns.toString());
+//                             temp.lhs.divide(eqns.lhs.real.terms[0].coefficient);
+//                             temp.rhs.divide(eqns.lhs.real.terms[0].coefficient);
+//                             eqns = new Equation(temp.lhs, temp.rhs);
+//                         }
+//                     } else if (eqns.lhs.imag.terms.length !== 0) {
+//                         if (eqns.lhs.imag.terms[0].coefficient !== 1) {
+//                             temp = new Equation(eqns.toString());
+//                             temp.lhs.divide(eqns.lhs.imag.terms[0].coefficient);
+//                             temp.rhs.divide(eqns.lhs.imag.terms[0].coefficient);
+//                             eqns = new Equation(temp.lhs, temp.rhs);
+//                         }
+//                     }
 
-                    // console.log(eqns.toString());
-                    equations.push(algebra.parse(eqns.toString()));
-                }
-            }
-        ))
-    );
+//                     // console.log(eqns.toString());
+//                     equations.push(algebra.parse(eqns.toString()));
+//                 }
+//             }
+//         ))
+//     );
 
     // Combine DPI and shortcircuit - ERROR WITH DPI * SHORCIRCUIT
+    // ONLY USE THIS CASE DONT USE NODAL CASE
     for (var i = 0; i < temp.dpi.length; i++) {
-        let lhs = new Expression(`V${temp.nodeId[i]}`);
-        // console.log(temp.dpi[i].toString());
-        // console.log(temp.shorCircuitCurrent[i]);
-        let rhs = temp.dpi[i].multiply(temp.shorCircuitCurrent[i]);
-        let tempEqn = new Equation(lhs, rhs);
-        // console.log(tempEqn.toString());
-        equations.push(algebra.parse(tempEqn.toString()));
+        // let lhs = new Expression(`V${temp.nodeId[i]}`);
+        // let rhs = temp.dpi[i].multiply(temp.shorCircuitCurrent[i]);
+        // let tempEqn = new Equation(lhs, rhs);
+//         console.log(temp.dpi[i].toString());
+        equations.push(algebra.parse(temp.dpi[i].toString()));
+    }
+
+    for (var i = 0; i < temp.shorCircuitCurrent.length; i++) {
+//         console.log(temp.shorCircuitCurrent[i].toString());
+        equations.push(algebra.parse(temp.shorCircuitCurrent[i].toString()));
     }
 
     if(!circuit) {
