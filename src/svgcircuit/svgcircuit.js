@@ -43,4 +43,10 @@ const generateCircuit = (canvas_id) => {
 
 		circuit_canvas.appendChild(elem);
 	});
+
+	let nodes = [];
+	nodes.forEach(n => {
+		circuit_canvas.appendChild(Element.createNode(n));
+	});
 };
+

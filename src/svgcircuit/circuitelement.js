@@ -103,6 +103,10 @@ const computeStartEndPosition = (centre, R) => {
   return { pos_node, neg_node};
 };
 
+const createNode = (coord) => {
+  return Node(coord);
+};
+
 const createNodes = (coord1, coord2) => {
   let nodes = [];
   nodes.push(Node(coord1));
@@ -524,4 +528,4 @@ const Wire = (coord1, coord2) => {
   return Line(coord1, coord2);
 };
 
-const Element = { create };
+const Element = { create, createNode };
