@@ -601,22 +601,22 @@ function createCircuit(components){
 //     this.currentEquations.push(eqs);
 // };
 
-(function main(){
-    const voltage_div = 'test/circuitModule/netlist_ann1.txt'
-    const var_simple = 'test/circuitModule/netlist_ann2.txt'
-    const curr_src = 'test/circuitModule/netlist_ann_csrc.txt'
-    const rc = 'test/circuitModule/netlist_ann_rc.txt'
-    const vcvs = 'test/circuitModule/netlist_ann_vcvs.txt'
-    const vcvs2 = 'test/circuitModule/netlist_ann_vcvs2.txt'
-    const amplifier = 'test/circuitModule/netlist_ann_vcvs3.txt'
-    const vccs = 'test/circuitModule/netlist_ann_vccs.txt'
+// (function main(){
+//     const voltage_div = 'test/circuitModule/netlist_ann1.txt'
+//     const var_simple = 'test/circuitModule/netlist_ann2.txt'
+//     const curr_src = 'test/circuitModule/netlist_ann_csrc.txt'
+//     const rc = 'test/circuitModule/netlist_ann_rc.txt'
+//     const vcvs = 'test/circuitModule/netlist_ann_vcvs.txt'
+//     const vcvs2 = 'test/circuitModule/netlist_ann_vcvs2.txt'
+//     const amplifier = 'test/circuitModule/netlist_ann_vcvs3.txt'
+//     const vccs = 'test/circuitModule/netlist_ann_vccs.txt'
 
-    c = nl.nlConsume(vcvs);
-    circuit = createCircuit(c);
-    var summary = circuit.dpiAnalysis();
-})();
+//     c = nl.nlConsume(vcvs);
+//     circuit = createCircuit(c);
+//     var summary = circuit.dpiAnalysis();
+// })();
 
-exports.createCircuit = createCircuit;
-exports.setCircuit = (c) => {
-    circuit = c;
-};
+// exports.createCircuit = createCircuit;
+// exports.setCircuit = (c) => {
+//     circuit = c;
+// };
