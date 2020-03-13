@@ -14,6 +14,7 @@ exports.ascConsume = filepath => {
   const d = fs.readFileSync(filepath, {encoding: 'utf8'});
   const asc = fromAsc(d);
   console.log(JSON.stringify(asc.asc));
+  console.log(JSON.stringify(asc.nodes));
   return asc;
 };
 

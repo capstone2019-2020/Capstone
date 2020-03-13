@@ -348,9 +348,51 @@ function fromAsc(buf, dim={x:1500,y:1000}) {
     }
   }
 
+  let nodes = [];
+  {
+    let all_nodes = {};
+    const upsertNode = (n_id, component) => {
+      if (!all_nodes.hasOwnProperty(n_id)) {
+        all_nodes[n_id] = {
+          id: n_id,
+          components: [],
+          p: undefined
+        };
+      }
+      all_nodes[n_id].components.push(component.id);
+    };
+
+    let component, n1, n2;
+    let i;
+    for (i=0; i<netlist.length; i++) {
+      component = netlist[i];
+      n1 = component.pnode;
+      n2 = component.nnode;
+      upsertNode(n1, component);
+      upsertNode(n2, component);
+    }
+
+    Object.values(all_nodes).forEach(node => {
+      let xAvg = 0, yAvg = 0;
+      let cList = node.components;
+      let c;
+      for (i=0; i<cList.length; i++) {
+        c = asc.find(_asc => _asc.id === cList[i]);
+        xAvg += c.p_center.x;
+        yAvg += c.p_center.y;
+      }
+      node.p = {
+        x: Math.floor(xAvg/cList.length),
+        y: Math.floor(yAvg/cList.length)
+      };
+      nodes.push(node);
+    });
+  }
+
   return {
     netlist,
-    asc
+    asc,
+    nodes
   }
 }
 
