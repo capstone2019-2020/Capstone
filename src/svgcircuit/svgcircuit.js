@@ -1,4 +1,10 @@
-const generateCircuit = (canvas_id) => {
+/*
+ * Initial implementation of circuit generation,
+ * Does netlist parsing. New implementation assumes the netlist
+ * was already parsed.
+ * @deprecated
+ */
+const generateCircuit_deprecated = (canvas_id) => {
 	const netlist = document.getElementById('netlist');
 	const circuit_elems = netlist.value.split(/\n/);
 	console.log(circuit_elems);
@@ -17,6 +23,17 @@ const generateCircuit = (canvas_id) => {
 
 		elem = Element.create(elem_type, elem_id,
 			positive_node, negative_node);
+
+		circuit_canvas.appendChild(elem);
+	});
+};
+
+const generateCircuit = (canvas_id, circuit_elems) => {
+	let circuit_canvas = document.getElementById(canvas_id);
+	let elem;
+	circuit_elems.forEach( c => {
+		elem = Element.create(c.type, c.id,
+			c.positive_node, c.negative_node);
 
 		circuit_canvas.appendChild(elem);
 	});
