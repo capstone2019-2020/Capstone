@@ -8,6 +8,7 @@ const _CAPACITOR_TYPE_ = 'C';
 const _DEP_VCVS_TYPE_ = 'E';
 const _DEP_VCCS_TYPE_ = 'G';
 const _DEP_CCVS_TYPE_ = 'H';
+const _WIRE_TYPE_ = 'W';
 
 /* Fixed length of each symbol */
 const _RESISTOR_L_ = 50;
@@ -62,6 +63,9 @@ const create = (type, id, coord1, coord2) => {
       break;
     case _DEP_CCVS_TYPE_:
       element = DependentCurrent(id, coord1, coord2);
+      break;
+    case _WIRE_TYPE_:
+      element = Wire(coord1, coord2);
       break;
     default:
       break;
@@ -479,7 +483,10 @@ const DependentCurrent = (id, coord1, coord2) => {
   current_src.appendChild(dependentSymbol(start, end));
   current_src.appendChild(currentSymbol(start, end));
   return current_src;
+};
 
+const Wire = (coord1, coord2) => {
+  return Line(coord1, coord2);
 };
 
 const Element = { create };
