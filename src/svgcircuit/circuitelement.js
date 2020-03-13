@@ -11,13 +11,14 @@ const _DEP_CCVS_TYPE_ = 'H';
 const _WIRE_TYPE_ = 'W';
 
 /* Fixed length of each symbol */
+const _GENERIC_L_ = 70;
 const _RESISTOR_L_ = 50;
 const _INDEP_L_ = 50;
 const _CAP_L_ = 25;
 const _DEP_L_ = 50;
 
 /* General constants applied to each element*/
-const _NODE_RADIUS_ = 4;
+const _NODE_RADIUS_ = 3;
 const _LINE_WIDTH_ = 2;
 const _DEFAULT_COLOR_ = '#000';
 const _RESISTOR_HEIGHT_ = 20;
@@ -34,35 +35,36 @@ const createSVGElem = (elem) => document.createElementNS(_SVG_NS_, elem);
  *
  * @param type - type of element to create (R | V | I | C ...)
  * @param id   - id of element - will be used as the label
- * @param coord1 - coordinate of positive node {x: _x, y: _y}
- * @param coord2 - coordinate of negative node {x: _x, y: _y}
+ * @param pos_node - coordinate of positive node {x: _x, y: _y}
+ * @param neg_node - coordinate of negative node {x: _x, y: _y}
  */
-const create = (type, id, coord1, coord2) => {
+const create = (type, id, centre, R, coord1, coord2) => {
+  const { pos_node, neg_node} = computeStartEndPosition(centre, R);
   console.log(`Creating element: {type: ${type}, id: ${id}, 
-  coord1: (${coord1.x}, ${coord1.y}), coord2: (${coord2.x}, ${coord2.y})`);
+    coord1: (${pos_node.x}, ${pos_node.y}), coord2: (${neg_node.x}, ${neg_node.y})`);
 
   let element = createSVGGroup();
   switch(type) {
     case _RESISTOR_TYPE_:
-      element = Resistor(id, coord1, coord2);
+      element = Resistor(id, pos_node, neg_node);
       break;
     case _INDEP_VOLTAGE_TYPE_:
-      element = IndependentVoltage(id, coord1, coord2);
+      element = IndependentVoltage(id, pos_node, neg_node);
       break;
     case _INDEP_CURRENT_TYPE_:
-      element = IndependentCurrent(id, coord1, coord2);
+      element = IndependentCurrent(id, pos_node, neg_node);
       break;
     case _CAPACITOR_TYPE_:
-      element = Capacitor(id, coord1, coord2);
+      element = Capacitor(id, pos_node, neg_node);
       break;
     case _DEP_VCVS_TYPE_:
-      element = DependentVoltage(id, coord1, coord2);
+      element = DependentVoltage(id, pos_node, neg_node);
       break;
     case _DEP_VCCS_TYPE_:
-      element = DependentVoltage(id, coord1, coord2);
+      element = DependentVoltage(id, pos_node, neg_node);
       break;
     case _DEP_CCVS_TYPE_:
-      element = DependentCurrent(id, coord1, coord2);
+      element = DependentCurrent(id, pos_node, neg_node);
       break;
     case _WIRE_TYPE_:
       element = Wire(coord1, coord2);
@@ -71,6 +73,34 @@ const create = (type, id, coord1, coord2) => {
       break;
   }
   return element;
+};
+
+const computeStartEndPosition = (centre, R) => {
+  let pos_node = {x: 0, y: 0};
+  let neg_node = {x: 0, y: 0};
+  const h = _GENERIC_L_/2;
+  console.log( `centre: ${JSON.stringify(centre)}, R: ${R}`);
+  switch (R) {
+    case 0:
+      pos_node = {x: centre.x, y: centre.y - h};
+      neg_node = {x: centre.x, y: centre.y + h};
+      break;
+    case 90:
+      pos_node = {x: centre.x + h, y: centre.y};
+      neg_node = {x: centre.x - h, y: centre.y};
+      break;
+    case 180:
+      pos_node = {x: centre.x, y: centre.y + h};
+      neg_node = {x: centre.x, y: centre.y - h};
+      break;
+    case 270:
+      pos_node = {x: centre.x - h, y: centre.y};
+      neg_node = {x: centre.x + h, y: centre.y};
+      break;
+    default:
+      break;
+  }
+  return { pos_node, neg_node};
 };
 
 const createNodes = (coord1, coord2) => {
@@ -93,29 +123,31 @@ const createLines = (coord1, coord2, length) => {
   /* Case 1: horizontal line */
   if (y1 === y2) {
     const width = x2 - x1;
+    const l = width < 0 ? length : -length;
 
     /* line 1 */
     line_pos1 = {x: x1, y: y1};
-    line_pos2 = {x: x1 + (width - length)/2, y: y1};
+    line_pos2 = {x: x1 + (width + l)/2, y: y1};
     lines.push(Line(line_pos1, line_pos2));
 
     /* line 2 */
     line_pos1 = {x: x2, y: y2};
-    line_pos2 = {x: x2 - (width-length)/2, y: y2};
+    line_pos2 = {x: x2 - (width+l)/2, y: y2};
     lines.push(Line(line_pos1, line_pos2));
 
   }
   /* Case 2: vertical line */
   else {
     const height = y2 - y1;
+    const l = height < 0 ? length : -length;
 
     /* line 1 */
     line_pos1 = {x: x1, y: y1};
-    line_pos2 = {x: x1, y: y1 + (height-length)/2};
+    line_pos2 = {x: x1, y: y1 + (height+l)/2};
     lines.push(Line(line_pos1, line_pos2));
 
     line_pos1 = {x: x2, y: y2};
-    line_pos2 = {x: x2, y: y2 - (height-length)/2};
+    line_pos2 = {x: x2, y: y2 - (height+l)/2};
     lines.push(Line(line_pos1, line_pos2));
   }
   return lines;
@@ -207,18 +239,20 @@ const getSymbolBounds = (coord1, coord2, l) => {
   let end = {x: null, y: null};
   if (isHorizontal(coord1, coord2)) {
     const width = x2- x1;
-    start.x = x1 + (width-l)/2;
-    end.x = x2 - (width-l)/2;
+    l = width < 0 ? l : -l;
+    start.x = x1 + (width+l)/2;
+    end.x = x2 - (width+l)/2;
 
     start.y = y1;
     end.y = y2;
 
   } else {
     const height = y2 - y1;
+    l = height < 0 ? l : -l;
     start.x = x1;
-    start.y = y1 + (height-l)/2;
+    start.y = y1 + (height+l)/2;
     end.x = x2;
-    end.y = y2 - (height-l)/2;
+    end.y = y2 - (height+l)/2;
   }
   return {start, end};
 };
@@ -353,8 +387,9 @@ const voltageSymbol = (pos, neg) => {
     orientation = pos.y > neg.y ? D : U;
     rotate = true;
   }
-
-  msg = orientation === D || orientation == R ? '- +' : '+ -';
+  console.log(`pos: ${JSON.stringify(pos)}, neg: ${JSON.stringify(neg)}`);
+  console.log(`orientation: ${orientation}`);
+  msg = orientation === D || orientation === R ? '- +' : '+ -';
   let symbol = Text(msg, center, font_size);
   if (rotate)
     symbol.setAttribute('transform', `rotate(90, ${center.x}, ${center.y - OFFSET}) translate(0 4)`);

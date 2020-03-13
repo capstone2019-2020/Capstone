@@ -11,18 +11,20 @@ const generateCircuit_deprecated = (canvas_id) => {
 
 	/* Create SVG object for each element*/
 	let circuit_canvas = document.getElementById(canvas_id);
-	let prop, elem, elem_id, elem_type,
-		positive_node, negative_node;
+	let prop, elem, elem_id, elem_type, centre, R,
+		from, to;
 
 	circuit_elems.forEach( c => {
 		prop = c.split(' ');
 		elem_id = prop[0];
 		elem_type = elem_id.charAt(0);
-		positive_node = {x: prop[4], y: prop[5], id: prop[1]};
-		negative_node = {x: prop[6], y: prop[7], id: prop[2]};
+		centre = {x: parseFloat(prop[4]), y: parseFloat(prop[5])};
+		R = parseFloat(prop[6]);
+		from = {x: prop[7], y: prop[8], id: prop[1]};
+		to = {x: prop[9], y: prop[10], id: prop[2]};
 
-		elem = Element.create(elem_type, elem_id,
-			positive_node, negative_node);
+		elem = Element.create(elem_type, elem_id, centre, R,
+			from, to);
 
 		circuit_canvas.appendChild(elem);
 	});
@@ -32,8 +34,8 @@ const generateCircuit = (canvas_id, circuit_elems) => {
 	let circuit_canvas = document.getElementById(canvas_id);
 	let elem;
 	circuit_elems.forEach( c => {
-		elem = Element.create(c.type, c.id,
-			c.positive_node, c.negative_node);
+		elem = Element.create(c.type, c.id, c.p_center, c.R,
+			c.from, c.to);
 
 		circuit_canvas.appendChild(elem);
 	});
