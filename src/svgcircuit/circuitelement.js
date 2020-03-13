@@ -104,7 +104,9 @@ const computeStartEndPosition = (centre, R) => {
 };
 
 const createNode = (coord) => {
-  return Node(coord);
+  let node = Node(coord);
+  node.setAttribute('fill', 'red');
+  return node;
 };
 
 const createNodes = (coord1, coord2) => {
