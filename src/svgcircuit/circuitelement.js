@@ -27,7 +27,7 @@ const _DEFAULT_NODE_COLOR_ = '#8f8f8f';
 
 /* Element specific constants */
 const _RESISTOR_HEIGHT_ = 20;
-const _GROUND_LENGTH_ = 40;
+const _GROUND_LENGTH_ = 30;
 /*
  * Generic SVG element create functions
  */
@@ -443,14 +443,14 @@ const groundSymbol = (center) => {
   }
 
   {
-    h = (_GROUND_LENGTH - 10) / 2;
+    h = (_GROUND_LENGTH_ - 10) / 2;
     coord1 = {x: center.x + h, y: center.y + 5};
     coord2 = {x: center.x - h, y: center.y + 5};
     symbol.appendChild(Line(coord1, coord2));
   }
 
   {
-    h = (_GROUND_LENGTH - 20) / 2;
+    h = (_GROUND_LENGTH_ - 20) / 2;
     coord1 = {x: center.x + h, y: center.y + 10};
     coord2 = {x: center.x - h, y: center.y + 10};
     symbol.appendChild(Line(coord1, coord2));
@@ -565,6 +565,7 @@ const Wire = (coord1, coord2) => {
 };
 
 const Ground = (center) => {
+  console.log('CREATING GROUND SYMBOL...');
   return groundSymbol(center);
 };
 
