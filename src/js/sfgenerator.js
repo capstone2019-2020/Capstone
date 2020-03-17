@@ -3,6 +3,8 @@ const SELECTED_NODE_CLR = '#f04b4c';
 const GHOST_NODE_CLR = '#528aeb';
 const DEFAULT_EDGE_CLR = '#999';
 
+const CIRCUIT_CANVAS_ID = 'circuit-canvas';
+
 let clickedNodes = null;
 let startNode = null;
 let endNode = null;
@@ -11,8 +13,9 @@ let svgraph = null;
 let loopgraph = null;
 
 function initSvgCircuit() {
-  let nodes = getCookie('circuit_layout');
-  console.log('initCircuit', nodes);
+  let asc = JSON.parse(getCookie('circuit_layout'));
+  generateCircuit(CIRCUIT_CANVAS_ID, asc);
+  console.log('initCircuit', asc);
 }
 
 function initSFG() {
