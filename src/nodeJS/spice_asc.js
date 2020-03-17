@@ -9,6 +9,7 @@ const VCCS_t = 'G';
 const CCVS_t = 'H';
 const W_t = 'W';
 const GND_t = 'GND';
+const LABEL_t = 'LABEL';
 const CCCS_t = '';
 
 const SUPPORTED_TYPES = [R_t, L_t, C_t, I_t, V_t, VCVS_t, VCCS_t, CCVS_t, CCCS_t];
@@ -29,7 +30,11 @@ const ASC_TO_TYPE_LUT = {
   'current': I_t,
   'ind': L_t,
   'cap': C_t,
-  'res': R_t
+  'res': R_t,
+  '0': GND_t,
+  'VCC': LABEL_t,
+  'VEE': LABEL_t,
+  'OUT': LABEL_t
 };
 const srandPeriod = [
   0.5572978613694286,0.7582149729151599,0.2862383839181688,0.0851135310503035,0.3857092360396768,
@@ -207,7 +212,7 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
           elem.type = ASC_TO_TYPE_LUT[line[3]];
 
           switch(elem.type) {
-            case '0':
+            case GND_t:
               isInsert = true;
               elem.id = `gnd-${i}`;
               elem.type = GND_t;
@@ -216,9 +221,7 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
                 y: parseInt(line[2])
               };
               break;
-            case 'VCC':
-            case 'VEE':
-            case 'OUT':
+            case LABEL_t:
             default:
           }
           break;
