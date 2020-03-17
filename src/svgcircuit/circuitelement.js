@@ -9,6 +9,7 @@ const _DEP_VCVS_TYPE_ = 'E';
 const _DEP_VCCS_TYPE_ = 'G';
 const _DEP_CCVS_TYPE_ = 'H';
 const _WIRE_TYPE_ = 'W';
+const _GROUND_TYPE = 'GND';
 
 /* Fixed length of each symbol */
 const _GENERIC_L_ = 70;
@@ -23,8 +24,10 @@ const _LINE_WIDTH_ = 1.5;
 const _DEFAULT_COLOR_ = '#bababa';
 const _DEFAULT_FONT_COLOR_ = '#8f8f8f';
 const _DEFAULT_NODE_COLOR_ = '#8f8f8f';
-const _RESISTOR_HEIGHT_ = 20;
 
+/* Element specific constants */
+const _RESISTOR_HEIGHT_ = 20;
+const _GROUND_LENGTH_ = 40;
 /*
  * Generic SVG element create functions
  */
@@ -40,8 +43,8 @@ const createSVGElem = (elem) => document.createElementNS(_SVG_NS_, elem);
  * @param pos_node - coordinate of positive node {x: _x, y: _y}
  * @param neg_node - coordinate of negative node {x: _x, y: _y}
  */
-const create = (type, id, centre, R, coord1, coord2) => {
-  const { pos_node, neg_node} = centre !== undefined ? computeStartEndPosition(centre, R) : -1;
+const create = (type, id, center, R, coord1, coord2) => {
+  const { pos_node, neg_node} = center !== undefined ? computeStartEndPosition(center, R) : -1;
   // console.log(`Creating element: {type: ${type}, id: ${id},
   //   coord1: (${pos_node.x}, ${pos_node.y}), coord2: (${neg_node.x}, ${neg_node.y})`);
 
@@ -70,6 +73,9 @@ const create = (type, id, centre, R, coord1, coord2) => {
       break;
     case _WIRE_TYPE_:
       element = Wire(coord1, coord2);
+      break;
+    case _GROUND_TYPE_:
+      element = Ground(center);
       break;
     default:
       break;
@@ -103,12 +109,6 @@ const computeStartEndPosition = (centre, R) => {
       break;
   }
   return { pos_node, neg_node};
-};
-
-const createNode = (coord) => {
-  let node = Node(coord);
-  node.setAttribute('fill', 'red');
-  return node;
 };
 
 const createNodes = (coord1, coord2) => {
@@ -429,6 +429,36 @@ const currentSymbol = (pos, neg) => {
   return symbol;
 };
 
+const groundSymbol = (center) => {
+  let symbol = createSVGGroup();
+  let coord1, coord2;
+  let h;
+
+  // longest line
+  {
+    h = _GROUND_LENGTH_ / 2;
+    coord1 = {x: center.x + h, y: center.y};
+    coord2 = {x: center.x - h, y: center.y};
+    symbol.appendChild(Line(coord1, coord2));
+  }
+
+  {
+    h = (_GROUND_LENGTH - 10) / 2;
+    coord1 = {x: center.x + h, y: center.y + 5};
+    coord2 = {x: center.x - h, y: center.y + 5};
+    symbol.appendChild(Line(coord1, coord2));
+  }
+
+  {
+    h = (_GROUND_LENGTH - 20) / 2;
+    coord1 = {x: center.x + h, y: center.y + 10};
+    coord2 = {x: center.x - h, y: center.y + 10};
+    symbol.appendChild(Line(coord1, coord2));
+  }
+
+  return symbol;
+};
+
 /**
  * Generate template for a generic circuit element
  * - 2 lines + 2 nodes
@@ -532,6 +562,10 @@ const DependentCurrent = (id, coord1, coord2) => {
 
 const Wire = (coord1, coord2) => {
   return Line(coord1, coord2);
+};
+
+const Ground = (center) => {
+  return groundSymbol(center);
 };
 
 const Element = { create };
