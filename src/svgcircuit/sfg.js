@@ -4,6 +4,7 @@ const SZ_CIRCLE_RADIUS = 5;
 const BEZIER_SAMPLE_RATE = 200;
 const PI_2 = 1.57079632679;
 const PI = Math.PI;
+const ID_SFG_WRAPPER_G = 'sfg-wraper-g';
 
 /* Fake macros */
 const sfg_ELEM = (id) => document.getElementById(id);
@@ -96,6 +97,16 @@ function sfg_line(vecf, vect, config={}) {
     x2: vect.x,
     y2: vect.y
   });
+}
+
+function sfg_g(id, ...children) {
+  const g = document.createElementNS(sfg_SVG_NS, 'g');
+  g.setAttribute('id', id);
+
+  if (children) {
+    children.forEach(c => g.appendChild(c));
+  }
+  return g;
 }
 
 function finite_diff(vecs, i) {
@@ -459,9 +470,12 @@ function sfg_render(V, E) {
     }
   }
 
+  let wrapper_g = document.getElementById(ID_SFG_WRAPPER_G);
+  if (sfg_DEFINED(wrapper_g)) {
+    getSFG().removeChild(wrapper_g);
+  }
   sfg___ns(getSFG(), {},
-    ...nodes,
-    ...edges
+    sfg_g(ID_SFG_WRAPPER_G, ...[...nodes, ...edges])
   );
 }
 
@@ -485,7 +499,7 @@ function toSFG(nodes, sfg) {
   return _sfg;
 }
 
-function init(sfg) {
+function sfg_init(sfg) {
   let V = {}, E = {};
   {
     let i, v;
@@ -646,4 +660,4 @@ const _sfg = [
   }
 ];
 
-init(_sfg);
+sfg_init(_sfg);
