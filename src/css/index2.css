@@ -44,27 +44,24 @@
   height: 100%;
   border: none;
   margin: 0;
+  background-color: white;
 }
 
 .right-top-panel {
-  background-color: white;
   display: inline-block;
   width: 100%;
   height: 50%;
   float: left;
   border-color: black;
-  border-left: 2px solid #aaaaaa;
   margin: 0;
 }
 
 .right-bottom-panel {
-  background-color: white;
   display: inline-block;
   width: 100%;
   height: 50%;
   float: left;
   border: none;
-  border-left: 2px solid #aaaaaa;
   margin: 0;
 }
 

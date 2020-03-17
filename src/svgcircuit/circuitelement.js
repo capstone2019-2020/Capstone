@@ -534,4 +534,4 @@ const Wire = (coord1, coord2) => {
   return Line(coord1, coord2);
 };
 
-const Element = { create, createNode };
+const Element = { create };
