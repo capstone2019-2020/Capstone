@@ -21,6 +21,7 @@ const _DEP_L_ = 50;
 const _NODE_RADIUS_ = 2;
 const _LINE_WIDTH_ = 1.5;
 const _DEFAULT_COLOR_ = '#bababa';
+const _DEFAULT_FONT_COLOR_ = '#8f8f8f';
 const _DEFAULT_NODE_COLOR_ = '#8f8f8f';
 const _RESISTOR_HEIGHT_ = 20;
 
@@ -214,6 +215,7 @@ const Text = (msg, coord, size='1em') => {
   text.setAttribute('font-size', size);
   text.setAttribute('font-family', 'Calibri');
   text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('fill', _DEFAULT_FONT_COLOR_);
   text.appendChild(
     document.createTextNode(msg)
   );
@@ -453,9 +455,9 @@ const GenericElement = (id, coord1, coord2, length) => {
   // label the element
   const center = getCenter(coord1, coord2);
   if (isHorizontal(coord1, coord2)) {
-    element.appendChild(Text(id, {x: center.x, y: center.y - 40}, '1.5em'));
+    element.appendChild(Text(id, {x: center.x, y: center.y - 30}));
   } else {
-    element.append(Text(id, {x: center.x + 50, y: center.y}, '1.5em'));
+    element.append(Text(id, {x: center.x - 35, y: center.y}));
   }
   return element;
 };
