@@ -1,4 +1,4 @@
-const SVG_NS = 'http://www.w3.org/2000/svg';
+const sfg_SVG_NS = 'http://www.w3.org/2000/svg';
 const ID_SFG = 'svg-sfg';
 const SZ_CIRCLE_RADIUS = 5;
 const BEZIER_SAMPLE_RATE = 200;
@@ -57,7 +57,7 @@ function sfg___vec(x, y) {
 }
 
 function sfg_circle(vec, r, config={}) {
-  const c = document.createElementNS(SVG_NS, 'circle');
+  const c = document.createElementNS(sfg_SVG_NS, 'circle');
 
   return sfg___ns(c, {
     ...config,
@@ -68,7 +68,7 @@ function sfg_circle(vec, r, config={}) {
 }
 
 function sfg_polygon(points, config={}) {
-  const p = document.createElementNS(SVG_NS, 'polygon');
+  const p = document.createElementNS(sfg_SVG_NS, 'polygon');
 
   return sfg___ns(p, {
     ...config,
@@ -77,7 +77,7 @@ function sfg_polygon(points, config={}) {
 }
 
 function sfg_polyline(points, config={}) {
-  const p = document.createElementNS(SVG_NS, 'polyline');
+  const p = document.createElementNS(sfg_SVG_NS, 'polyline');
 
   return sfg___ns(p, {
     points,
@@ -86,7 +86,7 @@ function sfg_polyline(points, config={}) {
 }
 
 function sfg_line(vecf, vect, config={}) {
-  const l = document.createElementNS(SVG_NS, 'line');
+  const l = document.createElementNS(sfg_SVG_NS, 'line');
   l.style.zIndex = '1';
 
   return sfg___ns(l, {

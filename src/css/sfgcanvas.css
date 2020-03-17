@@ -21,16 +21,16 @@ h3 {
 }
 
 .sfg-wrapper {
-  width: 80%;
-  height: 60%;
+  width: 60%;
+  height: 80%;
   background-color: white;
   border: 1px solid #dddd;
-  margin: 0% 0 0% 17%;
+  margin: auto;
 }
 
 #fit-icon {
+  margin-left: 10px;
   position: absolute;
-  margin: 29% -2% 10%;
   color: #ccc;
   font-size: 1.5em;
   cursor: pointer;

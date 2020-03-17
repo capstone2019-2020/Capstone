@@ -18,29 +18,47 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 </head>
-<body onload="initSvgraph(); generateSFG();">
+<body onload="initSvgraph(); generateSFG(); initSvgCircuit(); initSFG();">
   <div id="main-div" class="main-div">
     <div id="left-div" class="left-div">
-      <!-- DROPDOWN MENU -->
-      <div class="dropdown">
-        <div id="menu-btn" class="menu-btn" onClick="toggleMenu()"></div>
-        <div id="dropdown-content" class="dropdown-content">
-          <a href="./buttonindex.html" title="Upload a new netlist file">New File</a>
-          <a id="export" class="export" onClick="toggleExportOptions()">Export SFG <i id="export-drop" class="fa fa-caret-down"></i></a>
-          <div id="export-options" class="export-options">
-            <a href="#" onClick="exportSFG('png')">PNG</a>
-            <a href="#" onClick="exportSFG('jpg')">JPG</a>
-          </div>
-        </div>
-      </div>
 
       <!--  SFG CANVVAS    -->
-      <h3 id="sfg-title">Signal Flow Graph</h3>
-      <div id="sfg-wrapper" class="sfg-wrapper">
-        <div id="sfg-canvas" class="sfg-canvas"></div>
-        <i id="fit-icon" class='fas fa-expand' onClick="sfgFit()" title="Fit to Window"></i>
+      <div class="left-top-panel">
+        <!-- DROPDOWN MENU -->
+        <div class="dropdown">
+          <div id="menu-btn" class="menu-btn" onClick="toggleMenu()"></div>
+          <div id="dropdown-content" class="dropdown-content">
+            <a href="./buttonindex.html" title="Upload a new netlist file">New File</a>
+            <a id="export" class="export" onClick="toggleExportOptions()">Export SFG <i id="export-drop" class="fa fa-caret-down"></i></a>
+            <div id="export-options" class="export-options">
+              <a href="#" onClick="exportSFG('png')">PNG</a>
+              <a href="#" onClick="exportSFG('jpg')">JPG</a>
+            </div>
+          </div>
+        </div>
+        <h3 id="sfg-title">Signal Flow Graph</h3>
+        <div id="sfg-wrapper" class="sfg-wrapper">
+            <div id="sfg-canvas" class="sfg-canvas"></div>
+            <i id="fit-icon" class='fas fa-expand' onClick="sfgFit()" title="Fit to Window"></i>
+        </div>
+        <div id="sfg-help-text" class="sfg-help-text">Please select a start and end node</div>
       </div>
-      <div id="sfg-help-text" class="sfg-help-text">Please select a start and end node</div>
+
+      <!-- CIRCUIT CANVAS -->
+      <div class="left-bottom-panel">
+        <svg height="100%" width="100%" id="circuit-canvas">
+          <defs>
+            <!-- arrowhead marker definition -->
+            <marker id="arrow" viewBox="0 0 5 5" refX="3" refY="2.5"
+                    markerWidth="3" markerHeight="3"
+                    orient="auto-start-reverse">
+              <path d="M 0 0 L 5 2.5 L 0 5 z"></path>
+            </marker>
+          </defs>
+        </svg>
+      </div>
+
+      <!-- Hidden element -->
       <a id="downloadsfg"></a>
   </div>
     <div id="right-div" class="right-div">
@@ -61,5 +79,7 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/6.2.2/math.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
   <script type="text/javascript" src="svgraph/svgraph.js"></script>
+  <script type="text/javascript" src="svgcircuit/sfg.js"></script>
+  <script type="text/javascript" src="svgcircuit/svgcircuit.js"></script>
 </body>
 </html>

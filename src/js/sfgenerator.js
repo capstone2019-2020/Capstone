@@ -10,6 +10,18 @@ let cy = null;
 let svgraph = null;
 let loopgraph = null;
 
+function initSvgCircuit() {
+  let nodes = getCookie('circuit_layout');
+  console.log('initCircuit', nodes);
+}
+
+function initSFG() {
+  let nodes = getCookie('circuit_nodes');
+  let sfg = getCookie('sfg_nodes');
+  console.log('initSFG', nodes);
+  console.log('initSFG', sfg);
+}
+
 function initSvgraph() {
   let initializer = new SVGraph_initializer('svg-graph');
   let initate = new SVGraph_initializer('loop-graph');
