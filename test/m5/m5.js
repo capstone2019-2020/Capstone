@@ -303,7 +303,7 @@ describe('m5 math utilities library tests', function() {
    * expressions. To resolve this, a set left_join is
    * performed, arbitrarily selecting the left side
    *
-   * @param op: the operation to perform (e.g. +,-,*,/)
+   * @param op: the operation to perform (e.sg_g. +,-,*,/)
    * @param iters: number of iterations to run
    * @param isImag: test for imaginary?
    */

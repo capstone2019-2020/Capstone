@@ -81,7 +81,9 @@ function uploadFile(f) {
             })
             .then((res) => { return res.json();})
             .then( (j) => {
-                  setLocalStorage('sfg_equations', JSON.stringify(j));
+                  setLocalStorage('sfg_equations', JSON.stringify(j.equations));
+                  setLocalStorage('circuit_layout', JSON.stringify(j.asc));
+                  setLocalStorage('circuit_nodes', JSON.stringify(j.ascNodes));
               })
             .catch(() => 
                 {
@@ -106,7 +108,6 @@ async function sendNext(event) {
           return res.json();
       })
       .then( (j) => {
-          localStorage.clear();
           setLocalStorage('sfg_nodes', JSON.stringify(j.sfg));
           setLocalStorage('loop_gain', JSON.stringify(j.bode));
       })

@@ -16,27 +16,27 @@ const LOG_LEVEL = 1;
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
 
 /* 'fake' macros */
-const OFFSET = (margin, idx) => margin * idx;
-const HALF = (v) => v/2;
-const UP = (ref, offset) => ref-offset;
-const DOWN = (ref, offset) => ref+offset;
-const LEFT = (ref, offset) => ref-offset;
-const RIGHT = (ref, offset) => ref+offset;
-const SCALE = (v, r) => v * r;
-const RATIO = (c1, c2) => c1 / c2;
-const MAX = (s1, s2) => s1 > s2 ? s1 : s2;
-const MIN = (s1, s2) => s1 < s2 ? s1 : s2;
-const DELTA = (s1, s2) => Math.abs(s1-s2);
-const ELEM = (id) => document.getElementById(id);
-const APPROX = (num, ref, tol) => (num >= ref-tol) && (num <= ref+tol);
-const CSS = (obj) => Object.entries(obj)
+const sg_OFFSET = (margin, idx) => margin * idx;
+const sg_HALF = (v) => v/2;
+const sg_UP = (ref, offset) => ref-offset;
+const sg_DOWN = (ref, offset) => ref+offset;
+const sg_LEFT = (ref, offset) => ref-offset;
+const sg_RIGHT = (ref, offset) => ref+offset;
+const sg_SCALE = (v, r) => v * r;
+const sg_RATIO = (c1, c2) => c1 / c2;
+const sg_MAX = (s1, s2) => s1 > s2 ? s1 : s2;
+const sg_MIN = (s1, s2) => s1 < s2 ? s1 : s2;
+const sg_DELTA = (s1, s2) => Math.abs(s1-s2);
+const sg_ELEM = (id) => document.getElementById(id);
+const sg_APPROX = (num, ref, tol) => (num >= ref-tol) && (num <= ref+tol);
+const sg_CSS = (obj) => Object.entries(obj)
   .reduce((p, [k, v]) => `${p}${k}: ${v}; `, '').trim();
-const RAND = (min, max) => Math.floor(Math.random() * (max - min) ) + min;
-const RGB = (r, g, b) => `rgb(${r},${g},${b})`;
-const DEFINED = (v) => (typeof v !== 'undefined') && (v !== null);
-const INFINITY = (v) => Math.abs(v) === Infinity;
-const RANGE = (n, l, u) => n >= l && n < u;
-const CLAMP = (s, lb, ub) => MIN(MAX(s, lb), ub);
+const sg_RAND = (min, max) => Math.floor(Math.random() * (max - min) ) + min;
+const sg_RGB = (r, g, b) => `rgb(${r},${g},${b})`;
+const sg_DEFINED = (v) => (typeof v !== 'undefined') && (v !== null);
+const sg_INFINITY = (v) => Math.abs(v) === Infinity;
+const sg_RANGE = (n, l, u) => n >= l && n < u;
+const sg_CLAMP = (s, lb, ub) => sg_MIN(sg_MAX(s, lb), ub);
 
 /* loggers */
 const __LOG = (l, msg, ...p) => {
@@ -50,14 +50,14 @@ const WARN = (msg, ...p) => __LOG('warn', msg, ...p);
 const ERROR = (msg, ...p) => __LOG('error', msg, ...p);
 
 const COLORS = [
-  RGB(0,128,255)  /* blue */,   RGB(255,0,128)  /* magenta */,
-  RGB(255,0,0)    /* red */,    RGB(0,128,0)    /* dark green */,
-  RGB(128,0,255)  /* violet */, RGB(64,128,128) /* teal */,
-  RGB(255,128,64) /* orange */, RGB(128,128,0)  /* dark yellow */
+  sg_RGB(0,128,255)  /* blue */,   sg_RGB(255,0,128)  /* magenta */,
+  sg_RGB(255,0,0)    /* red */,    sg_RGB(0,128,0)    /* dark green */,
+  sg_RGB(128,0,255)  /* violet */, sg_RGB(64,128,128) /* teal */,
+  sg_RGB(255,128,64) /* orange */, sg_RGB(128,128,0)  /* dark yellow */
 ];
 
-const RAND_COLOR = () => RGB(RAND(0, 255), RAND(0, 255), RAND(0, 255));
-const COLOR = (() => {
+const sg_RAND_COLOR = () => sg_RGB(sg_RAND(0, 255), sg_RAND(0, 255), sg_RAND(0, 255));
+const sg_COLOR = (() => {
   let i = 0;
   /* Loop back to first color if runs out */
   return reset_i => {
@@ -72,17 +72,17 @@ const COLOR = (() => {
 })();
 
 /* SVG grid related macros */
-const __X = (x, xlb, xub, startx, lenx) => (x-startx)/RATIO(lenx, xub-xlb)+xlb;
-const __Y = (y, ylb, yub, starty, leny) => (starty-y)/RATIO(leny, yub-ylb)+ylb;
-const __gX = (ORIGIN_X, x, ratio) => RIGHT(ORIGIN_X, SCALE(x, ratio));
-const __gY = (y, ratio, ORIGIN) => UP(ORIGIN, SCALE(y, ratio));
+const __X = (x, xlb, xub, startx, lenx) => (x-startx)/sg_RATIO(lenx, xub-xlb)+xlb;
+const __Y = (y, ylb, yub, starty, leny) => (starty-y)/sg_RATIO(leny, yub-ylb)+ylb;
+const __gX = (ORIGIN_X, x, ratio) => sg_RIGHT(ORIGIN_X, sg_SCALE(x, ratio));
+const __gY = (y, ratio, ORIGIN) => sg_UP(ORIGIN, sg_SCALE(y, ratio));
 
 /* Math related "macros" */
-const __ROUND = (f) => parseFloat(Math.round(f*100)/100);
-const EXP = (f, d) => f.toExponential(d);
-const ROUND = (f) => __ROUND(f).toFixed(0);
-const FIXED = (f, d) => __ROUND(f).toFixed(d);
-const ROUND_UP = (f, n) => {
+const sg___ROUND = (f) => parseFloat(Math.round(f*100)/100);
+const sg_EXP = (f, d) => f.toExponential(d);
+const sg_ROUND = (f) => sg___ROUND(f).toFixed(0);
+const sg_FIXED = (f, d) => sg___ROUND(f).toFixed(d);
+const sg_ROUND_UP = (f, n) => {
   if (f === 0) return f;
   let r;
   if ((r = Math.abs(f) % n) === 0)
@@ -97,7 +97,7 @@ const __Guide = function(guideId, vec1, vec2, config={}) {
 
   if (!guide) {
     this.get_Svgraph().appendChild(
-      line(vec1, vec2, {
+      sg_line(vec1, vec2, {
         id: guideId,
         'stroke': 'purple',
         'stroke-opacity': 0.5,
@@ -106,7 +106,7 @@ const __Guide = function(guideId, vec1, vec2, config={}) {
       })
     );
   } else {
-    __ns(guide, {
+    sg___ns(guide, {
       x1: vec1.x, y1: vec1.y,
       x2: vec2.x, y2: vec2.y
     });
@@ -114,58 +114,58 @@ const __Guide = function(guideId, vec1, vec2, config={}) {
 };
 
 const __Tracer = function(tracerId, xval, yval, xratio, yratio, ylb) {
-  const tracer = ELEM(tracerId);
-  const tracerRect = ELEM(`${tracerId}-rect`);
-  const tracerTxt = ELEM(`${tracerId}-text`);
-  const tracerCirc = ELEM(`${tracerId}-circle`);
+  const tracer = sg_ELEM(tracerId);
+  const tracerRect = sg_ELEM(`${tracerId}-rect`);
+  const tracerTxt = sg_ELEM(`${tracerId}-text`);
+  const tracerCirc = sg_ELEM(`${tracerId}-circle`);
   const gx = __gX(this.ORIGIN_X, xval, xratio);
-  const gy = MAX(
-    MIN(__gY(yval-ylb, yratio, this.START_Y), this.START_Y),
+  const gy = sg_MAX(
+    sg_MIN(__gY(yval-ylb, yratio, this.START_Y), this.START_Y),
     this.START_Y-this.LENGTH_Y
   );
-  const coords = `(${FIXED(xval, 2)}, ${FIXED(yval, 2)})`;
+  const coords = `(${sg_FIXED(xval, 2)}, ${sg_FIXED(yval, 2)})`;
 
   if (!tracer && !isNaN(yval)) {
     /*
      * For some strange reason, we can only append
-     * children to <svg> elements, so that's what
+     * children to <sg_svg> elements, so that's what
      * is happening here.
      */
     let elems = [
-      rect(__vec(gx, gy),
+      sg_rect(sg___vec(gx, gy),
         WIDTH_TRACE, HEIGHT_TRACE, {
           id: `${tracerId}-rect`,
           stroke: 'grey',
           fill: 'white',
           'stroke-opacity': '0.3'
         }),
-      text(__vec(
-        RIGHT(gx, 5), DOWN(gy, 7)),
+      sg_text(sg___vec(
+        sg_RIGHT(gx, 5), sg_DOWN(gy, 7)),
         coords, {
           id: `${tracerId}-text`,
           textLength: WIDTH_TRACE-5,
-          style: CSS({
+          style: sg_CSS({
             'font-size': '9px',
             'font-weight': 'bold',
             padding: '5px',
           })
         }),
-      circle(__vec(gx, gy), 3, {
+      sg_circle(sg___vec(gx, gy), 3, {
         id: `${tracerId}-circle`,
         opacity: '0.5',
         fill: 'red'
       })
     ];
 
-    this.get_Svgraph().appendChild(__ns(
-      svg(tracerId), undefined, ...elems
+    this.get_Svgraph().appendChild(sg___ns(
+      sg_svg(tracerId), undefined, ...elems
     ));
   } else if (tracer && !isNaN(yval)) {
-    __ns(tracerRect, {x: gx, y: gy});
-    __ns(tracerTxt, {
-      x: RIGHT(gx, 2), y: DOWN(gy, 10)
+    sg___ns(tracerRect, {x: gx, y: gy});
+    sg___ns(tracerTxt, {
+      x: sg_RIGHT(gx, 2), y: sg_DOWN(gy, 10)
     });
-    __ns(tracerCirc, {cx: gx, cy: gy});
+    sg___ns(tracerCirc, {cx: gx, cy: gy});
     tracerTxt.innerHTML = coords;
   } else if (tracer) {
     tracer.removeChild(tracerRect);
@@ -175,7 +175,7 @@ const __Tracer = function(tracerId, xval, yval, xratio, yratio, ylb) {
   }
 };
 
-function svg(id, ...children) {
+function sg_svg(id, ...children) {
   const svg = document.createElementNS(SVG_NS, 'svg');
   svg.setAttribute('id', id);
 
@@ -185,7 +185,7 @@ function svg(id, ...children) {
   return svg;
 }
 
-function g(id, ...children) {
+function sg_g(id, ...children) {
   const g = document.createElementNS(SVG_NS, 'g');
   g.setAttribute('id', id);
 
@@ -195,11 +195,11 @@ function g(id, ...children) {
   return g;
 }
 
-function __vec(x, y) {
+function sg___vec(x, y) {
   return { x, y };
 }
 
-function __ns(elem, config={}, ...children) {
+function sg___ns(elem, config={}, ...children) {
   Object.keys(config).forEach(k =>
     elem.setAttribute(k, config[k])
   );
@@ -211,21 +211,21 @@ function __ns(elem, config={}, ...children) {
   return elem;
 }
 
-function line(vec_from, vec_to, config={}) {
+function sg_line(vec_from, vec_to, config={}) {
   const l = document.createElementNS(SVG_NS, 'line');
   l.style.zIndex = '1';
 
-  return __ns(l, {
+  return sg___ns(l, {
     ...config,
     x1: vec_from.x, y1: vec_from.y,
     x2: vec_to.x  , y2: vec_to.y
   });
 }
 
-function foreignObject(vec, w, h, config, ...children) {
+function sg_foreignObject(vec, w, h, config, ...children) {
   const f = document.createElementNS(SVG_NS, 'foreignObject');
 
-  return __ns(f, {
+  return sg___ns(f, {
     ...config,
     width: w, height: h,
     x: vec.x, y: vec.y,
@@ -243,13 +243,13 @@ function exponent(vec, base, exp) {
   _msup.appendChild(exp_mn);
   _math.appendChild(_msup);
 
-  return foreignObject(vec, 40, 40,
-    {style: CSS({'z-index': 10})},
+  return sg_foreignObject(vec, 40, 40,
+    {style: sg_CSS({'z-index': 10})},
     _math
   );
 }
 
-function text(vec, words, config={}) {
+function sg_text(vec, words, config={}) {
   const t = document.createElementNS(SVG_NS, 'text');
   if (typeof words === 'string') {
     t.innerHTML = words;
@@ -258,36 +258,36 @@ function text(vec, words, config={}) {
   }
   t.style.zIndex = '1';
 
-  return __ns(t, {
+  return sg___ns(t, {
     ...config,
     x: vec.x, y: vec.y
   });
 }
 
-function circle(vec, r, config={}) {
+function sg_circle(vec, r, config={}) {
   const c = document.createElementNS(SVG_NS, 'circle');
 
-  return __ns(c, {
+  return sg___ns(c, {
     ...config,
     cx: vec.x, cy: vec.y, r
   });
 }
 
-function rect(vec, width, height, config={}) {
+function sg_rect(vec, width, height, config={}) {
   const r = document.createElementNS(SVG_NS, 'rect');
 
-  return __ns(r, {
+  return sg___ns(r, {
     ...config,
     x: vec.x, y: vec.y,
     width, height
   });
 }
 
-function polyline(points, config={}, cb) {
+function sg_polyline(points, config={}, cb) {
   const p = document.createElementNS(SVG_NS, 'polyline');
   p.addEventListener('mousemove', cb);
 
-  return __ns(p, {
+  return sg___ns(p, {
     points,
     ...config
   });
@@ -302,8 +302,8 @@ function plot(ORIGIN_X, dp, x_cratio, y_cratio, color, ylb,
   for (i=0; i<dp.length; i++) {
     dp_e = dp[i];
     if (!isNaN(dp_e.y)) {
-      x_coord = MIN(__gX(ORIGIN_X, dp_e.x, x_cratio), START_X+LENGTH_X);
-      y_coord = MIN(__gY(dp_e.y-ylb, y_cratio, START_Y), START_Y);
+      x_coord = sg_MIN(__gX(ORIGIN_X, dp_e.x, x_cratio), START_X+LENGTH_X);
+      y_coord = sg_MIN(__gY(dp_e.y-ylb, y_cratio, START_Y), START_Y);
 
       points += `${x_coord},${y_coord}`;
       if (i+1 !== dp.length) {
@@ -313,11 +313,11 @@ function plot(ORIGIN_X, dp, x_cratio, y_cratio, color, ylb,
   }
 
   return [
-    polyline(points, {
+    sg_polyline(points, {
       'stroke': color,
       'fill': 'none',
     }),
-    polyline(points, {
+    sg_polyline(points, {
       'fill': 'none',
       'stroke': 'transparent',
       'stroke-width': 5
@@ -338,32 +338,32 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio,
    * Rendering x-axis intervals and text for each interval
    */
   for (i=0; i<=parts; i++) {
-    x_coord = RIGHT(START_X, OFFSET(margin, i));
+    x_coord = sg_RIGHT(START_X, sg_OFFSET(margin, i));
     partitions.push(
-      line(
-        __vec(x_coord, DOWN(ORIGIN_Y1, 5)),
-        __vec(x_coord, UP(ORIGIN_Y1, 5)),
+      sg_line(
+        sg___vec(x_coord, sg_DOWN(ORIGIN_Y1, 5)),
+        sg___vec(x_coord, sg_UP(ORIGIN_Y1, 5)),
         {stroke: 'black'}
       )
     );
-    xval = lb+SCALE(part_val, i);
-    xval = Math.abs(xval) < 1 ? FIXED(xval, 1) : ROUND(xval);
+    xval = lb+sg_SCALE(part_val, i);
+    xval = Math.abs(xval) < 1 ? sg_FIXED(xval, 1) : sg_ROUND(xval);
     if (SEMI_LOG_MODE) {
       partitions.push(exponent(
-        __vec(RIGHT(x_coord, -10), DOWN(ORIGIN_Y1, 5)),
+        sg___vec(sg_RIGHT(x_coord, -10), sg_DOWN(ORIGIN_Y1, 5)),
         10, xval));
     } else {
-      partitions.push(text(
-        __vec(RIGHT(x_coord, 5), DOWN(ORIGIN_Y1, 20)),
+      partitions.push(sg_text(
+        sg___vec(sg_RIGHT(x_coord, 5), sg_DOWN(ORIGIN_Y1, 20)),
         xval, {'text-anchor': 'end'})
       );
     }
 
     if (grid && xval !== 0) {
       partitions.push(
-        line(
-          __vec(x_coord, UP(START_Y, 5)),
-          __vec(x_coord, UP(START_Y, leny)), {
+        sg_line(
+          sg___vec(x_coord, sg_UP(START_Y, 5)),
+          sg___vec(x_coord, sg_UP(START_Y, leny)), {
             stroke: 'grey',
             'stroke-opacity': '0.3',
             'stroke-dasharray': '4,6'
@@ -376,11 +376,11 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio,
   if (SEMI_LOG_MODE && grid) {
     let i;
     for (i=0; i<logvals.length; i++) {
-      x_coord = MIN(__gX(ORIGIN_X, logvals[i], x_cratio),
+      x_coord = sg_MIN(__gX(ORIGIN_X, logvals[i], x_cratio),
         START_X + LENGTH_X);
-      partitions.push(line(
-        __vec(x_coord, UP(START_Y, 5)),
-        __vec(x_coord, UP(START_Y, leny)), {
+      partitions.push(sg_line(
+        sg___vec(x_coord, sg_UP(START_Y, 5)),
+        sg___vec(x_coord, sg_UP(START_Y, leny)), {
           stroke: 'grey',
           'stroke-opacity': '0.3',
         }
@@ -389,24 +389,24 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio,
   }
 
   return [
-    text(__vec(
-      RIGHT(START_X, HALF(lenx)), DOWN(START_Y, 20)
+    sg_text(sg___vec(
+      sg_RIGHT(START_X, sg_HALF(lenx)), sg_DOWN(START_Y, 20)
       ), label, {'text-anchor': 'end'}
     ),
-    line(
-      __vec(START_X, ORIGIN_Y1),
-      __vec(RIGHT(START_X, lenx), ORIGIN_Y1),
+    sg_line(
+      sg___vec(START_X, ORIGIN_Y1),
+      sg___vec(sg_RIGHT(START_X, lenx), ORIGIN_Y1),
       {'stroke': 'black'}
     ),
     /*
      * Add rectangle and make transparent to help with
      * cursor pointer hover effect.
      */
-    rect(__vec(
-      START_X, UP(ORIGIN_Y1,5)),
+    sg_rect(sg___vec(
+      START_X, sg_UP(ORIGIN_Y1,5)),
       lenx, 10, {
         fill: 'transparent',
-        style: CSS({cursor: 'pointer'})
+        style: sg_CSS({cursor: 'pointer'})
       }),
     ...partitions
   ];
@@ -426,38 +426,38 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
 
   /* Rendering y-axis intervals & text for each interval */
   for (i=0; i<=parts; i++) {
-    y_coord = START_Y - OFFSET(margin, i);
+    y_coord = START_Y - sg_OFFSET(margin, i);
     partitions.push(
-      line(
-        __vec(LEFT(AXIS_XPOS,5), y_coord),
-        __vec(RIGHT(AXIS_XPOS,5), y_coord),
+      sg_line(
+        sg___vec(sg_LEFT(AXIS_XPOS,5), y_coord),
+        sg___vec(sg_RIGHT(AXIS_XPOS,5), y_coord),
         {'stroke': 'black'}
       )
     );
 
-    yval = lb + SCALE(part_val, i);
+    yval = lb + sg_SCALE(part_val, i);
     let abs_yval = Math.abs(yval);
     yval = (abs_yval >= 1000) || (abs_yval <= 0.001 && abs_yval > 0)
-      ? EXP(yval, 1)
-      : FIXED(yval, 2);
+      ? sg_EXP(yval, 1)
+      : sg_FIXED(yval, 2);
 
     let _yval = `${yval}${label_postfix}`;
     partitions.push(
-      text(
-        __vec(
+      sg_text(
+        sg___vec(
           is_left
-            ? LEFT(AXIS_XPOS,10)
-            : RIGHT(AXIS_XPOS, 50),
-          DOWN(y_coord,5)),
+            ? sg_LEFT(AXIS_XPOS,10)
+            : sg_RIGHT(AXIS_XPOS, 50),
+          sg_DOWN(y_coord,5)),
         _yval, {'text-anchor': 'end'}
       )
     );
 
     if (grid && yval !== '0.00') {
       partitions.push(
-        line(
-          __vec(RIGHT(START_X,5), y_coord),
-          __vec(RIGHT(START_X,lenx), y_coord),
+        sg_line(
+          sg___vec(sg_RIGHT(START_X,5), y_coord),
+          sg___vec(sg_RIGHT(START_X,lenx), y_coord),
           {
             'stroke': 'grey',
             'stroke-opacity': '0.5',
@@ -469,23 +469,23 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
   }
 
   return [
-    text(__vec(
+    sg_text(sg___vec(
       is_left
-        ? LEFT(START_X, 85)
-        : RIGHT(START_X+LENGTH_X, 60),
-      UP(START_Y, DOWN(HALF(leny),40))
+        ? sg_LEFT(START_X, 85)
+        : sg_RIGHT(START_X+LENGTH_X, 60),
+      sg_UP(START_Y, sg_DOWN(sg_HALF(leny),40))
       ),
       label, {
-        style: CSS({
+        style: sg_CSS({
           'text-orientation': 'sideways',
           'writing-mode': 'vertical-lr'
         }),
         'text-anchor': 'start'
       }
     ),
-    line(
-      __vec(AXIS_XPOS, UP(START_Y,leny)),
-      __vec(AXIS_XPOS, START_Y), {
+    sg_line(
+      sg___vec(AXIS_XPOS, sg_UP(START_Y,leny)),
+      sg___vec(AXIS_XPOS, START_Y), {
         id: 'y-axis-line',
         stroke: 'black',
       }
@@ -494,11 +494,11 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
      * Add rectangle and make transparent to help with
      * cursor pointer hover effect.
      */
-    rect(__vec(
-      LEFT(AXIS_XPOS, 5), UP(START_Y,leny)),
+    sg_rect(sg___vec(
+      sg_LEFT(AXIS_XPOS, 5), sg_UP(START_Y,leny)),
       10, leny, {
         fill: 'transparent',
-        style: CSS({cursor: 'pointer'})
+        style: sg_CSS({cursor: 'pointer'})
       }),
     ...partitions
   ]
@@ -514,16 +514,16 @@ function legend(fpoints, ID_LEGEND, START_X) {
   let _fpoint, max_width = 0, inc_width;
   for (i=0; i<fpoints.length; i+=rownum) {
     /* Construct legend using row-major order */
-    _i = MIN(i+rownum, fpoints.length);
+    _i = sg_MIN(i+rownum, fpoints.length);
     for (j=i; j<_i; j++) {
       _fpoint = fpoints[j];
       if (_fpoint.f.length > max_width) {
         max_width = _fpoint.f.length;
       }
-      txt_elems.push(text(__vec(
-        RIGHT(START_X, width), DOWN(10, 20+20*(j-i))
+      txt_elems.push(sg_text(sg___vec(
+        sg_RIGHT(START_X, width), sg_DOWN(10, 20+20*(j-i))
       ), _fpoint.f, {
-        style: CSS({
+        style: sg_CSS({
           'color': _fpoint.color,
           'font-size': fontsize,
           'font-weight': 100
@@ -535,9 +535,9 @@ function legend(fpoints, ID_LEGEND, START_X) {
     inc_width = fontsize*(max_width*0.45);
     for (j=i; j<_i; j++) {
       _fpoint = fpoints[j];
-      color_elems.push(rect(__vec(
-        RIGHT(START_X, width+inc_width+10),
-        DOWN(10, 10+20*(j-i))
+      color_elems.push(sg_rect(sg___vec(
+        sg_RIGHT(START_X, width+inc_width+10),
+        sg_DOWN(10, 10+20*(j-i))
         ), 30, fontsize, {
           fill: _fpoint.color,
           stroke: 'black'
@@ -551,7 +551,7 @@ function legend(fpoints, ID_LEGEND, START_X) {
   }
 
   return [
-    rect(__vec(START_X, 10), width, height, {
+    sg_rect(sg___vec(START_X, 10), width, height, {
       'id': ID_LEGEND,
       'stroke': 'black',
       'stroke-width': '1px',
@@ -565,8 +565,8 @@ function legend(fpoints, ID_LEGEND, START_X) {
 
 function init_plot(lb, ub, plot_len, parts,is_init=false,
                    seed_offset=0) {
-  lb = ROUND_UP(lb, 5);
-  ub = ROUND_UP(ub, 5);
+  lb = sg_ROUND_UP(lb, 5);
+  ub = sg_ROUND_UP(ub, 5);
 
   INFO(`lb: ${lb}, ub: ${ub}`);
   if (lb === ub) {
@@ -576,7 +576,7 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
     }
   }
 
-  lb = __ROUND(lb); ub = __ROUND(ub);
+  lb = sg___ROUND(lb); ub = sg___ROUND(ub);
   let new_lb = lb, new_ub = ub;
   let abs_lb = Math.abs(new_lb), abs_ub = Math.abs(new_ub);
 
@@ -627,8 +627,8 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
    * don't want to miss any necessary grid space)
    */
   if (is_init) {
-    let lb_ru = ROUND_UP(abs_lb, partition*l_parts);
-    let ub_ru = ROUND_UP(abs_ub, partition*u_parts);
+    let lb_ru = sg_ROUND_UP(abs_lb, partition*l_parts);
+    let ub_ru = sg_ROUND_UP(abs_ub, partition*u_parts);
     new_lb -= (lb_ru - Math.abs(new_lb));
     new_ub += (ub_ru - Math.abs(new_ub));
   }
@@ -648,10 +648,10 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
   let i, val, offset;
   let px_per_partition = plot_len/parts;
   for (i = 0; i <= parts; i++) {
-    val = FIXED(new_lb+SCALE(partition, i), 2);
+    val = sg_FIXED(new_lb+sg_SCALE(partition, i), 2);
     DEBUG(`VALUE: ${val}`);
     if (val === '0.00' || val === '-0.00') {
-      offset = OFFSET(plot_len/parts, i);
+      offset = sg_OFFSET(plot_len/parts, i);
       INFO(`current offset: ${offset}`);
 
       /*
@@ -659,7 +659,7 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
        * adjust the current offset
        */
       if (seed_offset) {
-        let p = __ROUND(RATIO(offset-seed_offset,
+        let p = sg___ROUND(sg_RATIO(offset-seed_offset,
           px_per_partition));
 
         new_ub+=(p*partition);
@@ -740,7 +740,7 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub) {
    * xlb: lower bound log(x), xub: upper bound log(x)
    */
   xlb = 0;
-  xub = MIN(xgrid, MAX_LOG_XGRID);
+  xub = sg_MIN(xgrid, MAX_LOG_XGRID);
 
   const parser = math.parser();
   fpoints = funcs.map(f => {
@@ -751,18 +751,18 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub) {
     let i, yval, xlog;
     for (i=0; i<logvals.length; i++) {
       xlog = logvals[i];
-      yval = parser.evaluate(`f(${EXP(10, xlog)})`);
-      if (!isNaN(yval) && !INFINITY(yval)) {
-        yub = MAX(yval, yub);
-        ylb = MIN(yval, ylb);
+      yval = parser.evaluate(`f(${sg_EXP(10, xlog)})`);
+      if (!isNaN(yval) && !sg_INFINITY(yval)) {
+        yub = sg_MAX(yval, yub);
+        ylb = sg_MIN(yval, ylb);
 
-        points.push(__vec(xlog, yval));
+        points.push(sg___vec(xlog, yval));
       } else {
-        points.push(__vec(xlog, NaN));
+        points.push(sg___vec(xlog, NaN));
       }
     }
 
-    return {f, points, color: COLOR()};
+    return {f, points, color: sg_COLOR()};
   });
 
   return {fpoints, sample_amt: 1,
@@ -784,7 +784,7 @@ function eval(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
    * xgrid    : how many grid pieces there are
    * SAMPLE_RATE : number of samples per grid piece
    *
-   * sample_amt : the interval b/w 2 samples of f(x) e.g.
+   * sample_amt : the interval b/w 2 samples of f(x) e.sg_g.
    * Say the bounds were from -2 to 2 (xlb=-2, xub=2),
    * SAMPLE_RATE=1 (1 sample per grid piece), and # of
    * grid pieces in x is 4, then:
@@ -805,16 +805,16 @@ function eval(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
     let xval, yval;
     for (xval=xlb; xval<=xub; xval+=sample_amt) {
       yval = parser.evaluate(`f(${xval})`);
-      if (!isNaN(yval) || INFINITY(yval)) {
-        yub = MAX(yval, yub);
-        ylb = MIN(yval, ylb);
+      if (!isNaN(yval) || sg_INFINITY(yval)) {
+        yub = sg_MAX(yval, yub);
+        ylb = sg_MIN(yval, ylb);
 
-        points.push(__vec(xval, yval));
+        points.push(sg___vec(xval, yval));
       } else {
-        points.push(__vec(xval, NaN));
+        points.push(sg___vec(xval, NaN));
       }
     }
-    return {f, points, color: COLOR()};
+    return {f, points, color: sg_COLOR()};
   });
 
   return {fpoints, sample_amt,
@@ -829,27 +829,27 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
   if (changeSet) {
     DEBUG(`========START CONFIG==========`);
     DEBUG(`BEFORE: ylb: ${ylb1}, yub: ${yub1}`);
-    COLOR(true);
+    sg_COLOR(true);
     let {x_axis, left_y_axis, right_y_axis} = config;
     let {xm, ym1, ym2} = changeSet;
     let x_changed=false, y1_changed=false, y2_changed=false;
 
     if (!x_axis.fixed) {
-      xgrid = MIN(MAX(xgrid+xm, MIN_XGRID), MAX_XGRID);
-      xlb = MIN(xlb-xm, -MIN_X);
-      xub = MAX(xub+xm, MIN_X);
+      xgrid = sg_MIN(sg_MAX(xgrid+xm, MIN_XGRID), MAX_XGRID);
+      xlb = sg_MIN(xlb-xm, -MIN_X);
+      xub = sg_MAX(xub+xm, MIN_X);
       x_changed = true;
     }
     if (!left_y_axis.fixed) {
-      ygrid1 = MIN(MAX(ygrid1+ym1, MIN_YGRID), MAX_YGRID);
-      ylb1 = MIN(ylb1-ym1, -MIN_Y);
-      yub1 = MAX(yub1+ym1, MIN_Y);
+      ygrid1 = sg_MIN(sg_MAX(ygrid1+ym1, MIN_YGRID), MAX_YGRID);
+      ylb1 = sg_MIN(ylb1-ym1, -MIN_Y);
+      yub1 = sg_MAX(yub1+ym1, MIN_Y);
       y1_changed = true;
     }
     if (!right_y_axis.fixed) {
-      ygrid2 = MIN(MAX(ygrid2+ym2, MIN_YGRID), MAX_YGRID);
-      ylb2 = MIN(ylb2-ym2, -MIN_Y);
-      yub2 = MAX(yub2+ym2, MIN_Y);
+      ygrid2 = sg_MIN(sg_MAX(ygrid2+ym2, MIN_YGRID), MAX_YGRID);
+      ylb2 = sg_MIN(ylb2-ym2, -MIN_Y);
+      yub2 = sg_MAX(yub2+ym2, MIN_Y);
       y2_changed = true;
     }
     DEBUG(`AFTER: ylb: ${ylb1}, yub: ${yub1}`);
@@ -868,7 +868,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       fpoints: fpoints1, sample_amt: sample_amt1,
       xlb, xub, ylb: ylb1, yub: yub1
     } = eval(funcs1, xgrid, xlb, xub, ylb1, yub1,
-      !DEFINED(changeSet)));
+      !sg_DEFINED(changeSet)));
   } else {
     fpoints1 = [];
   }
@@ -878,7 +878,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       fpoints: fpoints2, sample_amt: sample_amt2,
       xlb, xub, ylb: ylb2, yub: yub2
     } = eval(funcs2, xgrid, xlb, xub, ylb2, yub2,
-      !DEFINED(changeSet)));
+      !sg_DEFINED(changeSet)));
   } else {
     fpoints2 = [];
   }
@@ -891,7 +891,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       offset: x_offset,
       parts: xgrid
     } = init_plot(xlb, xub, this.LENGTH_X, xgrid,
-      !DEFINED(changeSet)));
+      !sg_DEFINED(changeSet)));
     if (funcs1.length !== 0) {
       ({
         lb: ylb1,
@@ -899,7 +899,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
         offset: y_offset1,
         parts: ygrid1
       } = init_plot(ylb1, yub1, this.LENGTH_Y, ygrid1,
-        !DEFINED(changeSet)));
+        !sg_DEFINED(changeSet)));
     } else {
       ({
         lb: ylb2,
@@ -907,11 +907,11 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
         offset: y_offset2,
         parts: ygrid2
       } = init_plot(ylb2, yub2, this.LENGTH_Y, ygrid2,
-        !DEFINED(changeSet), y_offset1));
+        !sg_DEFINED(changeSet), y_offset1));
     }
-    let wrapper = ELEM(this.ID_SVG_WRAPPER);
+    let wrapper = sg_ELEM(this.ID_SVG_WRAPPER);
     if (wrapper) {
-      this.get_Svgraph().removeChild(ELEM(this.ID_SVG_WRAPPER));
+      this.get_Svgraph().removeChild(sg_ELEM(this.ID_SVG_WRAPPER));
     }
   } catch (err) {
     return {
@@ -921,44 +921,44 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
     };
   }
 
-  this.ORIGIN_X = RIGHT(this.START_X, x_offset);
+  this.ORIGIN_X = sg_RIGHT(this.START_X, x_offset);
   if (!y_offset1) {
-    y_offset1 = __ROUND(this.START_Y/2);
+    y_offset1 = sg___ROUND(this.START_Y/2);
   }
-  this.ORIGIN_Y1 = UP(this.START_Y, y_offset1);
+  this.ORIGIN_Y1 = sg_UP(this.START_Y, y_offset1);
   this.ORIGIN_Y2 = this.ORIGIN_Y1;
 
-  let _svg = svg(this.ID_SVG_WRAPPER);
+  let _svg = sg_svg(this.ID_SVG_WRAPPER);
 
   INFO(`yub1: ${yub1}, ylb1: ${ylb1}`);
   /* plot */
-  __ns(_svg,
+  sg___ns(_svg,
     undefined,
     ...fpoints1.map(({points, color}) =>
-      g(this.ID_LEFT_PLOTS,
+      sg_g(this.ID_LEFT_PLOTS,
         ...plot(
           this.ORIGIN_X,
           points,
-          RATIO(this.LENGTH_X, xub-xlb),
-          RATIO(this.LENGTH_Y, yub1-ylb1),
+          sg_RATIO(this.LENGTH_X, xub-xlb),
+          sg_RATIO(this.LENGTH_Y, yub1-ylb1),
           color, ylb1,
           this.START_X, this.START_Y, this.LENGTH_X
         )
       )
     ),
     ...fpoints2.map(({points, color}) =>
-      g(this.ID_RIGHT_PLOTS,
+      sg_g(this.ID_RIGHT_PLOTS,
         ...plot(
           this.ORIGIN_X,
           points,
-          RATIO(this.LENGTH_X, xub-xlb),
-          RATIO(this.LENGTH_Y, yub2-ylb2),
+          sg_RATIO(this.LENGTH_X, xub-xlb),
+          sg_RATIO(this.LENGTH_Y, yub2-ylb2),
           color, ylb2,
           this.START_X, this.START_Y, this.LENGTH_X
         )
       )
     ),
-    g(this.ID_X_AXIS, ...xaxis({
+    sg_g(this.ID_X_AXIS, ...xaxis({
       leny: this.LENGTH_Y,
       lenx: this.LENGTH_X,
       lb: xlb,
@@ -966,14 +966,14 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       parts: xgrid,
       label: config.x_axis.label,
       grid: GRID_MODE,
-      x_cratio: RATIO(this.LENGTH_X, xub-xlb),
+      x_cratio: sg_RATIO(this.LENGTH_X, xub-xlb),
       ORIGIN_Y1: this.ORIGIN_Y1,
       ORIGIN_X: this.ORIGIN_X,
       START_X: this.START_X,
       START_Y: this.START_Y,
       LENGTH_X: this.LENGTH_X
     }, generate_logvals(xlb, xub))),
-    g(this.ID_LEFT_Y_AXIS, ...yaxis({
+    sg_g(this.ID_LEFT_Y_AXIS, ...yaxis({
       leny: this.LENGTH_Y,
       lenx: this.LENGTH_X,
       AXIS_XPOS: this.AXIS_XPOS_1,
@@ -987,7 +987,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       START_Y: this.START_Y,
       LENGTH_X: this.LENGTH_X
     }, true, false)),
-    g(this.ID_RIGHT_Y_AXIS, ...yaxis({
+    sg_g(this.ID_RIGHT_Y_AXIS, ...yaxis({
       leny: this.LENGTH_Y,
       lenx: this.LENGTH_X,
       AXIS_XPOS: this.AXIS_XPOS_2,
@@ -1005,12 +1005,12 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
 
   this.get_Svgraph().appendChild(_svg);
   if (is_update) {
-    let legend_elem = ELEM(this.ID_LEGEND);
+    let legend_elem = sg_ELEM(this.ID_LEGEND);
     if (legend_elem) {
       this.get_Svgraph().removeChild(legend_elem);
     }
     this.get_Svgraph().appendChild(
-      g(this.ID_LEGEND, ...legend(
+      sg_g(this.ID_LEGEND, ...legend(
         [...fpoints1, ...fpoints2],
         this.ID_LEGEND,
         this.START_X
@@ -1036,7 +1036,7 @@ const SVGraph_initializer = (function()
    * will be adopted by the top-level DOM element of this
    * SVGraph instance - child elements of SVGraph will use
    * this ID as a unique namespace identifier
-   * (e.g. svg-graph-legend, svg-graph-xaxis, etc.).
+   * (e.sg_g. svg-graph-legend, svg-graph-xaxis, etc.).
    *
    * @param ID_GRAPH_SVG
    * @constructor
@@ -1085,7 +1085,7 @@ const SVGraph_initializer = (function()
      * h  |---+------------------------------+----|
      * e  |   |				                       |	  |
      * i	|   |		        SVGraph		         |    |
-     * g  |   |				                       |    |
+     * sg_g  |   |				                       |    |
      * h  |---+------------------------------+----|
      * t  |   |				                       |    | bottom
      *    -----------------------------------------
@@ -1099,8 +1099,8 @@ const SVGraph_initializer = (function()
       top: 70,
       bottom: 40
     };
-    this.WIDTH = CLAMP(width, MIN_WIDTH, MAX_WIDTH);
-    this.HEIGHT = CLAMP(height, MIN_HEIGHT, MAX_HEIGHT);
+    this.WIDTH = sg_CLAMP(width, MIN_WIDTH, MAX_WIDTH);
+    this.HEIGHT = sg_CLAMP(height, MIN_HEIGHT, MAX_HEIGHT);
     this.START_X = padding.left;
     this.LENGTH_X = this.WIDTH - padding.right - padding.left;
     this.START_Y = this.HEIGHT - padding.bottom;
@@ -1135,7 +1135,7 @@ const SVGraph_initializer = (function()
    * [x/y]ub    : Upper-bound value for x/y-axis (actual)
    * [x/y]grid  : Approx. # of grid intervals for x-axis
    * sample_amt : Actual x-value interval b/w each sample.
-   *              e.g. f(x) = x taken at sample_amt=0.2
+   *              e.sg_g. f(x) = x taken at sample_amt=0.2
    *                   with xlb=-1, xub=1 would be sampled at:
    *                   x=[-1,-0.8,-0.6,-0.4,-0.2, ..., 1]
    * fpoints    : Main data structure - each elem contains 'y'
@@ -1196,7 +1196,7 @@ const SVGraph_initializer = (function()
                             sample_amt) => {
         let idx;
         if (!SEMI_LOG_MODE) {
-          idx = RATIO(_x - xlb, sample_amt);
+          idx = sg_RATIO(_x - xlb, sample_amt);
         } else {
           let _base, _d, _add=0;
 
@@ -1207,23 +1207,23 @@ const SVGraph_initializer = (function()
            * Same ranges used in eval_log(), see that for
            * more detailed explanation.
            */
-          if (RANGE(_d, 0.1, 0.301))
+          if (sg_RANGE(_d, 0.1, 0.301))
             _add = 1;
-          else if (RANGE(_d, 0.301, 0.477))
+          else if (sg_RANGE(_d, 0.301, 0.477))
             _add = 2;
-          else if (RANGE(_d, 0.477, 0.602))
+          else if (sg_RANGE(_d, 0.477, 0.602))
             _add = 3;
-          else if (RANGE(_d, 0.602, 0.699))
+          else if (sg_RANGE(_d, 0.602, 0.699))
             _add = 4;
-          else if (RANGE(_d, 0.699, 0.778))
+          else if (sg_RANGE(_d, 0.699, 0.778))
             _add = 5;
-          else if (RANGE(_d, 0.778, 0.845))
+          else if (sg_RANGE(_d, 0.778, 0.845))
             _add = 6;
-          else if (RANGE(_d, 0.845, 0.903))
+          else if (sg_RANGE(_d, 0.845, 0.903))
             _add = 7;
-          else if (RANGE(_d, 0.903, 0.945))
+          else if (sg_RANGE(_d, 0.903, 0.945))
             _add = 8;
-          else if (RANGE(_d, 0.945, 1))
+          else if (sg_RANGE(_d, 0.945, 1))
             _add = 9;
 
           /*
@@ -1234,18 +1234,18 @@ const SVGraph_initializer = (function()
           idx = 9*_base + _add;
         }
 
-        if (FIXED(idx%1, 1) === '0.0' && SHOW_TRACER_GUIDE) {
+        if (sg_FIXED(idx%1, 1) === '0.0' && SHOW_TRACER_GUIDE) {
           idx = Math.floor(idx);
 
           __Guide.bind(_this)(
             _this.ID_GUIDE_X,
-            __vec(_this.START_X, Y),
-            __vec(RIGHT(_this.START_X, _this.LENGTH_X), Y)
+            sg___vec(_this.START_X, Y),
+            sg___vec(sg_RIGHT(_this.START_X, _this.LENGTH_X), Y)
           );
           __Guide.bind(_this)(
             _this.ID_GUIDE_Y,
-            __vec(X, _this.START_Y),
-            __vec(X, UP(_this.START_Y, _this.LENGTH_Y))
+            sg___vec(X, _this.START_Y),
+            sg___vec(X, sg_UP(_this.START_Y, _this.LENGTH_Y))
           );
 
           /*
@@ -1256,11 +1256,11 @@ const SVGraph_initializer = (function()
            */
           fpoints.forEach(({points}, i) => {
             let vec = points[idx];
-            if (DEFINED(vec)) {
+            if (sg_DEFINED(vec)) {
               __Tracer.bind(_this)(`tracer-${id}-${i}`,
                 vec.x, vec.y,
-                RATIO(_this.LENGTH_X, xub - xlb),
-                RATIO(_this.LENGTH_Y, yub - ylb),
+                sg_RATIO(_this.LENGTH_X, xub - xlb),
+                sg_RATIO(_this.LENGTH_Y, yub - ylb),
                 ylb
               );
             }
@@ -1301,7 +1301,7 @@ const SVGraph_initializer = (function()
           let _startx = _this.START_X;
           let _starty = _this.START_Y;
           if (xory) { /* X-axis */
-            if (DELTA(X, oldX) > 5) {
+            if (sg_DELTA(X, oldX) > 5) {
               x_offset = 2;
               if (Math.abs(__X(oldX, xlb, xub, _startx, _lenx)) <
                 Math.abs(__X(X, xlb, xub, _startx, _lenx))) {
@@ -1309,7 +1309,7 @@ const SVGraph_initializer = (function()
               }
             }
           } else { /* Y-axis */
-            if (DELTA(Y, oldY) > 5) {
+            if (sg_DELTA(Y, oldY) > 5) {
               y_offset = 2;
               if (Math.abs(__Y(oldY, ylb, yub, _starty, _leny)) <
                 Math.abs(__Y(Y, ylb, yub, _starty, _leny))) {
@@ -1331,8 +1331,8 @@ const SVGraph_initializer = (function()
         return () => {
           __Guide.bind(_this)(
             _this.ID_FREQUENCY_SWEEPER,
-            __vec(X, _this.START_Y),
-            __vec(X, UP(_this.START_Y, _this.LENGTH_Y)),
+            sg___vec(X, _this.START_Y),
+            sg___vec(X, sg_UP(_this.START_Y, _this.LENGTH_Y)),
             {
               'stroke': 'red',
               'stroke-opacity': 0.6,
@@ -1352,15 +1352,15 @@ const SVGraph_initializer = (function()
       let cb = undefined;
 
       /* X-axis */
-      if (APPROX(Y, _this.ORIGIN_Y1, 5)) {
+      if (sg_APPROX(Y, _this.ORIGIN_Y1, 5)) {
         cb = cb_render_setup(true, true);
       }
       /* Y-axis 1 */
-      else if (APPROX(X, _this.AXIS_XPOS_1, 5)) {
+      else if (sg_APPROX(X, _this.AXIS_XPOS_1, 5)) {
         cb = cb_render_setup(false, true);
       }
       /* Y-axis 2 */
-      else if (APPROX(X, _this.AXIS_XPOS_2, 5)) {
+      else if (sg_APPROX(X, _this.AXIS_XPOS_2, 5)) {
         cb = cb_render_setup(false, false);
       }
       /* Anywhere but on axis -> change tracer */
@@ -1369,7 +1369,7 @@ const SVGraph_initializer = (function()
         cb(); // call it instantly upon mousedown
       }
 
-      if (!DEFINED(cb) || intervalId !== 0) {
+      if (!sg_DEFINED(cb) || intervalId !== 0) {
         return;
       }
 
@@ -1386,7 +1386,7 @@ const SVGraph_initializer = (function()
 
         /* Call CB */
         let c = cb(X, Y, _X, _Y);
-        if (!DEFINED(c)
+        if (!sg_DEFINED(c)
           || (c.xm === 0 && c.ym1 === 0 && c.ym2 === 0)) {
           return;
         }
@@ -1422,7 +1422,7 @@ const SVGraph_initializer = (function()
     return {
       put(left_funcs, right_funcs) {
         /* =========== Put render =========== */
-        COLOR(true);
+        sg_COLOR(true);
 
         ({
           xlb, xub, ylb1, yub1, ylb2, yub2,
@@ -1437,7 +1437,7 @@ const SVGraph_initializer = (function()
       },
       update(left_funcs, right_funcs) {
         /* =========== Update render =========== */
-        COLOR(true);
+        sg_COLOR(true);
 
         axis1_funcs.push(...left_funcs);
         axis2_funcs.push(...right_funcs);

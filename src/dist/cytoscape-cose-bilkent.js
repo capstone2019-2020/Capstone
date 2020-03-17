@@ -278,7 +278,7 @@
 
             afterReposition();
 
-            // trigger layoutstop when the layout stops (e.g. finishes)
+            // trigger layoutstop when the layout stops (e.sg_g. finishes)
             self.cy.one('layoutstop', self.options.stop);
             self.cy.trigger({ type: 'layoutstop', layout: self });
 

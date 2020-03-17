@@ -19,8 +19,8 @@ app.get('/gojs', function(req, res) {
   res.sendfile('gojs-demo/index.html');
 });
 
-app.get('/svg-js', function(req, res) {
-  res.sendfile('svg-js-demo/index.html');
+app.get('/sg_svg-js', function(req, res) {
+  res.sendfile('sg_svg-js-demo/index.html');
 });
 
 app.listen(8080);

@@ -3,14 +3,14 @@ exports.equations = [
     eqns: [
       'x2 = 1 * x1 + e * x3',
       'x3 = a * x2 + f * x4',
-      'x4 = b * x3 + g * x5',
+      'x4 = b * x3 + sg_g * x5',
       'x5 = c * x4 + d * x2',
       'x6 = 1 * x5'
     ],
     start: 'x2',
     end: 'x6',
     n: 'a * b * c + d * (1 - b * f)',
-    d: '1 - a * e - b * f - c * g - d * g * f * e + a * e * c * g'
+    d: '1 - a * e - b * f - c * sg_g - d * sg_g * f * e + a * e * c * sg_g'
   },
   { // 1
     eqns: [
@@ -76,12 +76,12 @@ exports.equations = [
       'x5 = d * x4',
       'x6 = e * x5',
       'x7 = f * x6',
-      'x8 = g * x7',
+      'x8 = sg_g * x7',
       'x9 = h * x8'
     ],
     start: 'x1',
     end: 'x9',
-    n: 'a * b * c * d * e * f * g * h',
+    n: 'a * b * c * d * e * f * sg_g * h',
     d: '1'
   },
   { // 7

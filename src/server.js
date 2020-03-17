@@ -3,14 +3,14 @@ const bodyParser = require('body-parser');	// pull info from HTML POST (express4
 const m1 = require("./nodeJS/m1.js");
 const circuitjs = require('./nodeJS/circuit.js');
 const algebra = require('./RWalgebra/RWalgebra.js');
-const netlist = require('./nodeJS/netlist.js');
+const nl = require('./nodeJS/netlist.js');
 const app = express();
 const Expression = algebra.Expression;
 const Equation = algebra.Equation;
 const fileupload = require('express-fileupload');
 const router = express.Router();
 const port = process.env.PORT || 3000;
-const equations = [];
+let equations = [];
 let nodes, startNode, endNode, masonsdata, circuit;
 
 app.use(function(req, res, next) {
@@ -36,9 +36,9 @@ app.post("/input-file", (req, res) => {
 
     // For the case where \n still remains in the array
     if (stuff[0].search('\n') !== -1) {
-      c = netlist.nlConsumeArr(stuff.toString().split('\n'));
+      c = nl.ascConsumeArr(stuff.toString().split('\n'));
     } else {
-      c = netlist.nlConsumeArr(stuff);
+      c = nl.ascConsumeArr(stuff);
     }
 
     // The nlConsume is not working properly
@@ -48,11 +48,11 @@ app.post("/input-file", (req, res) => {
 
     // The eqns array is emptied every time the input post is used
     if (equations.length !== 0) {
-        equations.length = 0;
+        equations = [];
     }
 
     // Create circuit
-    circuit = circuitjs.createCircuit(c);
+    circuit = circuitjs.createCircuit(c.netlist);
     let temp = circuit.dpiAnalysis();
 
 //     temp.currentEquations.forEach(first => first.forEach(second => second.forEach(eqns => console.log(eqns.toString()))));
@@ -230,7 +230,11 @@ app.post("/input-file", (req, res) => {
     }
 
     // Read the netlist file and save the content
-    return res.status(200).send(equations);
+    return res.status(200).send({
+        equations,
+        asc: c.asc,
+        ascNodes: c.nodes
+    });
 });
 
 // Receive user request and parse into the eqns

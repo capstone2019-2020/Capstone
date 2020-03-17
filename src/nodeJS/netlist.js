@@ -12,7 +12,14 @@ exports.nlConsume = filepath => {
 
 exports.ascConsume = filepath => {
   const d = fs.readFileSync(filepath, {encoding: 'utf8'});
-  const asc = fromAsc(d);
+  const asc = fromAsc(d.split('\n'));
+  console.log(JSON.stringify(asc.asc));
+  console.log(JSON.stringify(asc.nodes));
+  return asc;
+};
+
+exports.ascConsumeArr = ascArr => {
+  const asc = fromAsc(ascArr);
   console.log(JSON.stringify(asc.asc));
   console.log(JSON.stringify(asc.nodes));
   return asc;

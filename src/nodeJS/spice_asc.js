@@ -17,6 +17,7 @@ const CONVERSION_LUT = {
   'k': 1000,
   'm': 0.001,
   'u': 0.000001,
+  'μ': 0.000001,
   'n': 0.000000001,
   'p': 0.000000000001
 };
@@ -126,8 +127,7 @@ function toNetlist(arr) {
   return components;
 }
 
-function fromAsc(buf, dim={x:1500,y:1000}) {
-  let lines = buf.split('\n');
+function fromAsc(lines, dim={x:1500,y:1000}) {
   let netlist, asc;
   let _asc_lines = [];
   {
@@ -348,6 +348,7 @@ function fromAsc(buf, dim={x:1500,y:1000}) {
     }
   }
 
+  // Add nodes: Isc, V for each node in the schematic
   let nodes = [];
   {
     let all_nodes = {};
@@ -355,8 +356,7 @@ function fromAsc(buf, dim={x:1500,y:1000}) {
       if (!all_nodes.hasOwnProperty(n_id)) {
         all_nodes[n_id] = {
           id: n_id,
-          components: [],
-          p: undefined
+          components: []
         };
       }
       all_nodes[n_id].components.push(component.id);
@@ -381,11 +381,20 @@ function fromAsc(buf, dim={x:1500,y:1000}) {
         xAvg += c.p_center.x;
         yAvg += c.p_center.y;
       }
-      node.p = {
+
+      let p_V, p_Isc;
+      p_V = {
+        id: `V_n${node.id}`,
         x: Math.floor(xAvg/cList.length),
         y: Math.floor(yAvg/cList.length)
       };
-      nodes.push(node);
+      p_Isc = {
+        id: `ISC_n${node.id}`,
+        x: p_V.x + 60,
+        y: p_V.y
+      };
+      nodes.push(p_V);
+      nodes.push(p_Isc)
     });
   }
 

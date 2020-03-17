@@ -6,41 +6,41 @@ const PI_2 = 1.57079632679;
 const PI = Math.PI;
 
 /* Fake macros */
-const ELEM = (id) => document.getElementById(id);
-const AVG = arr => arr.reduce((total, e) => total+e)/arr.length;
-const CENTER = vecs => __vec(AVG(vecs.map(v => v.x)), AVG(vecs.map(v => v.y)));
-const SHIFT = (v, s) => __vec(v.x+s.x, v.y+s.y);
-const MAG = v => Math.sqrt(Math.pow(v.x,2)+Math.pow(v.y,2));
-const NORM = v => __vec(v.x/MAG(v), v.y/MAG(v));
-const MULT = (v, scalar) => __vec(v.x*scalar, v.y*scalar);
-const MULT_X = (v, scalar) => __vec(v.x*scalar, v.y);
-const MULT_Y = (v, scalar) => __vec(v.x, v.y*scalar);
-const DOT = (v1, v2) => v1.x*v2.x + v1.y*v2.y;
-const DET = (v1, v2) => v1.x*v2.y - v1.y*v2.x;
-const SUB = (v1, v2) => __vec(v1.x-v2.x, v1.y-v2.y);
-const ADD = (v1, v2) => __vec(v1.x+v2.x, v1.y+v2.y);
-const EQUALS = (v1, v2) => v1.x === v2.x && v1.y === v2.y;
-const DEFINED = (v) => (typeof v !== 'undefined') && (v !== null);
-const DEG_TO_RAD = deg => deg*0.0174533; /* Approximate - avoid divison */
-const RAD_TO_DEG = rad => rad*57.2958; /* Approximate - avoid divisoin */
-const IN_RANGE = (v, l, u) => v >= l && v <= u; /* Inclusive on lower and upper: [l, u] */
-const ANGLE = (v1, v2) => Math.acos(DOT(NORM(v1), NORM(v2)));
-const CW_ANGLE = (v1, v2) => {
+const sfg_ELEM = (id) => document.getElementById(id);
+const sfg_AVG = arr => arr.reduce((total, e) => total+e)/arr.length;
+const sfg_CENTER = vecs => sfg___vec(sfg_AVG(vecs.map(v => v.x)), sfg_AVG(vecs.map(v => v.y)));
+const sfg_SHIFT = (v, s) => sfg___vec(v.x+s.x, v.y+s.y);
+const sfg_MAG = v => Math.sqrt(Math.pow(v.x,2)+Math.pow(v.y,2));
+const sfg_NORM = v => sfg___vec(v.x/sfg_MAG(v), v.y/sfg_MAG(v));
+const sfg_MULT = (v, scalar) => sfg___vec(v.x*scalar, v.y*scalar);
+const sfg_MULT_X = (v, scalar) => sfg___vec(v.x*scalar, v.y);
+const sfg_MULT_Y = (v, scalar) => sfg___vec(v.x, v.y*scalar);
+const sfg_DOT = (v1, v2) => v1.x*v2.x + v1.y*v2.y;
+const sfg_DET = (v1, v2) => v1.x*v2.y - v1.y*v2.x;
+const sfg_SUB = (v1, v2) => sfg___vec(v1.x-v2.x, v1.y-v2.y);
+const sfg_ADD = (v1, v2) => sfg___vec(v1.x+v2.x, v1.y+v2.y);
+const sfg_EQUALS = (v1, v2) => v1.x === v2.x && v1.y === v2.y;
+const sfg_DEFINED = (v) => (typeof v !== 'undefined') && (v !== null);
+const sfg_DEG_TO_RAD = deg => deg*0.0174533; /* Approximate - avoid divison */
+const sfg_RAD_TO_DEG = rad => rad*57.2958; /* Approximate - avoid divisoin */
+const sfg_IN_RANGE = (v, l, u) => v >= l && v <= u; /* Inclusive on lower and upper: [l, u] */
+const sfg_ANGLE = (v1, v2) => Math.acos(sfg_DOT(sfg_NORM(v1), sfg_NORM(v2)));
+const sfg_CW_ANGLE = (v1, v2) => {
   /* https://stackoverflow.com/questions/14066933/direct-way-of-computing-clockwise-angle-between-2-vectors */
-  let n_v1 = NORM(v1), n_v2 = NORM(v2);
+  let n_v1 = sfg_NORM(v1), n_v2 = sfg_NORM(v2);
 
-  let dot = DOT(n_v1, n_v2);
-  let det = DET(n_v1, n_v2);
+  let dot = sfg_DOT(n_v1, n_v2);
+  let det = sfg_DET(n_v1, n_v2);
   return Math.atan2(det, dot);
 };
-const VECS_TO_POINTS = vecs => vecs.reduce((aggr, v) => aggr+=`${v.x},${v.y} `, '');
+const sfg_VECS_TO_POINTS = vecs => vecs.reduce((aggr, v) => aggr+=`${v.x},${v.y} `, '');
 
 
 function getSFG() {
   return document.getElementById(ID_SFG);
 }
 
-function __ns(elem, config={}, ...children) {
+function sfg___ns(elem, config={}, ...children) {
   Object.keys(config).forEach(k => {
     elem.setAttribute(k, config[k])
   });
@@ -52,14 +52,14 @@ function __ns(elem, config={}, ...children) {
   return elem;
 }
 
-function __vec(x, y) {
+function sfg___vec(x, y) {
   return {x, y};
 }
 
-function circle(vec, r, config={}) {
+function sfg_circle(vec, r, config={}) {
   const c = document.createElementNS(SVG_NS, 'circle');
 
-  return __ns(c, {
+  return sfg___ns(c, {
     ...config,
     cx: vec.x,
     cy: vec.y,
@@ -67,29 +67,29 @@ function circle(vec, r, config={}) {
   });
 }
 
-function polygon(points, config={}) {
+function sfg_polygon(points, config={}) {
   const p = document.createElementNS(SVG_NS, 'polygon');
 
-  return __ns(p, {
+  return sfg___ns(p, {
     ...config,
     points
   });
 }
 
-function polyline(points, config={}) {
+function sfg_polyline(points, config={}) {
   const p = document.createElementNS(SVG_NS, 'polyline');
 
-  return __ns(p, {
+  return sfg___ns(p, {
     points,
     ...config
   });
 }
 
-function line(vecf, vect, config={}) {
+function sfg_line(vecf, vect, config={}) {
   const l = document.createElementNS(SVG_NS, 'line');
   l.style.zIndex = '1';
 
-  return __ns(l, {
+  return sfg___ns(l, {
     ...config,
     x1: vecf.x,
     y1: vecf.y,
@@ -102,7 +102,7 @@ function finite_diff(vecs, i) {
   if (vecs.length === 1 || i === 0
     || i === vecs.length-1) {
     console.log('cannot calculate discrete tan');
-    return __vec(0,0);
+    return sfg___vec(0,0);
   }
 
   /*
@@ -113,10 +113,10 @@ function finite_diff(vecs, i) {
    */
   let p = vecs[i];
 
-  let t1 = SUB(p, vecs[i-1]);
-  let t2 = SUB(vecs[i+1], p);
+  let t1 = sfg_SUB(p, vecs[i-1]);
+  let t2 = sfg_SUB(vecs[i+1], p);
 
-  return __vec((t1.x+t2.x)/2, (t1.y+t2.y)/2);
+  return sfg___vec((t1.x+t2.x)/2, (t1.y+t2.y)/2);
 }
 
 function _bezier_(P, len, factor) {
@@ -132,10 +132,10 @@ function _bezier_(P, len, factor) {
     let q_n, v, len;
     let n;
     for (n=0; n<Q.length-1; n++) {
-      v = SUB(Q[n+1], Q[n]);
-      len = MAG(v);
-      q_n = ADD(
-        MULT(NORM(v), (len/BEZIER_SAMPLE_RATE)*i),
+      v = sfg_SUB(Q[n+1], Q[n]);
+      len = sfg_MAG(v);
+      q_n = sfg_ADD(
+        sfg_MULT(sfg_NORM(v), (len/BEZIER_SAMPLE_RATE)*i),
         Q[n]
       );
 
@@ -165,8 +165,8 @@ function _bezier_(P, len, factor) {
    *     This is the transformation from BEZIER space
    *     to coordinate space.
    */
-  vecs = trans(vecs, __vec(0-X_LOWER, 0));
-  vecs = scale(vecs, __vec(len/(X_UPPER-X_LOWER), factor));
+  vecs = trans(vecs, sfg___vec(0-X_LOWER, 0));
+  vecs = scale(vecs, sfg___vec(len/(X_UPPER-X_LOWER), factor));
 
   return vecs;
 }
@@ -193,7 +193,7 @@ function _approx_curve_(len) {
   let xval, yval;
   for (xval=X_LOWER; xval<=X_UPPER; xval+=sample_amt) {
     yval = parser.evaluate(`f(${xval})`);
-    vecs.push(__vec(xval, yval));
+    vecs.push(sfg___vec(xval, yval));
   }
 
   /*
@@ -204,7 +204,7 @@ function _approx_curve_(len) {
    */
   if (xval-sample_amt < X_UPPER) {
     yval = parser.evaluate(`f(${X_UPPER})`);
-    vecs.push(__vec(xval, yval));
+    vecs.push(sfg___vec(xval, yval));
   }
 
   /*
@@ -216,20 +216,20 @@ function _approx_curve_(len) {
    *     This is the transformation from BEZIER space
    *     to coordinate space.
    */
-  vecs = trans(vecs, __vec(0-X_LOWER, 0));
-  vecs = scale(vecs, __vec(len/(X_UPPER-X_LOWER), 70));
+  vecs = trans(vecs, sfg___vec(0-X_LOWER, 0));
+  vecs = scale(vecs, sfg___vec(len/(X_UPPER-X_LOWER), 70));
 
   return vecs;
 }
 
 function _arrow_() {
   let points = [
-    __vec(16,16), __vec(24,19), __vec(32,22),
-    __vec(26,16), __vec(32,10), __vec(24,13),
-    __vec(16,16)
+    sfg___vec(16,16), sfg___vec(24,19), sfg___vec(32,22),
+    sfg___vec(26,16), sfg___vec(32,10), sfg___vec(24,13),
+    sfg___vec(16,16)
   ];
 
-  let shift = CENTER(points);
+  let shift = sfg_CENTER(points);
   shift.x = -shift.x;
   shift.y = -shift.y;
 
@@ -239,7 +239,7 @@ function _arrow_() {
 function trans(vecs, vec_trans) {
   let i;
   for (i=0; i<vecs.length; i++) {
-    vecs[i] = SHIFT(vecs[i], vec_trans);
+    vecs[i] = sfg_SHIFT(vecs[i], vec_trans);
   }
 
   return vecs;
@@ -249,7 +249,7 @@ function scale(vecs, vec_scale) {
   let i, v;
   for (i=0; i<vecs.length; i++) {
     v = vecs[i];
-    vecs[i] = MULT_Y(MULT_X(v, vec_scale.x), vec_scale.y);
+    vecs[i] = sfg_MULT_Y(sfg_MULT_X(v, vec_scale.x), vec_scale.y);
   }
 
   return vecs;
@@ -266,7 +266,7 @@ function rot(vecs, theta) {
     x_b = x_a*Math.cos(theta) - y_a*Math.sin(theta);
     y_b = y_a*Math.cos(theta) + x_a*Math.sin(theta);
 
-    vecs[i] = __vec(x_b, y_b);
+    vecs[i] = sfg___vec(x_b, y_b);
   }
 
   return vecs;
@@ -276,7 +276,7 @@ function reflect_x(vecs) {
   let i, v;
   for (i=0; i<vecs.length; i++) {
     v = vecs[i];
-    vecs[i] = __vec(v.x, -v.y);
+    vecs[i] = sfg___vec(v.x, -v.y);
   }
 
   return vecs;
@@ -287,21 +287,21 @@ function get_bezier(V, E, v_from, v_to, self_loop) {
   if (self_loop) {
     return _bezier_(
       [
-        __vec(0, 0), __vec(-50, 5),
-        __vec(20, 12), __vec(30, 4),
-        __vec(35, 5), __vec(5,0)
+        sfg___vec(0, 0), sfg___vec(-50, 5),
+        sfg___vec(20, 12), sfg___vec(30, 4),
+        sfg___vec(35, 5), sfg___vec(5,0)
       ],
-      MAG(SUB(v_to, v_from)), 7);
+      sfg_MAG(sfg_SUB(v_to, v_from)), 7);
   }
 
   /*
    * Conventions to follow:
    * ----------------------------------------------------
-   * (1) If v_from and v_to are on the horizontal line (e.g.
+   * (1) If v_from and v_to are on the horizontal line (e.sg_g.
    *     within +/-5° of the horizontal line, and vector
-   *     direction is RIGHT, then a straight line is drawn.
+   *     direction is sg_RIGHT, then a straight line is drawn.
    * (2) If v_from and v_to are on the horizontal line, but
-   *     direction is LEFT, then use wide bezier curve
+   *     direction is sg_LEFT, then use wide bezier curve
    *     facing AWAY from the graph center.
    * (3) Scale factor is a function of distance and angle
    *     as follows:
@@ -322,49 +322,49 @@ function get_bezier(V, E, v_from, v_to, self_loop) {
    *     the bezier will have.
    *
    */
-  let h = __vec(1,0);
-  let v = SUB(v_to, v_from);
-  let d = MAG(SUB(v_to, v_from));
-  let theta = CW_ANGLE(h, v)%(PI_2);
+  let h = sfg___vec(1,0);
+  let v = sfg_SUB(v_to, v_from);
+  let d = sfg_MAG(sfg_SUB(v_to, v_from));
+  let theta = sfg_CW_ANGLE(h, v)%(PI_2);
   let S_spec = Math.pow(Math.abs(Math.cos(theta/PI_2-1)), 0.3);
   let S_mag = Math.pow(d/300, 2);
   let s = Math.min(50, 40 * S_mag * S_spec);
 
   // (1)
   {
-    let angle = RAD_TO_DEG(ANGLE(v, h));
+    let angle = sfg_RAD_TO_DEG(sfg_ANGLE(v, h));
     // Straight line
     if (angle < 10) {
       return _bezier_(
-        [__vec(0,0), __vec(10,0)],
-        MAG(SUB(v_to, v_from)), s);
+        [sfg___vec(0,0), sfg___vec(10,0)],
+        sfg_MAG(sfg_SUB(v_to, v_from)), s);
     }
     // Wide bezier
     else if (180-angle < 10) {
       return _bezier_(
         [
-          __vec(0,0), __vec(-2,10),
-          __vec(4,10), __vec(2,0)
+          sfg___vec(0,0), sfg___vec(-2,10),
+          sfg___vec(4,10), sfg___vec(2,0)
         ],
-        MAG(SUB(v_to, v_from)), 12);
+        sfg_MAG(sfg_SUB(v_to, v_from)), 12);
     }
   }
 
   // else
   bezier = _bezier_(
     [
-      __vec(0,0), __vec(-0.5,2), __vec(2,2),
-      __vec(3,0.5), __vec(3.5,2), __vec(4,0)
+      sfg___vec(0,0), sfg___vec(-0.5,2), sfg___vec(2,2),
+      sfg___vec(3,0.5), sfg___vec(3.5,2), sfg___vec(4,0)
     ],
-    MAG(SUB(v_to, v_from)), s);
+    sfg_MAG(sfg_SUB(v_to, v_from)), s);
 
   return bezier;
 }
 
-function render(V, E) {
-  let v_center = CENTER(Object.values(V).map(v => v.vec));
+function sfg_render(V, E) {
+  let v_center = sfg_CENTER(Object.values(V).map(v => v.vec));
   const nodes = Object.values(V).map(v => {
-    return circle(v.vec, SZ_CIRCLE_RADIUS, {
+    return sfg_circle(v.vec, SZ_CIRCLE_RADIUS, {
         fill: 'transparent',
         stroke: 'black',
         'stroke-width': 1
@@ -391,21 +391,21 @@ function render(V, E) {
        * direction for fuzzy_v.
        */
       let fuzzy_v, self_loop = false;
-      if (EQUALS(p_from, p_to)) {
+      if (sfg_EQUALS(p_from, p_to)) {
         self_loop = true;
-        let vert = __vec(0,1);
-        [v_from] = rot([vert], DEG_TO_RAD(60));
-        [v_to] = rot([vert], -DEG_TO_RAD(60));
+        let vert = sfg___vec(0,1);
+        [v_from] = rot([vert], sfg_DEG_TO_RAD(60));
+        [v_to] = rot([vert], -sfg_DEG_TO_RAD(60));
 
-        fuzzy_v = MULT(v_from, SZ_CIRCLE_RADIUS);
-        p_from = ADD(p_from, fuzzy_v);
-        fuzzy_v = MULT(v_to, SZ_CIRCLE_RADIUS);
-        p_to = ADD(p_to, fuzzy_v);
+        fuzzy_v = sfg_MULT(v_from, SZ_CIRCLE_RADIUS);
+        p_from = sfg_ADD(p_from, fuzzy_v);
+        fuzzy_v = sfg_MULT(v_to, SZ_CIRCLE_RADIUS);
+        p_to = sfg_ADD(p_to, fuzzy_v);
       } else {
-        fuzzy_v = MULT(NORM(SUB(p_to, p_from)),
+        fuzzy_v = sfg_MULT(sfg_NORM(sfg_SUB(p_to, p_from)),
           SZ_CIRCLE_RADIUS);
-        p_from = ADD(p_from, fuzzy_v);
-        p_to = SUB(p_to, fuzzy_v);
+        p_from = sfg_ADD(p_from, fuzzy_v);
+        p_to = sfg_SUB(p_to, fuzzy_v);
       }
 
       /*
@@ -419,21 +419,21 @@ function render(V, E) {
        */
       let v, h, pc;
       let b_theta, v_theta;
-      v = SUB(p_to, p_from);
-      h = __vec(1, 0);
-      b_theta = CW_ANGLE(h, v);
-      pc = SUB(CENTER([p_from, p_to]), v_center);
-      v_theta = RAD_TO_DEG(CW_ANGLE(h, pc));
+      v = sfg_SUB(p_to, p_from);
+      h = sfg___vec(1, 0);
+      b_theta = sfg_CW_ANGLE(h, v);
+      pc = sfg_SUB(sfg_CENTER([p_from, p_to]), v_center);
+      v_theta = sfg_RAD_TO_DEG(sfg_CW_ANGLE(h, pc));
 
       let bezier = get_bezier(V, E, p_from, p_to, self_loop);
       bezier = reflect_x(bezier);
-      if (IN_RANGE(v_theta, 225, 360)
-        || IN_RANGE(v_theta, 0,45) && !self_loop) {
+      if (sfg_IN_RANGE(v_theta, 225, 360)
+        || sfg_IN_RANGE(v_theta, 0,45) && !self_loop) {
         bezier = reflect_x(bezier);
       }
       bezier = rot(bezier, b_theta);
       bezier = trans(bezier, p_from);
-      edges.push(polyline(VECS_TO_POINTS(bezier),
+      edges.push(sfg_polyline(sfg_VECS_TO_POINTS(bezier),
         {
           stroke: 'black',
           fill: 'none',
@@ -448,21 +448,41 @@ function render(V, E) {
        * (2) Translate arrow to center of edge
        */
       let tan_v = finite_diff(bezier, Math.floor(bezier.length/2));
-      let a_theta = CW_ANGLE(__vec(-10, 0), tan_v);
+      let a_theta = sfg_CW_ANGLE(sfg___vec(-10, 0), tan_v);
       arrow = _arrow_();
       arrow = rot(arrow, a_theta);
       arrow = trans(arrow, bezier[Math.floor(bezier.length/2)]);
-      edges.push(polygon(
-        VECS_TO_POINTS(arrow),
+      edges.push(sfg_polygon(
+        sfg_VECS_TO_POINTS(arrow),
         {fill: 'black'}
       ));
     }
   }
 
-  __ns(getSFG(), {},
+  sfg___ns(getSFG(), {},
     ...nodes,
     ...edges
   );
+}
+
+function toSFG(nodes, sfg) {
+  let _sfg = [];
+  {
+    let node;
+    let i;
+    for (i=0; i<sfg.length; i++) {
+      node = nodes.find(n => n.id === sfg[i].id);
+      if (sfg_DEFINED(node)) {
+        _sfg.push({
+          ...sfg[i],
+          x: node.x,
+          y: node.y
+        });
+      }
+    }
+  }
+
+  return _sfg;
 }
 
 function init(sfg) {
@@ -484,7 +504,7 @@ function init(sfg) {
               return adj_e.startNode;
             }
           }),
-          vec: __vec(v.x, v.y)
+          vec: sfg___vec(v.x, v.y)
         };
       }
 
@@ -501,7 +521,7 @@ function init(sfg) {
     }
   }
 
-  render(V, E);
+  sfg_render(V, E);
 }
 
 const _sfg = [

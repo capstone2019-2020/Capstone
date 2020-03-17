@@ -31,7 +31,7 @@ const createSVGElem = (elem) => document.createElementNS(_SVG_NS_, elem);
 
 /**
  * Creates element specified by 'type'
- * Returns svg <g> element
+ * Returns sg_svg <sg_g> element
  *
  * @param type - type of element to create (R | V | I | C ...)
  * @param id   - id of element - will be used as the label

@@ -174,7 +174,7 @@ function computeSFG (params) {
     }
 
     if (counter === 2) {
-      // console.log("COUNTING RIGHT!!!!!");
+      // console.log("COUNTING sg_RIGHT!!!!!");
       // console.log(`THE RHS INDX NUMBER ${termsofrhs.length-1}`);
       haveBothRealAndImag.push(termsofrhs.length);
     }
