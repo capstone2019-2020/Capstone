@@ -35,10 +35,23 @@ app.post("/input-file", (req, res) => {
     }
 
     // For the case where \n still remains in the array
-    if (stuff[0].search('\n') !== -1) {
-      c = nl.ascConsumeArr(stuff.toString().split('\n'));
+    let requestNetlist = stuff;
+    if (requestNetlist[0].search('\n') !== -1) {
+        requestNetlist = stuff.toString().split('\n');
+    }
+
+    /*
+     * Backwards compatibility with just netlist files
+     */
+    if (requestNetlist[0].includes(';')) {
+        c = nl.ascConsumeArr(requestNetlist);
     } else {
-      c = nl.ascConsumeArr(stuff);
+        c = nl.nlConsumeArr(requestNetlist);
+        c = {
+            netlist: c,
+            asc: null,
+            nodes: null
+        };
     }
 
     // The nlConsume is not working properly
@@ -56,8 +69,8 @@ app.post("/input-file", (req, res) => {
     let temp = circuit.dpiAnalysis();
 
 //     temp.currentEquations.forEach(first => first.forEach(second => second.forEach(eqns => console.log(eqns.toString()))));
-//     temp.currentEquations.forEach((first) => 
-//         first.forEach((second) => second.forEach((eqns) => 
+//     temp.currentEquations.forEach((first) =>
+//         first.forEach((second) => second.forEach((eqns) =>
 //             {
 //                 // This is a replacement for solveFor of algebra.js to make all the equations have a format of
 //                 // x1 = x2 +..... => one variable on the LHS and the rest on the RHS

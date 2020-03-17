@@ -74,7 +74,10 @@ function uploadFile(f) {
             // alert("Got the file name: " + f.name + "contents: "
             // + contents[0]);
 
-            setLocalStorage('ltspice', JSON.stringify(contents));
+            let ltspice = contents[0].search('\n') !== -1
+              ? contents.toString().split('\n')
+              : contents;
+            setLocalStorage('ltspice', JSON.stringify(ltspice));
             fetch(`${SERVER_URI}/input-file`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
