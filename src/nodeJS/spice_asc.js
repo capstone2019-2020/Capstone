@@ -315,12 +315,22 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
 
   {
     let minX = Infinity, minY = Infinity;
+    let centerX = Math.floor(xDim/2), centerY = Math.floor(yDim/2);
+    let avgX = 0, avgY = 0;
+    let numPoints = 1;
     let xScale = Math.min(1,dim.x/xDim);
     let yScale = Math.min(1, dim.y/yDim);
     const setMin = (vec) => {
       if (DEFINED(vec)) {
         minX = Math.min(vec.x, minX);
         minY = Math.min(vec.y, minY);
+      }
+    };
+    const setAverage = (vec) => {
+      if (DEFINED(vec)) {
+        avgX += vec.x;
+        avgY += vec.y;
+        numPoints++;
       }
     };
     const adjustPoint = (vec) => {
@@ -343,6 +353,16 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
         return vec;
       }
     };
+    const adjustPos = (vec, vecAdj) => {
+      if (DEFINED(vec)) {
+        return {
+          x: vec.x + vecAdj.x,
+          y: vec.y + vecAdj.y
+        }
+      } else {
+        return vec;
+      }
+    };
 
     // normalize coordinates
     let elem;
@@ -352,7 +372,12 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
       setMin(elem.p_center);
       setMin(elem.p_from);
       setMin(elem.p_to);
+      setAverage(elem.p_center);
+      setAverage(elem.p_from);
+      setAverage(elem.p_to);
     }
+    avgX = Math.floor(avgX/numPoints);
+    avgY = Math.floor(avgY/numPoints);
 
     for (i=0; i<asc.length; i++) {
       elem = asc[i];
@@ -366,6 +391,17 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
       elem.p_center = adjustScale(elem.p_center);
       elem.p_from = adjustScale(elem.p_from);
       elem.p_to = adjustScale(elem.p_to);
+    }
+
+    let vecAdj = {
+      x: centerX - avgX,
+      y: 0 /* Do not center vertically */
+    };
+    for (i=0; i<asc.length; i++) {
+      elem = asc[i];
+      elem.p_center = adjustPos(elem.p_center, vecAdj);
+      elem.p_from = adjustPos(elem.p_from, vecAdj);
+      elem.p_to = adjustPos(elem.p_to, vecAdj);
     }
   }
 
