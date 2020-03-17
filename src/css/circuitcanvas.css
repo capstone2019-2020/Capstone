@@ -1,0 +1,10 @@
+.circuit-canvas {
+  height: 100%;
+  width: 100%;
+}
+
+.circuit-canvas-wrapper {
+  height: 100%;
+  width: 80%;
+  margin: auto;
+}

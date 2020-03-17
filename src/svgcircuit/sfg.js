@@ -4,7 +4,8 @@ const SZ_CIRCLE_RADIUS = 5;
 const BEZIER_SAMPLE_RATE = 200;
 const PI_2 = 1.57079632679;
 const PI = Math.PI;
-const ID_SFG_WRAPPER_G = 'sfg-wraper-g';
+const ID_SFG_WRAPPER_G = 'sfg-wrapper-g';
+const WIDTH_EDGE_STROKE = 1.5;
 
 /* Fake macros */
 const sfg_ELEM = (id) => document.getElementById(id);
@@ -448,7 +449,7 @@ function sfg_render(V, E) {
         {
           stroke: 'black',
           fill: 'none',
-          'stroke-width': 0.5
+          'stroke-width': WIDTH_EDGE_STROKE
         }
       ));
 

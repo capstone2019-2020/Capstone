@@ -5,6 +5,7 @@
   <title>Capstone SFG</title>
   <link rel="stylesheet" type="text/css" href="css/index2.css"/>
   <link rel="stylesheet" type="text/css" href="css/sfgcanvas.css"/>
+  <link rel="stylesheet" type="text/css" href="css/circuitcanvas.css"/>
   <link rel="stylesheet" type="text/css" href="css/menu.css"/>
   <link href='https://fonts.googleapis.com/css?family=Nunito Sans' rel='stylesheet'>
 
@@ -18,7 +19,7 @@
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
 </head>
-<body onload="initSvgraph(); generateSFG(); initSvgCircuit(); initSFG();">
+<body onload="initSvgraph(); generateSFG(); initSvgCircuit();">
   <div id="main-div" class="main-div">
     <div id="left-div" class="left-div">
 
@@ -40,22 +41,24 @@
         <div id="sfg-wrapper" class="sfg-wrapper">
             <div id="sfg-canvas" class="sfg-canvas"></div>
             <i id="fit-icon" class='fas fa-expand' onClick="sfgFit()" title="Fit to Window"></i>
+          <div id="sfg-help-text" class="sfg-help-text">Please select a start and end node</div>
         </div>
-        <div id="sfg-help-text" class="sfg-help-text">Please select a start and end node</div>
       </div>
 
       <!-- CIRCUIT CANVAS -->
       <div class="left-bottom-panel">
-        <svg height="100%" width="100%" id="circuit-canvas">
-          <defs>
-            <!-- arrowhead marker definition -->
-            <marker id="arrow" viewBox="0 0 5 5" refX="3" refY="2.5"
-                    markerWidth="3" markerHeight="3"
-                    orient="auto-start-reverse">
-              <path d="M 0 0 L 5 2.5 L 0 5 z"></path>
-            </marker>
-          </defs>
-        </svg>
+        <div class="circuit-canvas-wrapper">
+          <svg class="circuit-canvas" id="circuit-canvas">
+            <defs>
+              <!-- arrowhead marker definition -->
+              <marker id="arrow" viewBox="0 0 5 5" refX="3" refY="2.5"
+                      markerWidth="3" markerHeight="3"
+                      orient="auto-start-reverse">
+                <path d="M 0 0 L 5 2.5 L 0 5 z"></path>
+              </marker>
+            </defs>
+          </svg>
+        </div>
       </div>
 
       <!-- Hidden element -->
@@ -75,6 +78,7 @@
   <script type="text/javascript" src="js/cyto.config.js"></script>
   <script type="text/javascript" src="js/index.js"></script>
   <script type="text/javascript" src="js/menu.js"></script>
+  <script type="text/javascript" src="nodeJS/spice_asc.js"></script>
   <script type="text/javascript" src="js/sfgenerator.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/6.2.2/math.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>

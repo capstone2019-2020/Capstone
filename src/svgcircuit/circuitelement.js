@@ -18,9 +18,10 @@ const _CAP_L_ = 25;
 const _DEP_L_ = 50;
 
 /* General constants applied to each element*/
-const _NODE_RADIUS_ = 3;
-const _LINE_WIDTH_ = 2;
-const _DEFAULT_COLOR_ = '#000';
+const _NODE_RADIUS_ = 2;
+const _LINE_WIDTH_ = 1.5;
+const _DEFAULT_COLOR_ = '#bababa';
+const _DEFAULT_NODE_COLOR_ = '#8f8f8f';
 const _RESISTOR_HEIGHT_ = 20;
 
 /*
@@ -170,6 +171,7 @@ const Node = (coord) => {
   node.setAttribute('cx', coord.x);
   node.setAttribute('cy', coord.y);
   node.setAttribute('r', _NODE_RADIUS_);
+  node.setAttribute('fill', _DEFAULT_NODE_COLOR_);
   return node;
 };
 

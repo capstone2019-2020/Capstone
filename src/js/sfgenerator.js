@@ -13,16 +13,12 @@ let svgraph = null;
 let loopgraph = null;
 
 function initSvgCircuit() {
-  let asc = JSON.parse(getCookie('circuit_layout'));
-  generateCircuit(CIRCUIT_CANVAS_ID, asc);
-  console.log('initCircuit', asc);
-}
-
-function initSFG() {
-  let nodes = JSON.parse(getCookie('circuit_nodes'));
+  let ltspice = JSON.parse(getCookie('ltspice'));
   let _sfg = JSON.parse(getCookie('sfg_nodes'));
-  console.log('initSFG nodes', nodes);
-  console.log('initSFG _sfg', _sfg);
+
+  let rect = document.getElementById(CIRCUIT_CANVAS_ID).getBoundingClientRect();
+  let {asc, nodes} = fromAsc(ltspice, {x: rect.width*0.8, y: rect.height*1.5});
+  generateCircuit(CIRCUIT_CANVAS_ID, asc);
   sfg_init(toSFG(nodes, _sfg));
 }
 

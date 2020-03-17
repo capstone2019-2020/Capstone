@@ -74,6 +74,7 @@ function uploadFile(f) {
             // alert("Got the file name: " + f.name + "contents: "
             // + contents[0]);
 
+            setLocalStorage('ltspice', JSON.stringify(contents));
             fetch(`${SERVER_URI}/input-file`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
