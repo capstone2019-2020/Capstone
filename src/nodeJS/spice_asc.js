@@ -204,14 +204,23 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
           };
           break;
         case 'FLAG':
-          isInsert = true;
-          elem.id = `gnd-${i}`;
-          elem.type = GND_t;
-          elem.p_center = {
-            x: parseInt(line[1]),
-            y: parseInt(line[2])
-          };
-          elem.R = parseInt(line[3]);
+          elem.type = ASC_TO_TYPE_LUT[line[3]];
+
+          switch(elem.type) {
+            case '0':
+              isInsert = true;
+              elem.id = `gnd-${i}`;
+              elem.type = GND_t;
+              elem.p_center = {
+                x: parseInt(line[1]),
+                y: parseInt(line[2])
+              };
+              break;
+            case 'VCC':
+            case 'VEE':
+            case 'OUT':
+            default:
+          }
           break;
         case 'SYMBOL':
           isInsert = true;
