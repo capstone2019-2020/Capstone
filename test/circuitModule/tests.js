@@ -14,6 +14,12 @@
   const {Expression, Equation} = require('../../src/RWalgebra/RWalgebra.js');
   const assert = require('assert');
   const nl = require('../../src/nodeJS/netlist.js');
+  const circuitjs = require('../../src/nodeJS/circuit.js');
+  const createCircuit = circuitjs.createCircuit;
+
+  const debug_log = (...params) => {
+      console.log(...params);
+  }
 
   /* Some common expressions & values */
   var parallel2Resistors  = new Expression("(1/1000) + (1/2000)").inverse();
@@ -26,18 +32,19 @@
   var circuits = [
     /* CASE 1: independent voltage sources with resistors*/
     {
-        fn: 'netlist_ann1.txt',
+        fn: 'test/circuitModule/netlist_ann1.txt',
         eqns: [
             new Equation("V_n1", "8"),
             new Equation("V_n2", "DPI_n2 * ISC_n2"),
             new Equation("DPI_n2", parallel3Resistors),
-            new Equation("ISC_n2", "(V_n1/1000) + (V_n3)/3000")
+            new Equation("ISC_n2", "(V_n1/1000) + (V_n3)/3000"),
+            new Equation("V_n3", "(-2)")
         ]
     },
 
     /* CASE 2: independent voltage sources with resistors*/
     {
-        fn: "./netlist_ann2.txt",
+        fn: "test/circuitModule/netlist_ann2.txt",
         eqns: [
             new Equation("V_n1", "5"),
             new Equation("V_n2", "DPI_n2 * ISC_n2"),
@@ -48,7 +55,7 @@
 
     /* CASE 3: independent voltage + current sources with resistors*/
     {
-        fn: "./netlist_ann_csrc.txt",
+        fn: "test/circuitModule/netlist_ann_csrc.txt",
         eqns: [
             new Equation("V_n1", "8"),
             new Equation("V_n2", "DPI_n2 * ISC_n2"),
@@ -62,7 +69,7 @@
 
     /* CASE 4: Independent + dependent voltage source + resistors */
     {
-        fn: "./netlist_ann_vcvs.txt",
+        fn: "test/circuitModule/netlist_ann_vcvs.txt",
         eqns: [
             new Equation("V_n1", "8*V_n2"),
             new Equation("V_n2", "DPI_n2 * ISC_n2"),
@@ -74,7 +81,7 @@
   
     /* CASE 5: Independent + dependent voltage source + resistors */
     {
-        fn: "./netlist_ann_vcvs2.txt",
+        fn: "test/circuitModule/netlist_ann_vcvs2.txt",
         eqns: [
             new Equation("V_n1", "20"),
             new Equation("V_n2", "DPI_n2 * ISC_n2"),
@@ -89,7 +96,7 @@
   
     /* CASE 6: Independent + dependent voltage source + resistors (amplifier circuit) */
     {
-        fn: "./netlist_ann_vcvs3.txt",
+        fn: "test/circuitModule/netlist_ann_vcvs3.txt",
         eqns: [
             new Equation("V_n1", "0.1"),
             new Equation("V_n2", "DPI_n2 * ISC_n2"),
@@ -104,7 +111,7 @@
 
     /* CASE 4: Independent voltage source + dependent current source + resistors */
     {
-        fn: "./netlist_ann_vccs.txt",
+        fn: "test/circuitModule/netlist_ann_vccs.txt",
         eqns: [
             new Equation("V_n1", "8"),
             new Equation("V_n2", "DPI_n2 * ISC_n2"),
@@ -119,7 +126,7 @@
 
     /* CASE 2: Basic circuit + independent current src*/
     {
-        fn: "./netlist_ann_rc.txt",
+        fn: "test/circuitModule/netlist_ann_rc.txt",
         eqns: [
 
         ]
@@ -127,7 +134,7 @@
 
     /* CASE 6: Medium RLC circuit + independent voltage & current src*/
     {
-        fn: "./netlist_rc_simple.txt",
+        fn: "test/circuitModule/netlist_rc_simple.txt",
         eqns: [
     
         ]
@@ -153,7 +160,7 @@
  * @param expected {hand-computed equations listed in ./tests.js}
  * @returns true if actual output matches expected
  */
-exports.verifyCircuit = function(output, expected) {
+function verifyCircuit(output, expected) {
 
     /**
      * Step 1: Convert equations into strings
@@ -189,11 +196,11 @@ exports.verifyCircuit = function(output, expected) {
       let result2 = {}
       /* Verify equations match the expected */
       for (j = 0; j < enode.length; j++) {
-        node_eqn1 = anode[j].toString();
-        node_eqn2 = enode[j].toString();
+        expected_eq = enode[j].toString();
+        actual_eq = anode.includes(expected_eq); //enode[j].toString();
  
-        if (node_eqn1.localeCompare(node_eqn2) != 0){
-          debug_log(`ERROR: Equations don't match\n { expected: ${node_eqn1}, actual: ${node_eqn2}`);
+        if (actual_eq == undefined){
+          debug_log(`ERROR: Expected equation ${node_eqn1} could not be found`);
           return false;
         }
       }

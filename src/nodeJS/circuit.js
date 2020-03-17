@@ -529,14 +529,14 @@ function createCircuit(components){
         var ctrl_pnode_vol, ctrl_nnode_vol;
 
         if (circuit.unknownVnodes.indexOf(ctrl_pnode.id) != -1){ // in unknown array -> voltage not known
-            ctrl_pnode_vol = new Expression(`n${ctrl_pnode.id}`);
+            ctrl_pnode_vol = new Expression(`V_n${ctrl_pnode.id}`);
         } 
         else{
             ctrl_pnode_vol = ctrl_pnode.voltage;
         }
 
         if (circuit.unknownVnodes.indexOf(ctrl_nnode.id) != -1){ // in unknown array -> voltage not known
-            ctrl_nnode_vol = new Expression(`n${ctrl_nnode.id}`);
+            ctrl_nnode_vol = new Expression(`V_n${ctrl_nnode.id}`);
         } 
         else{
             ctrl_nnode_vol = ctrl_nnode.voltage;
