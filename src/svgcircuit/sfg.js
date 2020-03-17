@@ -1,5 +1,5 @@
 const sfg_SVG_NS = 'http://www.w3.org/2000/svg';
-const ID_SFG = 'svg-sfg';
+const ID_SFG = 'circuit-canvas';
 const SZ_CIRCLE_RADIUS = 5;
 const BEZIER_SAMPLE_RATE = 200;
 const PI_2 = 1.57079632679;
@@ -480,11 +480,13 @@ function sfg_render(V, E) {
 }
 
 function toSFG(nodes, sfg) {
+  console.log('toSFG', nodes, sfg);
   let _sfg = [];
   {
     let node;
     let i;
     for (i=0; i<sfg.length; i++) {
+      console.log('nodes', nodes);
       node = nodes.find(n => n.id === sfg[i].id);
       if (sfg_DEFINED(node)) {
         _sfg.push({
@@ -500,6 +502,7 @@ function toSFG(nodes, sfg) {
 }
 
 function sfg_init(sfg) {
+  console.log('SFG INIT', sfg);
   let V = {}, E = {};
   {
     let i, v;
@@ -538,126 +541,3 @@ function sfg_init(sfg) {
   sfg_render(V, E);
 }
 
-const _sfg = [
-  {
-    id: 'v1',
-    x: 100, y: 100,
-    outgoingEdges: [
-      {
-        id: 'e2',
-        startNode: 'v1',
-        endNode: 'v3'
-      }
-    ]
-  },
-  {
-    id: 'v2',
-    x: 200, y: 30,
-    outgoingEdges: [
-      {
-        id: 'e1',
-        startNode: 'v2',
-        endNode: 'v1'
-      }
-    ]
-  },
-  {
-    id: 'v3',
-    x: 400, y: 200,
-    outgoingEdges: [
-      {
-        id: 'e3',
-        startNode: 'v3',
-        endNode: 'v2'
-      }
-    ]
-  },
-  {
-    id: 'v4',
-    x: 100, y: 300,
-    outgoingEdges: [
-      {
-        id: 'e5',
-        startNode: 'v4',
-        endNode: 'v1'
-      },
-      {
-        id: 'e6',
-        startNode: 'v4',
-        endNode: 'v2'
-      },
-      {
-        id: 'e7',
-        startNode: 'v4',
-        endNode: 'v3'
-      }
-    ]
-  },
-  {
-    id: 'v5',
-    x: 400, y: 100,
-    outgoingEdges: [
-      {
-        id: 'e8',
-        startNode: 'v5',
-        endNode: 'v4'
-      },
-      {
-        id: 'e9',
-        startNode: 'v5',
-        endNode: 'v5'
-      },
-      {
-        id: 'e11',
-        startNode: 'v5',
-        endNode: 'v6'
-      }
-    ]
-  },
-  {
-    id: 'v6',
-    x: 550, y: 100,
-    outgoingEdges: [
-      {
-        id: 'e10',
-        startNode: 'v6',
-        endNode: 'v5'
-      }
-    ]
-  },
-  {
-    id: 'v7',
-    x: 600, y: 50,
-    outgoingEdges: [
-      {
-        id: 'e20',
-        startNode: 'v7',
-        endNode: 'v6'
-      }
-    ]
-  },
-  {
-    id: 'v8',
-    x: 650, y: 120,
-    outgoingEdges: [
-      {
-        id: 'e12',
-        startNode: 'v8',
-        endNode: 'v6'
-      }
-    ]
-  },
-  {
-    id: 'v9',
-    x: 680, y: 75,
-    outgoingEdges: [
-      {
-        id: 'e13',
-        startNode: 'v9',
-        endNode: 'v6'
-      }
-    ]
-  }
-];
-
-sfg_init(_sfg);

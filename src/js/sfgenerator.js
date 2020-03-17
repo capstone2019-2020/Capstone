@@ -19,8 +19,10 @@ function initSvgCircuit() {
 }
 
 function initSFG() {
-  let nodes = getCookie('circuit_nodes');
-  let _sfg = getCookie('sfg_nodes');
+  let nodes = JSON.parse(getCookie('circuit_nodes'));
+  let _sfg = JSON.parse(getCookie('sfg_nodes'));
+  console.log('initSFG nodes', nodes);
+  console.log('initSFG _sfg', _sfg);
   sfg_init(toSFG(nodes, _sfg));
 }
 
