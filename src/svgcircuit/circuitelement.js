@@ -9,7 +9,7 @@ const _DEP_VCVS_TYPE_ = 'E';
 const _DEP_VCCS_TYPE_ = 'G';
 const _DEP_CCVS_TYPE_ = 'H';
 const _WIRE_TYPE_ = 'W';
-const _GROUND_TYPE = 'GND';
+const _GROUND_TYPE_ = 'GND';
 
 /* Fixed length of each symbol */
 const _GENERIC_L_ = 70;

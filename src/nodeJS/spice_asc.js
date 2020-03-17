@@ -8,6 +8,7 @@ const VCVS_t = 'E';
 const VCCS_t = 'G';
 const CCVS_t = 'H';
 const W_t = 'W';
+const GND_t = 'GND';
 const CCCS_t = '';
 
 const SUPPORTED_TYPES = [R_t, L_t, C_t, I_t, V_t, VCVS_t, VCCS_t, CCVS_t, CCCS_t];
@@ -201,6 +202,16 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
             x: parseInt(line[3]),
             y: parseInt(line[4])
           };
+          break;
+        case 'FLAG':
+          isInsert = true;
+          elem.id = `gnd-${i}`;
+          elem.type = GND_t;
+          elem.p_center = {
+            x: parseInt(line[1]),
+            y: parseInt(line[2])
+          };
+          elem.R = parseInt(line[3]);
           break;
         case 'SYMBOL':
           isInsert = true;
