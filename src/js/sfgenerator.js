@@ -16,11 +16,26 @@ function initSvgCircuit() {
   let ltspice = JSON.parse(getCookie('ltspice'));
   let _sfg = JSON.parse(getCookie('sfg_nodes'));
 
-  console.log(ltspice);
   let rect = document.getElementById(CIRCUIT_CANVAS_ID).getBoundingClientRect();
   let {asc, nodes} = fromAsc(ltspice, {x: rect.width*0.8, y: rect.height*1.5});
   generateCircuit(CIRCUIT_CANVAS_ID, asc);
   sfg_init(toSFG(nodes, _sfg));
+}
+
+function onToggleSvgCircuit(ele) {
+  let isHide = ele.checked;
+
+  if (isHide) {
+    removeSFG();
+    putCircuitToForeground();
+  } else {
+    let ltspice = JSON.parse(getCookie('ltspice'));
+    let _sfg = JSON.parse(getCookie('sfg_nodes'));
+
+    let rect = document.getElementById(CIRCUIT_CANVAS_ID).getBoundingClientRect();
+    let {nodes} = fromAsc(ltspice, {x: rect.width*0.8, y: rect.height*1.5});
+    sfg_init(toSFG(nodes, _sfg));
+  }
 }
 
 function initSvgraph() {

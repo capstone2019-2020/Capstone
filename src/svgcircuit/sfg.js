@@ -471,23 +471,18 @@ function sfg_render(V, E) {
     }
   }
 
-  let wrapper_g = document.getElementById(ID_SFG_WRAPPER_G);
-  if (sfg_DEFINED(wrapper_g)) {
-    getSFG().removeChild(wrapper_g);
-  }
+  removeSFG();
   sfg___ns(getSFG(), {},
     sfg_g(ID_SFG_WRAPPER_G, ...[...nodes, ...edges])
   );
 }
 
 function toSFG(nodes, sfg) {
-  console.log('toSFG', nodes, sfg);
   let _sfg = [];
   {
     let node;
     let i;
     for (i=0; i<sfg.length; i++) {
-      console.log('nodes', nodes);
       node = nodes.find(n => n.id === sfg[i].id);
       if (sfg_DEFINED(node)) {
         _sfg.push({
@@ -502,8 +497,14 @@ function toSFG(nodes, sfg) {
   return _sfg;
 }
 
+function removeSFG() {
+  let wrapper_g = document.getElementById(ID_SFG_WRAPPER_G);
+  if (sfg_DEFINED(wrapper_g)) {
+    getSFG().removeChild(wrapper_g);
+  }
+}
+
 function sfg_init(sfg) {
-  console.log('SFG INIT', sfg);
   let V = {}, E = {};
   {
     let i, v;

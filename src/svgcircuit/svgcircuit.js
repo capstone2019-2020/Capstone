@@ -10,3 +10,7 @@ const generateCircuit = (canvas_id, circuit_elems) => {
 	});
 };
 
+const putCircuitToForeground = () => {
+	// TODO: change circuit colours to foreground colours
+};
+
