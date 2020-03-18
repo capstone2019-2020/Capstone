@@ -208,12 +208,13 @@ const Path = (d) => {
   return path;
 };
 
-const Text = (msg, coord, size='1em') => {
+const Text = (msg, coord, size='1em', weight='normal') => {
   let text = createSVGElem('text');
   text.setAttribute('x', coord.x);
   text.setAttribute('y', coord.y);
   text.setAttribute('font-size', size);
   text.setAttribute('font-family', 'Calibri');
+  text.setAttribute('font-weight', weight);
   text.setAttribute('text-anchor', 'middle');
   text.setAttribute('fill', _DEFAULT_FONT_COLOR_);
   text.appendChild(
@@ -400,7 +401,7 @@ const voltageSymbol = (pos, neg) => {
   console.log(`pos: ${JSON.stringify(pos)}, neg: ${JSON.stringify(neg)}`);
   console.log(`orientation: ${orientation}`);
   msg = orientation === D || orientation === R ? '- +' : '+ -';
-  let symbol = Text(msg, center, font_size);
+  let symbol = Text(msg, center, font_size, 1);
   if (rotate)
     symbol.setAttribute('transform', `rotate(90, ${center.x}, ${center.y - OFFSET}) translate(0 4)`);
   else

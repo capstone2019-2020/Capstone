@@ -20,28 +20,26 @@
 
 </head>
 <body onload="initSvgraph(); generateSFG(); initSvgCircuit();">
+  <div class="dropdown">
+    <div id="menu-btn" class="menu-btn" onClick="toggleMenu()"></div>
+    <div id="dropdown-content" class="dropdown-content">
+      <a href="./buttonindex.html" title="Upload a new netlist file">New File</a>
+      <a id="export" class="export" onClick="toggleExportOptions()">Export SFG <i id="export-drop" class="fa fa-caret-down"></i></a>
+      <div id="export-options" class="export-options">
+        <a href="#" onClick="exportSFG('png')">PNG</a>
+        <a href="#" onClick="exportSFG('jpg')">JPG</a>
+      </div>
+    </div>
+  </div>
   <div id="main-div" class="main-div">
     <div id="left-div" class="left-div">
 
       <!--  SFG CANVVAS    -->
       <div class="left-top-panel">
         <!-- DROPDOWN MENU -->
-        <div class="dropdown">
-          <div id="menu-btn" class="menu-btn" onClick="toggleMenu()"></div>
-          <div id="dropdown-content" class="dropdown-content">
-            <a href="./buttonindex.html" title="Upload a new netlist file">New File</a>
-            <a id="export" class="export" onClick="toggleExportOptions()">Export SFG <i id="export-drop" class="fa fa-caret-down"></i></a>
-            <div id="export-options" class="export-options">
-              <a href="#" onClick="exportSFG('png')">PNG</a>
-              <a href="#" onClick="exportSFG('jpg')">JPG</a>
-            </div>
-          </div>
-        </div>
-        <h3 id="sfg-title">Signal Flow Graph</h3>
         <div id="sfg-wrapper" class="sfg-wrapper">
             <div id="sfg-canvas" class="sfg-canvas"></div>
             <i id="fit-icon" class='fas fa-expand' onClick="sfgFit()" title="Fit to Window"></i>
-          <div id="sfg-help-text" class="sfg-help-text">Please select a start and end node</div>
         </div>
       </div>
 
