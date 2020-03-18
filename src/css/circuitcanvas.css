@@ -9,3 +9,7 @@
   margin: auto;
   background-color: inherit;
 }
+
+.toggle-circuit {
+  position: absolute;
+}

@@ -46,7 +46,10 @@
       <!-- CIRCUIT CANVAS -->
       <div class="left-bottom-panel">
         <div class="circuit-canvas-wrapper">
-          <input type="checkbox" onclick="onToggleSvgCircuit(this)">Show Circuit Only</input>
+          <div class="toggle-circuit">
+            <input id="toggle-circuit" type="checkbox" onclick="onToggleSvgCircuit(this)"/>
+            <label for="toggle-circuit">Show Circuit Only</label>
+          </div>
           <svg class="circuit-canvas" id="circuit-canvas">
             <defs>
               <!-- arrowhead marker definition -->

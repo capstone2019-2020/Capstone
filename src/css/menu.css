@@ -20,7 +20,7 @@
 
 /* Dropdown button on hover & focus */
 .menu-btn:hover, .menu-btn:focus {
-  background-color: #6f2232;
+  background-color: #2b1d45;
   transition: 0.2s;
 }
 

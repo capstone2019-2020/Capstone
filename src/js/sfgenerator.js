@@ -18,16 +18,18 @@ function initSvgCircuit() {
 
   let rect = document.getElementById(CIRCUIT_CANVAS_ID).getBoundingClientRect();
   let {asc, nodes} = fromAsc(ltspice, {x: rect.width*0.8, y: rect.height*1.5});
+  setLocalStorage('circuit_asc', JSON.stringify(asc));
   generateCircuit(CIRCUIT_CANVAS_ID, asc);
   sfg_init(toSFG(nodes, _sfg));
 }
 
 function onToggleSvgCircuit(ele) {
   let isHide = ele.checked;
+  let asc = JSON.parse(getCookie('circuit_asc'));
 
   if (isHide) {
     removeSFG();
-    putCircuitToForeground();
+    putCircuitToForeground('circuit-canvas', asc);
   } else {
     let ltspice = JSON.parse(getCookie('ltspice'));
     let _sfg = JSON.parse(getCookie('sfg_nodes'));
@@ -35,6 +37,7 @@ function onToggleSvgCircuit(ele) {
     let rect = document.getElementById(CIRCUIT_CANVAS_ID).getBoundingClientRect();
     let {nodes} = fromAsc(ltspice, {x: rect.width*0.8, y: rect.height*1.5});
     sfg_init(toSFG(nodes, _sfg));
+    generateCircuit('circuit-canvas', asc);
   }
 }
 

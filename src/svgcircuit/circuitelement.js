@@ -21,9 +21,7 @@ const _DEP_L_ = 50;
 /* General constants applied to each element*/
 const _NODE_RADIUS_ = 2;
 const _LINE_WIDTH_ = 1.5;
-const _DEFAULT_COLOR_ = '#bababa';
-const _DEFAULT_FONT_COLOR_ = '#8f8f8f';
-const _DEFAULT_NODE_COLOR_ = '#8f8f8f';
+
 
 /* Element specific constants */
 const _RESISTOR_HEIGHT_ = 20;
@@ -34,6 +32,11 @@ const _GROUND_LENGTH_ = 30;
 const createSVGGroup = () => document.createElementNS(_SVG_NS_, 'g');
 const createSVGElem = (elem) => document.createElementNS(_SVG_NS_, elem);
 
+/* Toggleable colours */
+let _DEFAULT_COLOR_ = '#bababa';
+let _DEFAULT_FONT_COLOR_ = '#8f8f8f';
+let _DEFAULT_NODE_COLOR_ = '#8f8f8f';
+
 /**
  * Creates element specified by 'type'
  * Returns sg_svg <sg_g> element
@@ -43,10 +46,19 @@ const createSVGElem = (elem) => document.createElementNS(_SVG_NS_, elem);
  * @param pos_node - coordinate of positive node {x: _x, y: _y}
  * @param neg_node - coordinate of negative node {x: _x, y: _y}
  */
-const create = (type, id, center, R, coord1, coord2) => {
+const create = (type, id, center, R, coord1, coord2, toggle) => {
   const { pos_node, neg_node} = center !== undefined ? computeStartEndPosition(center, R) : -1;
   // console.log(`Creating element: {type: ${type}, id: ${id},
   //   coord1: (${pos_node.x}, ${pos_node.y}), coord2: (${neg_node.x}, ${neg_node.y})`);
+  if (toggle) {
+    _DEFAULT_COLOR_ = 'black';
+    _DEFAULT_FONT_COLOR_ = 'black';
+    _DEFAULT_NODE_COLOR_ = 'black';
+  } else {
+    _DEFAULT_COLOR_ = '#bababa';
+    _DEFAULT_FONT_COLOR_ = '#8f8f8f';
+    _DEFAULT_NODE_COLOR_ = '#8f8f8f';
+  }
 
   let element = createSVGGroup();
   switch(type) {
