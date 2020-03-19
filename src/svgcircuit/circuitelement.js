@@ -398,7 +398,7 @@ const dependentSymbol = (start, end) => {
 const voltageSymbol = (pos, neg) => {
   const L='l', R='r', U='u', D='d';
   const OFFSET = 5;
-  const font_size = '2em';
+  const font_size = '1.5em';
   const horiz = isHorizontal(pos, neg);
 
   let orientation, center, msg, rotate=false;
@@ -412,12 +412,12 @@ const voltageSymbol = (pos, neg) => {
   }
   // console.log(`pos: ${JSON.stringify(pos)}, neg: ${JSON.stringify(neg)}`);
   // console.log(`orientation: ${orientation}`);
-  msg = orientation === D || orientation === R ? '- +' : '+ -';
-  let symbol = Text(msg, center, font_size, 1);
+  msg = orientation === D || orientation === R ? 'I +' : '+ I';
+  let symbol = Text(msg, center, font_size, 0.5);
   if (rotate)
-    symbol.setAttribute('transform', `rotate(90, ${center.x}, ${center.y - OFFSET}) translate(0 4)`);
+    symbol.setAttribute('transform', `rotate(90, ${center.x}, ${center.y - OFFSET}) translate(0 2)`);
   else
-    symbol.setAttribute('transform', 'translate(0 3)');
+    symbol.setAttribute('transform', 'translate(0 2)');
   return symbol;
 };
 
