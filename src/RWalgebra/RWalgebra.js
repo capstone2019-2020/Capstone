@@ -638,10 +638,10 @@ Expression.prototype.phase = function() {
   imag_terms.forEach( t => t.imag = false );
 
   /* Special cases: real = 0 or imag = 0 */
-  if (!real_terms.length)
-    return 90;
   if (!imag_terms.length)
     return 0;
+  if (!real_terms.length)
+    return 90;
 
   const imag = new Expression(imag_terms);
   const real = new Expression(real_terms);
@@ -680,10 +680,11 @@ Expression.prototype.magnitude = function() {
   else
     real_exp = new Expression(real);
 
-  console.log(`magnitude imag: ${imag_exp}`);
-  console.log(`magnitude real: ${real_exp}`);
-  console.log(`magnitude: 20 * ${LOG_10} ( ${SQRT}( (${real_exp})^2 + (${imag_exp})^2 ))`);
-
+  if (DEBUG) {
+    console.log(`magnitude imag: ${imag_exp}`);
+    console.log(`magnitude real: ${real_exp}`);
+    console.log(`magnitude: 20 * ${LOG_10} ( ${SQRT}( (${real_exp})^2 + (${imag_exp})^2 ))`);
+  }
 
   /* |T(jw)| = 20 * log10 ( sqrt(real^2 + imag^2)) */
   return `20 * ${LOG_10} ( ${SQRT}( (${real_exp})^2 + (${imag_exp})^2 ))`;
