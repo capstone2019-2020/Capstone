@@ -263,8 +263,6 @@ async function generateSFG() {
       clickedNodes.splice(i, 1);
 
       highlightForwardPaths(cy.getElementById(startNode));
-      document.getElementById('sfg-help-text').style.display = 'inline-block'
-
     }
     /* Case 2: node was not clicked yet and only one element selected */
     else if (clickedNodes.length === 0) {
@@ -283,7 +281,6 @@ async function generateSFG() {
       resetEdgeColors();
       highlightStartEndPath();
       simulate();
-      document.getElementById('sfg-help-text').style.display = 'none';
     }
     console.log(clickedNodes);
   });

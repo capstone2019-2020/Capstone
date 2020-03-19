@@ -132,6 +132,6 @@ const layout = {
 
 
 
-const selectionType = 'additive';
+const selectionType = 'single';
 
 const cyto = { style, layout, selectionType };
