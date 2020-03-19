@@ -116,6 +116,7 @@ Node.prototype.computeDpi = function(){
             inverseSum.add(r.value.inverse());
     //}
     });
+   console.log(`inverseSum: ${inverseSum}`);
     return new Equation(lhs, inverseSum.inverse());
 };
 

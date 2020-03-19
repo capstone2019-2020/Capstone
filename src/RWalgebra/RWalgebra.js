@@ -156,6 +156,19 @@ const simplify = (terms) => {
   i[0].imag = true;
   r[0].coefficient = 0;
   terms.forEach( t => {
+    /*
+     * SUPER SPECIAL CASE: if all the variables in an expression cancel out
+     */
+    if (typeof t.fraction.denom !== 'number') {
+      let term_exp = new Expression([t.copy()]);
+      let evaluated = term_exp.eval({w: Math.random()});
+      if (evaluated === 1) {
+        r[0].coefficient += 1;
+        return;
+      }
+    }
+
+
     if (!t.variables.length) { // no variables
       if (typeof t.fraction.denom !== 'number')
         f.push(t);
@@ -651,12 +664,29 @@ Expression.prototype.magnitude = function() {
   const real = terms.filter(t => !t.imag);
   const imag = terms.filter(t => t.imag);
   imag.forEach( t => t.imag = false );
-  const real_squared = multiplyTerms(real, real); // compute a^2
-  const imag_squared = multiplyTerms(imag, imag); // compuate b^2
-  const sum = new Expression(addTerms(real_squared, imag_squared));
+  // const real_squared = multiplyTerms(real, real); // compute a^2
+  // const imag_squared = multiplyTerms(imag, imag); // compuate b^2
+  // const sum = new Expression(addTerms(real_squared, imag_squared));
+
+  let imag_exp;
+  if (!imag.length) // no imaginary terms
+    imag_exp = new Expression(0);
+  else
+    imag_exp = new Expression(imag);
+
+  let real_exp;
+  if (!real.length)
+    real_exp = new Expression(0);
+  else
+    real_exp = new Expression(real);
+
+  console.log(`magnitude imag: ${imag_exp}`);
+  console.log(`magnitude real: ${real_exp}`);
+  console.log(`magnitude: 20 * ${LOG_10} ( ${SQRT}( (${real_exp})^2 + (${imag_exp})^2 ))`);
+
 
   /* |T(jw)| = 20 * log10 ( sqrt(real^2 + imag^2)) */
-  return `20 * ${LOG_10} ( ${SQRT}( ${sum.toString()} ))`;
+  return `20 * ${LOG_10} ( ${SQRT}( (${real_exp})^2 + (${imag_exp})^2 ))`;
 };
 
 
