@@ -5,6 +5,11 @@
 
 .circuit-canvas-wrapper {
   height: 100%;
-  width: 80%;
+  width: 100%;
   margin: auto;
+  background-color: inherit;
+}
+
+.toggle-circuit {
+  position: absolute;
 }

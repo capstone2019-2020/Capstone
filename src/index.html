@@ -7,6 +7,7 @@
   <link rel="stylesheet" type="text/css" href="css/sfgcanvas.css"/>
   <link rel="stylesheet" type="text/css" href="css/circuitcanvas.css"/>
   <link rel="stylesheet" type="text/css" href="css/menu.css"/>
+  <link rel="stylesheet" type="text/css" href="css/switch-toggle.css"/>
   <link href='https://fonts.googleapis.com/css?family=Nunito Sans' rel='stylesheet'>
 
   <script src='https://kit.fontawesome.com/a076d05399.js'></script>
@@ -20,34 +21,43 @@
 
 </head>
 <body onload="initSvgraph(); generateSFG(); initSvgCircuit();">
+  <div class="dropdown">
+    <div id="menu-btn" class="menu-btn" onClick="location.href='./buttonindex.html'">New File</div>
+    <div id="menu-btn2" class="menu-btn" onClick="exportSFG('png')">Export SFG (png)</div>
+    <div id="menu-btn3" class="menu-btn" onClick="exportSFG('jpg')">Export SFG (jpg)</div>
+    <div id="dropdown-content" class="dropdown-content">
+      <a href="./buttonindex.html" title="Upload a new netlist file">New File</a>
+      <a id="export" class="export" onClick="toggleExportOptions()">Export SFG <i id="export-drop" class="fa fa-caret-down"></i></a>
+      <div id="export-options" class="export-options">
+        <a href="#" onClick="exportSFG('png')">PNG</a>
+        <a href="#" onClick="exportSFG('jpg')">JPG</a>
+      </div>
+    </div>
+  </div>
   <div id="main-div" class="main-div">
     <div id="left-div" class="left-div">
 
       <!--  SFG CANVVAS    -->
       <div class="left-top-panel">
         <!-- DROPDOWN MENU -->
-        <div class="dropdown">
-          <div id="menu-btn" class="menu-btn" onClick="toggleMenu()"></div>
-          <div id="dropdown-content" class="dropdown-content">
-            <a href="./buttonindex.html" title="Upload a new netlist file">New File</a>
-            <a id="export" class="export" onClick="toggleExportOptions()">Export SFG <i id="export-drop" class="fa fa-caret-down"></i></a>
-            <div id="export-options" class="export-options">
-              <a href="#" onClick="exportSFG('png')">PNG</a>
-              <a href="#" onClick="exportSFG('jpg')">JPG</a>
-            </div>
-          </div>
-        </div>
-        <h3 id="sfg-title">Signal Flow Graph</h3>
         <div id="sfg-wrapper" class="sfg-wrapper">
             <div id="sfg-canvas" class="sfg-canvas"></div>
             <i id="fit-icon" class='fas fa-expand' onClick="sfgFit()" title="Fit to Window"></i>
-          <div id="sfg-help-text" class="sfg-help-text">Please select a start and end node</div>
         </div>
       </div>
 
       <!-- CIRCUIT CANVAS -->
       <div class="left-bottom-panel">
         <div class="circuit-canvas-wrapper">
+          <div class="toggle-circuit">
+<!--            <input id="toggle-circuit" type="checkbox" onclick="onToggleSvgCircuit(this)"/>-->
+            <!-- Rounded switch -->
+            <label class="switch">
+              <input type="checkbox" id="toggle-circuit" onclick="onToggleSvgCircuit(this)">
+              <span class="slider round"></span>
+            </label>
+            <label class="switch-label" for="toggle-circuit">Show Circuit Only</label>
+          </div>
           <svg class="circuit-canvas" id="circuit-canvas">
             <defs>
               <!-- arrowhead marker definition -->

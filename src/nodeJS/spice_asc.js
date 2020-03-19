@@ -338,15 +338,23 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
 
   {
     let minX = Infinity, minY = Infinity;
-    let centerX = Math.floor(xDim/2), centerY = Math.floor(yDim/2);
+    let maxX = -Infinity, maxY = -Infinity;
+    let centerX = Math.floor(dim.x/2), centerY = Math.floor(dim.y/2);
+    let vecAdj;
     let avgX = 0, avgY = 0;
-    let numPoints = 1;
+    let numPoints = 0;
     let xScale = Math.min(1,dim.x/xDim);
     let yScale = Math.min(1, dim.y/yDim);
     const setMin = (vec) => {
       if (DEFINED(vec)) {
         minX = Math.min(vec.x, minX);
         minY = Math.min(vec.y, minY);
+      }
+    };
+    const setMax = (vec) => {
+      if (DEFINED(vec)) {
+        maxX = Math.max(vec.x, maxX);
+        maxY = Math.max(vec.y, maxY);
       }
     };
     const setAverage = (vec) => {
@@ -356,38 +364,31 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
         numPoints++;
       }
     };
-    const adjustPoint = (vec) => {
-      if (DEFINED(vec)) {
-        return {
-          x: vec.x - minX + 50,
-          y: vec.y - minY + 100
-        };
-      } else {
-        return vec;
-      }
-    };
     const adjustScale = (vec) => {
+      let retVec;
       if (DEFINED(vec)) {
-        return {
+        retVec = {
           x: Math.floor(vec.x * xScale),
           y: Math.floor(vec.y * yScale)
         };
       } else {
         return vec;
       }
+      return retVec;
     };
     const adjustPos = (vec, vecAdj) => {
+      let retVec;
       if (DEFINED(vec)) {
-        return {
+        retVec = {
           x: vec.x + vecAdj.x,
           y: vec.y + vecAdj.y
         }
       } else {
-        return vec;
+        retVec = vec;
       }
+      return retVec;
     };
 
-    // normalize coordinates
     let elem;
     let i;
     for (i=0; i<asc.length; i++) {
@@ -395,20 +396,35 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
       setMin(elem.p_center);
       setMin(elem.p_from);
       setMin(elem.p_to);
-      setAverage(elem.p_center);
-      setAverage(elem.p_from);
-      setAverage(elem.p_to);
     }
-    avgX = Math.floor(avgX/numPoints);
-    avgY = Math.floor(avgY/numPoints);
 
+    /*
+     * adjust position so that minimum x / y value is
+     * (0,0) (plus some offset)
+     */
+    vecAdj = {x: -minX + 50, y: -minY + 100};
     for (i=0; i<asc.length; i++) {
       elem = asc[i];
-      elem.p_center = adjustPoint(elem.p_center);
-      elem.p_from = adjustPoint(elem.p_from);
-      elem.p_to = adjustPoint(elem.p_to);
+      elem.p_center = adjustPos(elem.p_center, vecAdj);
+      elem.p_from = adjustPos(elem.p_from, vecAdj);
+      elem.p_to = adjustPos(elem.p_to, vecAdj);
     }
 
+    maxX = -Infinity;
+    maxY = -Infinity;
+    for (i=0; i<asc.length; i++) {
+      elem = asc[i];
+      setMax(elem.p_center);
+      setMax(elem.p_from);
+      setMax(elem.p_to);
+    }
+
+    /*
+     * Scale down the components/wires so that it fits
+     * within the specified width/height
+     */
+    xScale = Math.min(1,dim.x/maxX*0.9);
+    yScale = Math.min(1, dim.y/maxY*0.9);
     for (i=0; i<asc.length; i++) {
       elem = asc[i];
       elem.p_center = adjustScale(elem.p_center);
@@ -416,8 +432,26 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
       elem.p_to = adjustScale(elem.p_to);
     }
 
-    let vecAdj = {
-      x: centerX - avgX,
+    // average of coordinates
+    minX = Infinity;
+    minY = Infinity;
+    maxX = -Infinity;
+    maxY = -Infinity;
+    for (i=0; i<asc.length; i++) {
+      elem = asc[i];
+      setMin(elem.p_center);
+      setMin(elem.p_from);
+      setMin(elem.p_to);
+      setMax(elem.p_center);
+      setMax(elem.p_from);
+      setMax(elem.p_to);
+    }
+
+    /*
+     * Center it
+     */
+    vecAdj = {
+      x: centerX - ((maxX-minX)/2+minX),
       y: 0 /* Do not center vertically */
     };
     for (i=0; i<asc.length; i++) {
