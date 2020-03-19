@@ -70,25 +70,16 @@
 
 .menu-btn {
   cursor: pointer;
-  background-color: #2b2b2b;
-  position: absolute;
-  width: 125px;
-  height: 27px;
-  margin: 10px;
-  text-align: center;
-  color: white;
+  background-color: white;
+  display: inline-block;
+  float: left;
+  width: 94%;
+  height: 20px;
+  text-align: left;
+  color: black;
   font-size: 1em;
-  padding-top: 8px;
-}
-
-#menu-btn2 {
-  margin-top: 45px;
-  /*border-top: 1px solid whitesmoke;*/
-}
-
-#menu-btn3 {
-  margin-top: 80px;
-  /*border-top: 1px solid whitesmoke;*/
+  padding: 4% 3% 3% 3%;
+  border-bottom: 1px solid black;
 }
 
 html {
