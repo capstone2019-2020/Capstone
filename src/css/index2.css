@@ -74,12 +74,12 @@
   display: inline-block;
   float: left;
   width: 94%;
-  height: 20px;
+  height: 16px;
   text-align: left;
   color: black;
   font-size: 1em;
   padding: 4% 3% 3% 3%;
-  border-bottom: 1px solid black;
+  border-bottom: 0.5px solid black;
 }
 
 html {

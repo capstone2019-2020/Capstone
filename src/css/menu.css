@@ -28,13 +28,13 @@
 .dropdown {
   top: 10px;
   left: 10px;
-  width: 120px;
+  width: 105px;
   max-height: 400px;
   position: fixed;
   display: inline-block;
   font-family: Nunito Sans, sans-serif;
-  font-size: 13px;
-  border: 1px solid black;
+  font-size: 12px;
+  border: 0.5px solid black;
   border-bottom: 0;
 }
 

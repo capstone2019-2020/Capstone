@@ -232,7 +232,7 @@ function sg_foreignObject(vec, w, h, config, ...children) {
   }, ...children);
 }
 
-function exponent(vec, base, exp) {
+function exponent(vec, base, exp, config={}) {
   const _math = document.createElementNS(MATHML_NS, 'math');
   const _msup = document.createElementNS(MATHML_NS,'msup');
   const base_mn = document.createElementNS(MATHML_NS,'mn');
@@ -243,9 +243,12 @@ function exponent(vec, base, exp) {
   _msup.appendChild(exp_mn);
   _math.appendChild(_msup);
 
-  return sg_foreignObject(vec, 40, 40,
-    {style: sg_CSS({'z-index': 10})},
-    _math
+  return sg___ns(
+    sg_foreignObject(vec, 40, 40,
+      {style: sg_CSS({'z-index': 10})},
+      _math
+    ),
+    config
   );
 }
 
@@ -351,11 +354,16 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio,
     if (SEMI_LOG_MODE) {
       partitions.push(exponent(
         sg___vec(sg_RIGHT(x_coord, -10), sg_DOWN(ORIGIN_Y1, 5)),
-        10, xval));
+        10, xval, {
+          'font-size': '12px'
+        }));
     } else {
       partitions.push(sg_text(
         sg___vec(sg_RIGHT(x_coord, 5), sg_DOWN(ORIGIN_Y1, 20)),
-        xval, {'text-anchor': 'end'})
+        xval, {
+          'text-anchor': 'end',
+          'font-size': '10px'
+        })
       );
     }
 
@@ -364,7 +372,8 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio,
         sg_line(
           sg___vec(x_coord, sg_UP(START_Y, 5)),
           sg___vec(x_coord, sg_UP(START_Y, leny)), {
-            stroke: 'grey',
+            'stroke': 'grey',
+            'stroke-width': '0.5',
             'stroke-opacity': '0.3',
             'stroke-dasharray': '4,6'
           }
@@ -381,7 +390,8 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio,
       partitions.push(sg_line(
         sg___vec(x_coord, sg_UP(START_Y, 5)),
         sg___vec(x_coord, sg_UP(START_Y, leny)), {
-          stroke: 'grey',
+          'stroke': 'grey',
+          'stroke-width': '0.5',
           'stroke-opacity': '0.3',
         }
       ));
@@ -439,7 +449,7 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
     let abs_yval = Math.abs(yval);
     yval = (abs_yval >= 1000) || (abs_yval <= 0.001 && abs_yval > 0)
       ? sg_EXP(yval, 1)
-      : sg_FIXED(yval, 2);
+      : sg_FIXED(yval, 1);
 
     let _yval = `${yval}${label_postfix}`;
     partitions.push(
@@ -447,9 +457,12 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
         sg___vec(
           is_left
             ? sg_LEFT(AXIS_XPOS,10)
-            : sg_RIGHT(AXIS_XPOS, 50),
+            : sg_RIGHT(AXIS_XPOS, 40),
           sg_DOWN(y_coord,5)),
-        _yval, {'text-anchor': 'end'}
+        _yval, {
+          'text-anchor': 'end',
+          'font-size': '12px'
+        }
       )
     );
 
@@ -460,6 +473,7 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
           sg___vec(sg_RIGHT(START_X,lenx), y_coord),
           {
             'stroke': 'grey',
+            'stroke-width': '0.5',
             'stroke-opacity': '0.5',
             'stroke-dasharray': '4,6'
           }
@@ -471,8 +485,8 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
   return [
     sg_text(sg___vec(
       is_left
-        ? sg_LEFT(START_X, 85)
-        : sg_RIGHT(START_X+LENGTH_X, 60),
+        ? sg_LEFT(START_X, 50)
+        : sg_RIGHT(START_X+LENGTH_X, 50),
       sg_UP(START_Y, sg_DOWN(sg_HALF(leny),40))
       ),
       label, {
@@ -505,8 +519,8 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
 }
 
 function legend(fpoints, ID_LEGEND, START_X) {
-  let width = 10, height = 50, rownum = 2;
-  let fontsize = 14; // pixels
+  let width = 7, heightPerRow = 16, rownum = 1;
+  let fontsize = 10; // pixels
 
   let txt_elems = [], color_elems = [];
 
@@ -521,11 +535,11 @@ function legend(fpoints, ID_LEGEND, START_X) {
         max_width = _fpoint.f.length;
       }
       txt_elems.push(sg_text(sg___vec(
-        sg_RIGHT(START_X, width), sg_DOWN(10, 20+20*(j-i))
+        sg_RIGHT(START_X, width), sg_DOWN(10, 10+15*(j-i))
       ), _fpoint.f, {
         style: sg_CSS({
           'color': _fpoint.color,
-          'font-size': fontsize,
+          'font-size': `${fontsize}px`,
           'font-weight': 100
         })
       }));
@@ -537,7 +551,7 @@ function legend(fpoints, ID_LEGEND, START_X) {
       _fpoint = fpoints[j];
       color_elems.push(sg_rect(sg___vec(
         sg_RIGHT(START_X, width+inc_width+10),
-        sg_DOWN(10, 10+20*(j-i))
+        sg_DOWN(10, 3+15*(j-i))
         ), 30, fontsize, {
           fill: _fpoint.color,
           stroke: 'black'
@@ -546,12 +560,12 @@ function legend(fpoints, ID_LEGEND, START_X) {
     }
 
     /* Expand the row */
-    width+=(inc_width+60);
+    width+=(inc_width+50);
     max_width = 0;
   }
 
   return [
-    sg_rect(sg___vec(START_X, 10), width, height, {
+    sg_rect(sg___vec(START_X, 10), width, heightPerRow*rownum, {
       'id': ID_LEGEND,
       'stroke': 'black',
       'stroke-width': '1px',
@@ -982,7 +996,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       parts: ygrid1,
       label: config.left_y_axis.label,
       grid: GRID_MODE,
-      label_postfix: ' dB',
+      label_postfix: '',
       START_X: this.START_X,
       START_Y: this.START_Y,
       LENGTH_X: this.LENGTH_X
@@ -1094,9 +1108,9 @@ const SVGraph_initializer = (function()
 
     /* Everything is in pixels */
     let padding = {
-      right: 75,
-      left: 100,
-      top: 70,
+      right: 65,
+      left: 55,
+      top: 35,
       bottom: 40
     };
     this.WIDTH = sg_CLAMP(width, MIN_WIDTH, MAX_WIDTH);
