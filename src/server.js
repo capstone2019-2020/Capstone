@@ -214,24 +214,10 @@ app.post("/input-file", (req, res) => {
 //         ))
 //     );
 
-    // Combine DPI and shortcircuit - ERROR WITH DPI * SHORCIRCUIT
-    // ONLY USE THIS CASE DONT USE NODAL CASE
-    // for (var i = 0; i < temp.dpi.length; i++) {
-    //     // let lhs = new Expression(`V${temp.nodeId[i]}`);
-    //     // let rhs = temp.dpi[i].multiply(temp.shorCircuitCurrent[i]);
-    //     // let tempEqn = new Equation(lhs, rhs);
-    //     console.log(temp.dpi[i].toString());
-    //     equations.push(algebra.parse(temp.dpi[i].toString()));
-    // }
-    //
-    // for (var i = 0; i < temp.shorCircuitCurrent.length; i++) {
-    //     console.log(temp.shorCircuitCurrent[i].toString());
-    //     equations.push(algebra.parse(temp.shorCircuitCurrent[i].toString()));
-    // }
     console.log(temp.length);
     for (var i = 0; i < temp.length; i++) {
-        console.log(temp[i].toString());
-        equations.push(algebra.parse(temp[i].toString()));
+//         console.log(temp[i].toString());
+        equations.push(temp[i].toString());
     }
 
     if(!circuit) {
