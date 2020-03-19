@@ -99,7 +99,7 @@ const computeStartEndPosition = (centre, R) => {
   let pos_node = {x: 0, y: 0};
   let neg_node = {x: 0, y: 0};
   const h = _GENERIC_L_/2;
-  console.log( `centre: ${JSON.stringify(centre)}, R: ${R}`);
+  // console.log( `centre: ${JSON.stringify(centre)}, R: ${R}`);
   switch (R) {
     case 0:
       pos_node = {x: centre.x, y: centre.y - h};
@@ -179,7 +179,7 @@ const createLines = (coord1, coord2, length) => {
  */
 
 const Node = (coord) => {
-  console.log('CREATING NODE...');
+  // console.log('CREATING NODE...');
   let node = createSVGElem('circle');
   node.setAttribute('cx', coord.x);
   node.setAttribute('cy', coord.y);
@@ -339,7 +339,7 @@ const capacitorSymbol = (start, end) => {
     x2 = end.x;
     y1 = start.y + OFFSET;
     y2 = end.y - OFFSET;
-    console.log(`${x1}, ${x2}, ${y1}, ${y2}`);
+    // console.log(`${x1}, ${x2}, ${y1}, ${y2}`);
     cap.appendChild(Line({x: x1, y: y1}, {x: x1, y: y2}));
     cap.appendChild(Line({x: x2, y: y1}, {x: x2, y: y2}));
   } else {
@@ -410,8 +410,8 @@ const voltageSymbol = (pos, neg) => {
     orientation = pos.y > neg.y ? D : U;
     rotate = true;
   }
-  console.log(`pos: ${JSON.stringify(pos)}, neg: ${JSON.stringify(neg)}`);
-  console.log(`orientation: ${orientation}`);
+  // console.log(`pos: ${JSON.stringify(pos)}, neg: ${JSON.stringify(neg)}`);
+  // console.log(`orientation: ${orientation}`);
   msg = orientation === D || orientation === R ? '- +' : '+ -';
   let symbol = Text(msg, center, font_size, 1);
   if (rotate)
@@ -514,7 +514,7 @@ const GenericElement = (id, coord1, coord2, length) => {
  * @constructor
  */
 const Resistor = (id, coord1, coord2) => {
-  console.log('CREATING RESISTOR...');
+  // console.log('CREATING RESISTOR...');
   let resistor = GenericElement(id, coord1, coord2, _RESISTOR_L_);
 
   const {start, end} = getSymbolBounds(coord1, coord2, _RESISTOR_L_);
@@ -524,7 +524,7 @@ const Resistor = (id, coord1, coord2) => {
 };
 
 const Capacitor = (id, coord1, coord2) => {
-  console.log('CREATING CAPACITOR...');
+  // console.log('CREATING CAPACITOR...');
   let capacitor = GenericElement(id, coord1, coord2, _CAP_L_);
 
   const {start, end} = getSymbolBounds(coord1, coord2, _CAP_L_);
@@ -534,7 +534,7 @@ const Capacitor = (id, coord1, coord2) => {
 };
 
 const IndependentVoltage = (id, coord1, coord2) => {
-  console.log('CREATING INDEPENDENT VOLTAGE SOURCE...');
+  // console.log('CREATING INDEPENDENT VOLTAGE SOURCE...');
   let voltage_src = GenericElement(id, coord1, coord2, _INDEP_L_);
 
   const {start, end} = getSymbolBounds(coord1, coord2, _INDEP_L_);
@@ -544,7 +544,7 @@ const IndependentVoltage = (id, coord1, coord2) => {
 };
 
 const IndependentCurrent = (id, coord1, coord2) => {
-  console.log('CREATING INDEPENDENT CURRENT...');
+  // console.log('CREATING INDEPENDENT CURRENT...');
   let current_src = GenericElement(id, coord1, coord2, _INDEP_L_);
 
   const {start, end} = getSymbolBounds(coord1, coord2, _INDEP_L_);
@@ -554,7 +554,7 @@ const IndependentCurrent = (id, coord1, coord2) => {
 };
 
 const DependentVoltage = (id, coord1, coord2) => {
-  console.log('CREATING DEPENDENT VOLTAGE SOURCE...');
+  // console.log('CREATING DEPENDENT VOLTAGE SOURCE...');
   let voltage_src = GenericElement(id, coord1, coord2, _DEP_L_);
 
   const {start, end} = getSymbolBounds(coord1, coord2, _DEP_L_);
@@ -564,7 +564,7 @@ const DependentVoltage = (id, coord1, coord2) => {
 };
 
 const DependentCurrent = (id, coord1, coord2) => {
-  console.log('CREATING DEPENDENT CURRENT SOURCE...');
+  // console.log('CREATING DEPENDENT CURRENT SOURCE...');
   let current_src = GenericElement(id, coord1, coord2, _DEP_L_);
 
   const {start, end} = getSymbolBounds(coord1, coord2, _DEP_L_);
@@ -578,7 +578,7 @@ const Wire = (coord1, coord2) => {
 };
 
 const Ground = (center) => {
-  console.log('CREATING GROUND SYMBOL...');
+  // console.log('CREATING GROUND SYMBOL...');
   return groundSymbol(center);
 };
 

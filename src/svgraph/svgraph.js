@@ -37,6 +37,7 @@ const sg_DEFINED = (v) => (typeof v !== 'undefined') && (v !== null);
 const sg_INFINITY = (v) => Math.abs(v) === Infinity;
 const sg_RANGE = (n, l, u) => n >= l && n < u;
 const sg_CLAMP = (s, lb, ub) => sg_MIN(sg_MAX(s, lb), ub);
+const sg_CLAMP_STRING = (str, limit) => str.length > limit ? `${str.slice(0,limit)} ..` : str;
 
 /* loggers */
 const __LOG = (l, msg, ...p) => {
@@ -296,6 +297,13 @@ function sg_polyline(points, config={}, cb) {
   });
 }
 
+function sg_title(title, config={}) {
+  const t = document.createElementNS(SVG_NS, 'title');
+  t.innerHTML = title;
+
+  return sg___ns(t, config);
+}
+
 function plot(ORIGIN_X, dp, x_cratio, y_cratio, color, ylb,
               START_X, START_Y, LENGTH_X) {
   let points = '';
@@ -525,33 +533,42 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
 
 function legend(fpoints, ID_LEGEND, START_X) {
   let width = 7, heightPerRow = 16, rownum = 1;
-  let fontsize = 10; // pixels
+  const fontsize = 10; // pixels
+  const maxChars = 22;
 
   let txt_elems = [], color_elems = [];
 
   let i, j, _i;
+  let fname, fname_full;
   let _fpoint, max_width = 0, inc_width;
   for (i=0; i<fpoints.length; i+=rownum) {
     /* Construct legend using row-major order */
     _i = sg_MIN(i+rownum, fpoints.length);
     for (j=i; j<_i; j++) {
       _fpoint = fpoints[j];
-      if (_fpoint.f.length > max_width) {
-        max_width = _fpoint.f.length;
+
+      fname_full = _fpoint.f.replace('w','ω');
+      fname = sg_CLAMP_STRING(fname_full, maxChars);
+      if (fname.length > max_width) {
+        max_width = fname.length;
       }
-      txt_elems.push(sg_text(sg___vec(
-        sg_RIGHT(START_X, width), sg_DOWN(10, 10+15*(j-i))
-      ), _fpoint.f, {
-        style: sg_CSS({
-          'color': _fpoint.color,
-          'font-size': `${fontsize}px`,
-          'font-weight': 100
-        })
-      }));
+      txt_elems.push(sg___ns(
+        sg_text(sg___vec(
+          sg_RIGHT(START_X, width), sg_DOWN(10, 10+15*(j-i))
+        ), fname, {
+          style: sg_CSS({
+            'color': _fpoint.color,
+            'font-size': `${fontsize}px`,
+            'font-weight': 100
+          })
+        }),
+        {},
+        sg_title(fname_full)
+      ));
     }
 
     /* Color pallet */
-    inc_width = fontsize*(max_width*0.45);
+    inc_width = fontsize*(max_width*0.35);
     for (j=i; j<_i; j++) {
       _fpoint = fpoints[j];
       color_elems.push(sg_rect(sg___vec(
@@ -770,7 +787,7 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub) {
     let i, yval, xlog;
     for (i=0; i<logvals.length; i++) {
       xlog = logvals[i];
-      yval = parser.evaluate(`f(${sg_EXP(10, xlog)})`);
+      yval = parser.evaluate(`f(${Math.pow(10, xlog)})`);
       if (!isNaN(yval) && !sg_INFINITY(yval)) {
         yub = sg_MAX(yval, yub);
         ylb = sg_MIN(yval, ylb);
@@ -1191,6 +1208,7 @@ const SVGraph_initializer = (function()
     let _this = this;
     let X, Y;
     _this.get_Svgraph().addEventListener('mousemove', event => {
+      _this = this;
       let {left, top} = _this.get_BB();
       X = event.clientX-left; Y = event.clientY-top;
       if (Y > _this.START_Y
@@ -1287,14 +1305,17 @@ const SVGraph_initializer = (function()
         }
       };
 
-      tracer_guide('ORIGIN_Y1', fpoints1, _this.ORIGIN_Y1,
+      tracer_guide(`${_this.ID_GRAPH_SVG}-ORIGIN-Y1`,
+        fpoints1, _this.ORIGIN_Y1,
         ylb1, yub1, sample_amt1);
-      tracer_guide('ORIGIN_Y2', fpoints2,
-        _this.ORIGIN_Y2, ylb2, yub2, sample_amt2);
+      tracer_guide(`${_this.ID_GRAPH_SVG}-ORIGIN-Y2`,
+        fpoints2, _this.ORIGIN_Y2,
+        ylb2, yub2, sample_amt2);
     });
 
     let intervalId = 0;
     _this.get_Svgraph().addEventListener('mousedown', event => {
+      _this = this;
       let {left, top} = _this.get_BB();
       X = event.clientX-left; Y = event.clientY-top;
       if (Y > _this.START_Y
@@ -1432,6 +1453,7 @@ const SVGraph_initializer = (function()
     });
 
     _this.get_Svgraph().addEventListener('mouseup', () => {
+      _this = this;
       if (intervalId) {
         clearInterval(intervalId);
         intervalId = 0;
@@ -1439,6 +1461,7 @@ const SVGraph_initializer = (function()
     });
 
     return {
+      _this: this,
       put(left_funcs, right_funcs) {
         /* =========== Put render =========== */
         sg_COLOR(true);
@@ -1447,7 +1470,7 @@ const SVGraph_initializer = (function()
           xlb, xub, ylb1, yub1, ylb2, yub2,
           xgrid, ygrid1, ygrid2,
           sample_amt1, sample_amt2, fpoints1, fpoints2
-        } = render.bind(_this)(config, undefined,
+        } = render.bind(this._this)(config, undefined,
           left_funcs, right_funcs,
           xlb, xub, ylb1, yub1, ylb2, yub2,
           xgrid, ygrid1, ygrid2,
@@ -1465,7 +1488,7 @@ const SVGraph_initializer = (function()
           xlb, xub, ylb1, yub1, ylb2, yub2,
           xgrid, ygrid1, ygrid2,
           sample_amt1, sample_amt2, fpoints1, fpoints2
-        } = render.bind(_this)(config, undefined,
+        } = render.bind(this._this)(config, undefined,
           axis1_funcs, axis2_funcs,
           xlb, xub, ylb1, yub1, ylb2, yub2,
           xgrid, ygrid1, ygrid2,
