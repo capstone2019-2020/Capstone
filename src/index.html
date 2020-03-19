@@ -7,6 +7,7 @@
   <link rel="stylesheet" type="text/css" href="css/sfgcanvas.css"/>
   <link rel="stylesheet" type="text/css" href="css/circuitcanvas.css"/>
   <link rel="stylesheet" type="text/css" href="css/menu.css"/>
+  <link rel="stylesheet" type="text/css" href="css/switch-toggle.css"/>
   <link href='https://fonts.googleapis.com/css?family=Nunito Sans' rel='stylesheet'>
 
   <script src='https://kit.fontawesome.com/a076d05399.js'></script>
@@ -49,7 +50,12 @@
       <div class="left-bottom-panel">
         <div class="circuit-canvas-wrapper">
           <div class="toggle-circuit">
-            <input id="toggle-circuit" type="checkbox" onclick="onToggleSvgCircuit(this)"/>
+<!--            <input id="toggle-circuit" type="checkbox" onclick="onToggleSvgCircuit(this)"/>-->
+            <!-- Rounded switch -->
+            <label class="switch">
+              <input type="checkbox" id="toggle-circuit" onclick="onToggleSvgCircuit(this)">
+              <span class="slider round"></span>
+            </label>
             <label for="toggle-circuit">Show Circuit Only</label>
           </div>
           <svg class="circuit-canvas" id="circuit-canvas">
