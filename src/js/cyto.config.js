@@ -2,8 +2,8 @@ const style = [ // the stylesheet for the graph
   {
     selector: 'node',
     style: {
-      'width': 10,
-      'height': 10,
+      'width': 6,
+      'height': 6,
       'background-color': 'black',
       'label': 'data(value)',
       'text-justification': 'auto',
@@ -14,7 +14,7 @@ const style = [ // the stylesheet for the graph
   {
     selector: 'label',
     style: {
-      'font-size': 8,
+      'font-size': 5,
       'font-family': 'Calibri, sans-serif',
       'text-background-color': 'white',
       'text-background-opacity': 1
@@ -26,14 +26,14 @@ const style = [ // the stylesheet for the graph
       'width': 0.5,
       'curve-style': 'unbundled-bezier',
       'control-point-distance': '10px -10px -10px',
-      'control-point-weight': '0.1', // '0': curve towards source node, '1': towards target node.
+      'control-point-weight': '0.5', // '0': curve towards source node, '1': towards target node.
       'edge-distances': 'intersection',
       'line-color': '#999',
       'target-arrow-color': '#999',
       'target-arrow-shape': 'vee',
       'arrow-scale': 0.5,
       'label': 'data(edgeWeight)',
-      'font-size': 6,
+      'font-size': 4,
       'text-rotation': 'autorotate',
       'overlay-opacity': 0,
       'text-background-color': 'white'

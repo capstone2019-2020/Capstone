@@ -148,7 +148,7 @@ function sfgToCyto(sfg) {
 
   const nodes = [], edges = [];
   sfg.forEach(n => {
-    let _id = n.value !== null ? n.value.toString() : n.id;
+    let _id = n.value !== null ? n.id + '=' + n.value.toString() : n.id;
     let _value = _id.substring(0, 7);
     nodes.push({
       data: {
