@@ -41,3 +41,7 @@ h3 {
   cursor: pointer;
   transition: 0.2s;
 }
+
+svg g text {
+  font-family: "Calibri";
+}
