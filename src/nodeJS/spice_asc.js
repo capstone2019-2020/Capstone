@@ -58,6 +58,7 @@ const srandPeriod = [
   0.49042842835495315,0.5091794790294164,0.38886363894896436,0.1121355544215159,0.01771899213379946,
   0.4278872496985018,0.19786300815018687,0.7647423743660644,0.7238064215318576,0.8168180818387911];
 const DEFINED = (v) => v !== null && v !== undefined;
+const nl_CLAMP = (v, min, max) => Math.min(Math.max(min, v), max);
 
 // export these to be used in other modules
 exports.TYPES = {R_t, L_t, C_t, V_t, I_t, VCVS_t, VCCS_t};
@@ -477,6 +478,7 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
     };
     let srandInd = 0;
     const srandBool = () => {
+      srandInd++;
       if (srandInd+1 === srandPeriod.length) {
         srandInd = 0;
       }
@@ -493,33 +495,66 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
       upsertNode(n2, component);
     }
 
-    let x_inc = 60, y_inc = 60;
+    /*
+     * Placement of the SFG vertices (by circuit node):
+     *  - Take y-coord of horizontal components R=90,270deg
+     *  - Take x-coord of vertical components R=0,180deg
+     *
+     * If only horizontal/vertical components for a node,
+     * average each component x-coord and y-coord.
+     */
+    let x_inc = 70, y_inc = 70;
     Object.values(all_nodes).forEach(node => {
       let xAvg = 0, yAvg = 0;
+      let cwiseXAvg = -1, cwiseYAvg = -1;
+      let hcount = 0, vcount = 0;
       let cList = node.components;
       let c;
       for (i=0; i<cList.length; i++) {
         c = asc.find(_asc => _asc.id === cList[i]);
         xAvg += c.p_center.x;
         yAvg += c.p_center.y;
+        switch (c.R) {
+          case 90:
+          case 270:
+            vcount++;
+            cwiseYAvg = Math.max(0,cwiseYAvg);
+            cwiseYAvg += c.p_center.y;
+            break;
+          case 0:
+          case 180:
+            hcount++;
+            cwiseXAvg = Math.max(0,cwiseXAvg);
+            cwiseXAvg += c.p_center.x;
+            break;
+          default:
+        }
+      }
+
+      if (cwiseXAvg>=0 && cwiseYAvg>=0) {
+        xAvg = Math.floor(cwiseXAvg/hcount);
+        yAvg = Math.floor(cwiseYAvg/vcount);
+      } else {
+        xAvg = Math.floor(xAvg/cList.length);
+        yAvg = Math.floor(yAvg/cList.length);
       }
 
       let p_V, p_Isc;
       p_V = {
         id: `V_n${node.id}`,
-        x: Math.floor(xAvg/cList.length),
-        y: Math.floor(yAvg/cList.length)
+        x: xAvg,
+        y: yAvg
       };
       p_Isc = {
         id: `ISC_n${node.id}`,
-        x: p_V.x + x_inc,
-        y: p_V.y + y_inc
+        x: nl_CLAMP(xAvg+x_inc, 0, dim.x-30),
+        y: nl_CLAMP(yAvg+y_inc, 0, dim.y-30)
       };
       nodes.push(p_V);
       nodes.push(p_Isc);
 
-      x_inc = srandBool() ? x_inc : -1 * x_inc;
-      y_inc = srandBool() ? y_inc : -1 * y_inc;
+      x_inc = srandBool() ? x_inc : -1*x_inc;
+      y_inc = srandBool() ? y_inc : -1*y_inc;
     });
   }
 

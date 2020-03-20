@@ -439,8 +439,9 @@ function sfg_render(V, E) {
 
       let bezier = get_bezier(V, E, p_from, p_to, self_loop);
       bezier = reflect_x(bezier);
-      if (sfg_IN_RANGE(v_theta, 225, 360)
+      if (sfg_IN_RANGE(v_theta, 350, 360)
         || sfg_IN_RANGE(v_theta, 0,180) && !self_loop) {
+        bezier = reflect_x(bezier);
         bezier = reflect_x(bezier);
       }
       bezier = rot(bezier, b_theta);
