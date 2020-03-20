@@ -363,7 +363,7 @@ function get_bezier(V, E, v_from, v_to, self_loop) {
   {
     let angle = sfg_RAD_TO_DEG(sfg_ANGLE(v, h));
     // Straight line
-    if (angle < 10) {
+    if (angle < 10 && d <= 200) {
       return _bezier_(
         [sfg___vec(0,0), sfg___vec(10,0)],
         sfg_MAG(sfg_SUB(v_to, v_from)), s);

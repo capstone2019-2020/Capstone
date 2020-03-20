@@ -503,7 +503,7 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
      * If only horizontal/vertical components for a node,
      * average each component x-coord and y-coord.
      */
-    let x_inc = 70, y_inc = 70;
+    let x_inc = 75, y_inc = 75;
     Object.values(all_nodes).forEach(node => {
       let xAvg = 0, yAvg = 0;
       let cwiseXAvg = -1, cwiseYAvg = -1;
