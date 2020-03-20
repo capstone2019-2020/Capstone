@@ -148,7 +148,7 @@ function computeSFG (params) {
   let nodes = [], parsed = [];
   let termsoflhs = [];
   let termsofrhs = [];
-  let dpiLocation = [], haveBothRealAndImag = [];
+  let dpiLocation = [], haveBothRealAndImag = [], duplicateLocation = [];
   let vNodeNotFound = 0;
   let needToSearchRelation = false, dpiFound = false;
 
@@ -159,34 +159,47 @@ function computeSFG (params) {
   for (let i = 0; i < parsed.length; i++) {
     let counter = 0;
     //Access the eqns and split by lhs and rhs
-    if (parsed[i].lhs.real.terms.length !== 0) {
-      termsoflhs.push(parsed[i].lhs.real.terms);
-    }
+    if (!parsed[i].lhs.real.terms.toString().includes('DPI')) {
+      if (parsed[i].lhs.real.terms.length !== 0) {
+        // console.log(`Equation LHS: ${termsoflhs.length}`);
+        // console.log(parsed[i].lhs.real.terms.toString());
+        termsoflhs.push(parsed[i].lhs.real.terms);
+      }
 
-    if (parsed[i].lhs.imag.terms.length !== 0) {
-      termsoflhs.push(parsed[i].lhs.imag.terms);
-    }
+      if (parsed[i].lhs.imag.terms.length !== 0) {
+        // console.log(`Equation LHS: ${termsoflhs.length}`);
+        // console.log(parsed[i].lhs.imag.terms.toString());
+        termsoflhs.push(parsed[i].lhs.imag.terms);
+      }
 
-    if (parsed[i].rhs.imag.terms.length !== 0) {
-      termsofrhs.push(parsed[i].rhs.imag.terms);
-      counter++;
-    }
+      if (parsed[i].rhs.imag.terms.length !== 0) {
+        // console.log(`Equation RHS: ${termsofrhs.length}`);
+        // console.log(parsed[i].rhs.imag.terms.toString());
+        termsofrhs.push(parsed[i].rhs.imag.terms);
+        counter++;
+      }
 
-    if (parsed[i].rhs.real.terms.length !== 0) {
-      termsofrhs.push(parsed[i].rhs.real.terms);
-      counter++;
-    }
+      if (parsed[i].rhs.real.terms.length !== 0) {
+        // console.log(`Equation RHS: ${termsofrhs.length}`);
+        // console.log(parsed[i].rhs.real.terms.toString());
+        termsofrhs.push(parsed[i].rhs.real.terms);
+        counter++;
+      }
 
-    if (counter === 2) {
-      // console.log("COUNTING RIGHT!!!!!");
-      // console.log(`THE RHS INDX NUMBER ${termsofrhs.length-1}`);
-      haveBothRealAndImag.push(termsofrhs.length);
-    }
+      if (counter === 2) {
+        // console.log("COUNTING RIGHT!!!!!");
+        // console.log(`THE RHS INDX NUMBER ${termsofrhs.length-1}`);
+        haveBothRealAndImag.push(termsofrhs.length-1);
+      }
 
-    // Right hand side has no terms
-    if (parsed[i].rhs.real.terms.length === 0 && parsed[i].rhs.imag.terms.length === 0) {
-      termsofrhs.push(null);
-      // console.log("rhs = NULL");
+      // Right hand side has no terms
+      if (parsed[i].rhs.real.terms.length === 0 && parsed[i].rhs.imag.terms.length === 0) {
+        termsofrhs.push(null);
+        // console.log(`Equation RHS: ${termsofrhs.length}`);
+        // console.log("rhs = NULL");
+      }
+    } else {
+      dpiLocation.push(i);
     }
   }
 
@@ -197,20 +210,17 @@ function computeSFG (params) {
     let duplicate = false;
     // Do not create a node for those that have DPI as term on the lhs
     // Save the placement of the DPI equation
-    if (termsoflhs[i].toString().search("DPI") != -1) {
-      dpiFound = true;
-      dpiLocation.push(i);
-    } else {
-      // console.log(`New Node id is ${termsoflhs[i].toString()}`);
-      // Check for duplicates
-      for (let m = 0; m < nodes.length; m++) {
-        if (termsoflhs[i].toString() === nodes[m].id.toString()) {
-          duplicate = true;
-        }
+    // console.log(`New Node id is ${termsoflhs[i].toString()}`);
+    // Check for duplicates
+    for (let m = 0; m < nodes.length; m++) {
+      if (termsoflhs[i].toString() === nodes[m].id.toString()) {
+        duplicate = true;
+        duplicateLocation.push(nodes[m].id.toString());
       }
-      if (duplicate == false) {
-        newNode = new datamodel.Node(termsoflhs[i].toString(), null);
-      }
+    }
+
+    if (duplicate == false) {
+      newNode = new datamodel.Node(termsoflhs[i].toString(), null);
     }
 
     // Find the Node corresponding to the termsoflhs to determine the outoging edges
@@ -278,10 +288,11 @@ function computeSFG (params) {
             }
 
             if (check === termsoflhs[i].toString()) {
+              let currEdgeID, sameEdgeID = false, edgesLength;
               let endNode, foundNewEndNode = false;
 
               for (let l = 0; l < haveBothRealAndImag.length; l++) {
-                // console.log(`j = ${j}, l = ${haveBothRealAndImag[l]}`);
+                // console.log(`j is rhs num currently = ${j}, l = ${haveBothRealAndImag[l]}`);
                 if (haveBothRealAndImag[l] === j) {
                   // console.log("ENTERED THERE");
                   endNode = termsoflhs[j-1];
@@ -291,10 +302,24 @@ function computeSFG (params) {
               }
 
               if (foundNewEndNode == false) {
+                // console.log("ENTERED HERE");
                 endNode = termsoflhs[j];
               }
 
+              // For special cases like netlist_ann_vccs.txt
+              currEdgeID = termsoflhs[i].toString()+endNode.toString();
+              newNode.outgoingEdges.forEach((nn, i) => {
+                if (nn.id.toString() == currEdgeID) {
+                  sameEdgeID = true;
+                  edgesLength = i;
+                }
+              });
+
               newNode.outgoingEdges.push(new datamodel.Edge(weight.toString(), termsoflhs[i].toString(), endNode.toString()));
+              // Give unique id to the Edge
+              if (sameEdgeID == true) {
+                newNode.outgoingEdges[edgesLength+1].id = currEdgeID+"_"+(edgesLength+1);
+              }
             }
           }
         }
@@ -305,7 +330,6 @@ function computeSFG (params) {
       nodes.push(newNode);
     }
     dpiFound = false;
-    duplicate = false;
   }
 
   // console.log("-----------------------------------");
@@ -442,8 +466,20 @@ function computeSFG (params) {
 
   // Deal with the constants in the rhs of the equation
   for (let i = 0; i < parsed.length; i++) {
+    // console.log("---------------------------------------------");
+    // console.log(parsed[i].toString());
+    let duplicate = false, indx;
+    for (let j = 0; j < duplicateLocation.length; j++) {
+      if (duplicateLocation[j] === parsed[i].lhs.real.terms.toString()) {
+        // console.log("FOUND~~~~~~!!!");
+        indx = j;
+        duplicate = true;
+      }
+    }
+
     // Constant exist in the equation - y1&i as the id for imaginary constants with terms
     if (parsed[i].rhs.imag.terms.length !== 0 || parsed[i].rhs.real.terms.length !== 0){
+      // console.log("ENTERED FIRST");
       if (parsed[i].rhs.imag.constant !== null) {
         if (parsed[i].rhs.imag.constant.toString() !== "0") {
           var id = "y1"+i;
@@ -464,45 +500,52 @@ function computeSFG (params) {
       }
     }
 
-        // No terms exists in the rhs then the value must be given to existing node
+    // No terms exists in the rhs then the value must be given to existing node
     // example v1 = 8 or v1 = 5j
     else if (parsed[i].rhs.imag.terms.length === 0 && parsed[i].rhs.real.terms.length === 0
-        && parsed[i].lhs.real.terms.toString().search("ISC") === -1) {
-      // console.log("ENTERED SECOND");
-      for (let j = 0; j < nodes.length; j++) {
-        if (parsed[i].lhs.real.terms.toString() === nodes[j].id.toString()) {
-          // console.log("---------------------------------------------");
-          // console.log(`Node being looked at: ${nodes[j].id.toString()}`);
-          // console.log(`Value updated to: ${params[i].rhs.real.constant}`);
-          nodes[j].value = parsed[i].rhs.real.constant.toString();
-        } else if (parsed[i].lhs.imag.terms.toString() === nodes[j].id.toString()) {
-          // console.log("---------------------------------------------");
-          // console.log(`Node being looked at: ${nodes[j].id.toString()}`);
-          // console.log(`Value updated to: ${params[i].rhs.imag.constant}`)
-          nodes[j].value = parsed[i].rhs.imag.constant.toString();
+        && duplicate == false) {
+      if (!parsed[i].lhs.real.terms.toString().includes('DPI')) {
+        // console.log("ENTERED SECOND");
+        for (let j = 0; j < nodes.length; j++) {
+          if (parsed[i].lhs.real.terms.toString() === nodes[j].id.toString()) {
+            // console.log("---------------------------------------------");
+            // console.log(`Node being looked at: ${nodes[j].id.toString()}`);
+            // console.log(`Value updated to: ${parsed[i].rhs.real.constant.toString()}`);
+            nodes[j].value = parsed[i].rhs.real.constant.toString();
+          } else if (parsed[i].lhs.imag.terms.toString() === nodes[j].id.toString()) {
+            // console.log("---------------------------------------------");
+            // console.log(`Node being looked at: ${nodes[j].id.toString()}`);
+            // console.log(`Value updated to: ${parsed[i].rhs.imag.constant.toString()}`);
+            nodes[j].value = parsed[i].rhs.imag.constant.toString();
+          }
         }
       }
     }
 
-    // FOR ISC_n3 = 1
     else if (parsed[i].rhs.imag.terms.length === 0 && parsed[i].rhs.real.terms.length === 0) {
       // console.log("ENTERED THIRD");
-      if (parsed[i].rhs.imag.constant !== null) {
-        if (parsed[i].rhs.imag.constant.toString() !== "0") {
-          var id = "y1"+i;
-          var value = parsed[i].rhs.imag.constant+"j";
-          newNode = new datamodel.Node(id, value);
-          newNode.outgoingEdges.push(new datamodel.Edge("1", id, termsoflhs[i].toString()));
-          nodes.push(newNode);
-        }
-      }
+      for (let j = 0; j < nodes.length; j++) {
+        // Find the already existing node and then include another Edge
+        if (nodes[j].id.toString() === duplicateLocation[indx]) {
+          // console.log("NODE FOUND IN THE NODES LIST");
+          if (parsed[i].rhs.imag.constant !== null) {
+            if (parsed[i].rhs.imag.constant.toString() !== "0") {
+              var id = "y1"+i;
+              var value = parsed[i].rhs.imag.constant+"j";
+              newNode = new datamodel.Node(id, value);
+              newNode.outgoingEdges.push(new datamodel.Edge("1", id, nodes[j].id.toString()));
+              nodes.push(newNode);
+            }
+          }
 
-      if (parsed[i].rhs.real.constant !== null) {
-        if (parsed[i].rhs.real.constant.toString() !== "0") {
-          var id = "y2"+i;
-          newNode = new datamodel.Node(id, parsed[i].rhs.real.constant.toString());
-          newNode.outgoingEdges.push(new datamodel.Edge("1", id, termsoflhs[i].toString()));
-          nodes.push(newNode);
+          if (parsed[i].rhs.real.constant !== null) {
+            if (parsed[i].rhs.real.constant.toString() !== "0") {
+              var id = "y2"+i;
+              newNode = new datamodel.Node(id, parsed[i].rhs.real.constant.toString());
+              newNode.outgoingEdges.push(new datamodel.Edge("1", id, nodes[j].id.toString()));
+              nodes.push(newNode);
+            }
+          }
         }
       }
     }
@@ -567,12 +610,12 @@ function outputSFG (sfgnodes) {
 //   //   "DPI_n2 = 40",
 //   //   "ISC_n2 = V_n1/R1"
 //   // ];
-//   let testEquations = [
-//     "Vn1 = 9",
-//     "Vn2 = DPI_n2 * ISC_n2",
-//     "DPI_n2 = 10*jw",
-//     "ISC_n2 = Vn1/R1 + 10*Vn0*jw"
-//   ];
+//   // let testEquations = [
+//   //   "Vn1 = 9",
+//   //   "Vn2 = DPI_n2 * ISC_n2",
+//   //   "DPI_n2 = 10*jw",
+//   //   "ISC_n2 = Vn1/R1 + 10*Vn0*jw"
+//   // ];
 //   // let testEquations = [
 //   //   "V_n1 = 8*V_n2",
 //   //   "V_n2 = DPI_n2 * ISC_n2",
@@ -589,16 +632,16 @@ function outputSFG (sfgnodes) {
 //   //   "DPI_n3 = 3000",
 //   //   "ISC_n3 = V_n2/3000",
 //   //   "ISC_n3 = 3*V_n2"
-//   // ]
+//   // ];
 //   // let testEquations = [
 //   //   "V_n1 = 0.1",
-//   //   "V_n2 = DPI_n2 * ISC_n2",
-//   //   "DPI_n2 = 10",
-//   //   "ISC_n2 = V_n1/R1",
-//   //   "V_n3 = 100 * V_n2",
-//   //   "V_n4 = DPI_n4 * ISC_n4",
-//   //   "DPI_n4 = 20",
-//   //   "ISC_n4 = V_n3/R3"
+//   //   "V_n2 = DPI_n2*ISC_n2",
+//   //   "DPI_n2 = 833.3333333333333",
+//   //   "ISC_n2 = 0.001*V_n1",
+//   //   "V_n3 = 100*V_n2",
+//   //   "V_n4 = DPI_n4*ISC_n4",
+//   //   "DPI_n4 = 50",
+//   //   "ISC_n4 = 0.01*V_n3"
 //   // ];
 //   // let testEquations = [
 //   //   "V_n1 = 20",
@@ -610,7 +653,42 @@ function outputSFG (sfgnodes) {
 //   //   "ISC_n3 = V_n2/R3 + V_n4/R5",
 //   //   "V_n4 = 8*(V_n2 - V_n3)"
 //   // ]
-
+//   let testEquations = [
+//     "V_n1 = 8",
+//     "V_n3 = DPI_n3*ISC_n3",
+//     "DPI_n3 = 3000",
+//     "ISC_n3 = 0.0003333333333333333*V_n2",
+//     "ISC_n3 = 3*V_n2",
+//     "V_n2 = DPI_n2*ISC_n2",
+//     "DPI_n2 = 545.4545454545455",
+//     "ISC_n2 = 0.001*V_n1 + 0.0003333333333333333*V_n3"
+//   ];
+//   // let testEquations = [
+//   //   "V_n7 = (-10000)*V_n1 + 10000",
+//   //   "V_n3 = (-10000)*V_n1 + 10000",
+//   //   "V_n4 = DPI_n4*ISC_n4",
+//   //   "DPI_n4 = ((-8e-7)) / (8e-10*w*j + (-8e-10)*w*j + 6.399999999999999e-13*w^2 + 0.000001)*w*j + (0.001) / (8e-10*w*j + (-8e-10)*w*j + 6.399999999999999e-13*w^2 + 0.000001)",
+//   //   "ISC_n4 = 0.001*V_n3",
+//   //   "V_n5 = V_n4",
+//   //   "V_n2 = V_n6",
+//   //   "V_n6 = DPI_n6*ISC_n6",
+//   //   "DPI_n6 = ((-4.000000000000001e-10)) / (4.000000000000001e-13*w*j + (-4.000000000000001e-13)*w*j + 1.6000000000000009e-19*w^2 + 0.000001)*w*j + (0.001) / (4.000000000000001e-13*w*j + (-4.000000000000001e-13)*w*j + 1.6000000000000009e-19*w^2 + 0.000001)",
+//   //   "ISC_n6 = 0.001*V_n5",
+//   //   "V_n1 = DPI_n1*ISC_n1",
+//   //   "DPI_n1 = 800",
+//   //   "ISC_n1 = 0.00025*V_n2"
+//   // ];
+//   // let testEquations = [
+//   //   "V_n1 = 8",
+//   //   "V_n3 = DPI_n3*ISC_n3",
+//   //   "DPI_n3 = 3000",
+//   //   "ISC_n3 = 0.0003333333333333333*V_n2",
+//   //   "ISC_n3 = 0.001",
+//   //   "V_n2 = DPI_n2*ISC_n2",
+//   //   "DPI_n2 = 545.4545454545455",
+//   //   "ISC_n2 = 0.001*V_n1 + 0.0003333333333333333*V_n"
+//   // ];
+//
 //   let sfgnodes = computeSFG(testEquations);
 //   outputSFG(sfgnodes);
 // })();
