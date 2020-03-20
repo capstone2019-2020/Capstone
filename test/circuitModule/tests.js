@@ -28,6 +28,7 @@
   var parallel3Resistors  = new Expression("(1/1000) + (1/2000) + (1/3000)").inverse();
   var parallel3Resistors2 = new Expression("(1/2) + (1/20) + (1/5)").inverse();
   var parallel3Resistors3 = new Expression("(1/5) + (1/10) + (1/2)").inverse();
+  var parallelResistorAndCapacitor = new Expression("(1/4) + 0.002*j*w").inverse();
 
   var circuits = [
     /* CASE 1: independent voltage sources with resistors*/
@@ -63,7 +64,8 @@
             new Equation("ISC_n2", "(V_n1/1000) + (V_n3)/3000"),
             new Equation("V_n3", "DPI_n3 * ISC_n3"),
             new Equation("DPI_n3", "3000"),
-            new Equation("ISC_n3", "(V_n2/3000) + 0.001")
+            new Equation("ISC_n3", "(V_n2/3000)"),
+            new Equation("ISC_n3", "0.001")
         ]
     },
 
@@ -109,7 +111,7 @@
         ]
     },
 
-    /* CASE 4: Independent voltage source + dependent current source + resistors */
+    /* CASE 7: Independent voltage source + dependent current source + resistors */
     {
         fn: "test/circuitModule/netlist_ann_vccs.txt",
         eqns: [
@@ -120,23 +122,29 @@
             new Equation("V_n3", "DPI_n3 * ISC_n3"),
             new Equation("DPI_n3", "3000"),
             new Equation("ISC_n3", "V_n2/3000"),
-            new Equation("ISC_n3", "3*V_n2"),
+            new Equation("ISC_n3", "3*V_n2")
         ]
     },
 
-    /* CASE 2: Basic circuit + independent current src*/
+    /* CASE 8: */
     {
         fn: "test/circuitModule/netlist_ann_rc.txt",
         eqns: [
-
+            new Equation("V_n1", "24"),
+            new Equation("V_n2", "DPI_n2 * ISC_n2"),
+            new Equation("DPI_n2", parallelResistorAndCapacitor),
+            new Equation("ISC_n2", "(V_n1/4)")
         ]
     },
 
-    /* CASE 6: Medium RLC circuit + independent voltage & current src*/
+    /* CASE 9: */
     {
         fn: "test/circuitModule/netlist_rc_simple.txt",
         eqns: [
-    
+            new Equation("V_n1", "24"),
+            new Equation("V_n2", "DPI_n2 * ISC_n2"),
+            new Equation("DPI_n2", parallelResistorAndCapacitor),
+            new Equation("ISC_n2", "(V_n1/4)")
         ]
     }
   ];
@@ -146,7 +154,12 @@
     circuits.forEach(circuit => {
         var intermidiary = nl.nlConsume(circuit.fn);
         var cirObj = createCircuit(intermidiary);
-        output.push(cirObj.dpiAnalysis());
+        var results = cirObj.dpiAnalysis();
+        var stringyfied_result = [];
+        results.forEach(eq => {
+            stringyfied_result.push(eq.toString());
+        });
+        output.push(stringyfied_result);
     });
     return output;
   }
@@ -156,64 +169,44 @@
  *
  * NOTE: Assumes that
  *
- * @param output {array of equations computed by the functions}
+ * @param output {2D array of equations computed by the functions}
  * @param expected {hand-computed equations listed in ./tests.js}
  * @returns true if actual output matches expected
  */
 function verifyCircuit(output, expected) {
+    // Loop through each test case
+    expected.forEach((node_eqns, tc_num) => {
+        var anode = output[tc_num];
+        var file_name = node_eqns.fn;
+        var tc_eqns = node_eqns.eqns; // an array of equations for 1 test case
 
-    /**
-     * Step 1: Convert equations into strings
-     */
-    let actual_eqns = output;
-    let expected_eqns = [];
-  
-    expected.forEach((node_eqns) => {
-        expected_eqns.push(node_eqns.eqns);
-    });
+        debug_log(`Test #${tc_num}: ${file_name}`);
 
-    /* Step 2: Loop through all the equations, verify that they match */
-    let i, j;
-    let anode, enode, node_eqn1, node_eqn2; // list of node equations
-    for (i = 0; i < expected_eqns.length; i++) {
-      // deal with an array of equations for 1 circuit
-      anode = actual_eqns[i];
-      enode = expected_eqns[i];
-  
-      /* Verify number of equations */
-      if (enode.length !== anode.length) {
-        debug_log(`ERROR: Example ${i} expected ${enode.length} equations, received ${anode.length}`);
-            for (j = 0; j < enode.length; j++) {
-                debug_log(`Expected: ${enode[j].toString()}`);
-            }
-            for (k = 0; k <anode.length; k++){
-                debug_log(`Actual: ${anode[k].toString()}`);
-            }
-        return false;
-      }
-  
-      let result1 = {}
-      let result2 = {}
-      /* Verify equations match the expected */
-      for (j = 0; j < enode.length; j++) {
-        expected_eq = enode[j].toString();
-        actual_eq = anode.includes(expected_eq); //enode[j].toString();
- 
-        if (actual_eq == undefined){
-          debug_log(`ERROR: Expected equation ${node_eqn1} could not be found`);
-          return false;
+        /* Verify number of equations in a test case */
+        if (tc_eqns.length !== anode.length) {
+            debug_log(`ERROR: expected ${tc_eqns.length} equations, received ${anode.length}`);
+                for (j = 0; j < tc_eqns.length; j++) {
+                    debug_log(`Expected: ${tc_eqns[j].toString()}`);
+                }
+                for (k = 0; k <anode.length; k++){
+                    debug_log(`Actual: ${anode[k].toString()}`);
+                }
+            debug_log("Test case failed");
         }
-      }
-      return true;
-    }
+
+        /* Verify equations match the expected */
+        for (j = 0; j < tc_eqns.length; j++) {
+            expected_eq = tc_eqns[j].toString();
+            actual_eq = anode.includes(expected_eq); //enode[j].toString();
+    
+            if (actual_eq == undefined || actual_eq == false){
+                debug_log(`ERROR: Expected equation ${expected_eq} could not be found in actual output`);
+            }
+        }
+    });
   };
 
 (function main(){
     var actualEqns = loadAndSolve(circuits);
-    if (verifyCircuit(actualEqns, circuits)){
-        debug_log(`TEST ALL PASSED`);
-    }
-    else {
-        debug_log(`TEST FAILED`);
-    }
+    verifyCircuit(actualEqns, circuits);
 })();
