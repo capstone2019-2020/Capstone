@@ -428,23 +428,46 @@ function sfg_render(V, E) {
        * (3) Determine orientation of angle wrt center of
        *     mass. Then determine if the curve needs to
        *     be reflected.
+       * v:    Direction vector from 'p_from' to 'p_to'
+       * h:    Horizontal unit vector
+       * v_pc: Direction vector from the Euclidean centroid
+       *       of SFG and center of points 'p_from', 'p_to'
+       * beta: CW angle between h and v
+       * theta:CW angle between h and v_pc
        */
-      let v, h, pc;
-      let b_theta, v_theta;
+      let v, h, v_pc;
+      let beta, theta;
       v = sfg_SUB(p_to, p_from);
       h = sfg___vec(1, 0);
-      b_theta = sfg_CW_ANGLE(h, v);
-      pc = sfg_SUB(sfg_CENTER([p_from, p_to]), v_center);
-      v_theta = sfg_RAD_TO_DEG(sfg_CW_ANGLE(h, pc));
+      v_pc = sfg_SUB(sfg_CENTER([p_from, p_to]), v_center);
+      beta = sfg_RAD_TO_DEG(sfg_CW_ANGLE(h,v));
+      theta = sfg_RAD_TO_DEG(sfg_CW_ANGLE(h,v_pc));
 
+      /*
+       * (1) Bezier curve is upside-down when generated,
+       *     reflect it along the x-axis
+       * (2) Depending on the angle which the center 'pc' of
+       *     'p_from' and 'p_to' makes with the center of all
+       *     SFG nodes (e.g. which quadrant 'pc' resides),
+       *     it may need to be reflected in order for the
+       *     bezier curve to face 'outwards' (or away from
+       *     the Euclidean center of the SFG)
+       *
+       * Please refer to svgcircuit documentation for details
+       * on how this is implemented.
+       */
       let bezier = get_bezier(V, E, p_from, p_to, self_loop);
       bezier = reflect_x(bezier);
-      if (sfg_IN_RANGE(v_theta, 350, 360)
-        || sfg_IN_RANGE(v_theta, 0,180) && !self_loop) {
-        bezier = reflect_x(bezier);
-        bezier = reflect_x(bezier);
+      if (sfg_IN_RANGE(theta,0,90) || sfg_IN_RANGE(270,360)) {
+        if (sfg_IN_RANGE(beta,180,360)) {
+          bezier = reflect_x(bezier);
+        }
+      } else {
+        if (sfg_IN_RANGE(beta,0,180)) {
+          bezier = reflect_x(bezier);
+        }
       }
-      bezier = rot(bezier, b_theta);
+      bezier = rot(bezier, sfg_DEG_TO_RAD(beta));
       bezier = trans(bezier, p_from);
       edges.push(sfg_polyline(sfg_VECS_TO_POINTS(bezier),
         {
