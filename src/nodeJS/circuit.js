@@ -112,11 +112,8 @@ Node.prototype.computeDpi = function(){
     var lhs = "DPI_n" + this.id.toString();
     var inverseSum = new Expression(0); // store (1/R1 + 1/R2 + ... + 1/Rn)
    this.passiveComponents.forEach ((r) => {
-    //if (r.currentNumeric.real.constant == null){
-            inverseSum.add(r.value.inverse());
-    //}
+        inverseSum.add(r.value.inverse());
     });
-   console.log(`inverseSum: ${inverseSum}`);
     return new Equation(lhs, inverseSum.inverse());
 };
 
