@@ -482,19 +482,24 @@ function yaxis({leny, lenx, AXIS_XPOS, lb, ub, parts,
     }
   }
 
+  let textVec = sg___vec(
+    is_left
+      ? sg_LEFT(START_X, 50)
+      : sg_RIGHT(START_X+LENGTH_X, 50),
+    sg_UP(START_Y, sg_DOWN(sg_HALF(leny),40))
+  );
+  let rotateDeg = is_left ? `270deg` : `90deg`;
+  let trans = is_left
+    ? `-${textVec.y}px,10px`
+    : `0,0`;
   return [
-    sg_text(sg___vec(
-      is_left
-        ? sg_LEFT(START_X, 50)
-        : sg_RIGHT(START_X+LENGTH_X, 50),
-      sg_UP(START_Y, sg_DOWN(sg_HALF(leny),40))
-      ),
+    sg_text(textVec,
       label, {
         style: sg_CSS({
-          'text-orientation': 'sideways',
-          'writing-mode': 'vertical-lr'
+          'transform-origin': `${textVec.x}px ${textVec.y}px`,
+          'transform': `rotate(${rotateDeg}) translate(${trans})`
         }),
-        'text-anchor': 'start'
+        'text-anchor': 'center'
       }
     ),
     sg_line(
