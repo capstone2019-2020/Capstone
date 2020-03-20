@@ -24,8 +24,8 @@ const style = [ // the stylesheet for the graph
     selector: 'edge',
     style: {
       'width': 0.5,
-      'curve-style': 'unbundled-bezier',
-      'control-point-distance': '10px -10px -10px',
+      'curve-style': 'bezier',
+      'control-point-distance': '10px -10px 10px',
       'control-point-weight': '0.5', // '0': curve towards source node, '1': towards target node.
       'edge-distances': 'intersection',
       'line-color': '#999',
@@ -36,7 +36,9 @@ const style = [ // the stylesheet for the graph
       'font-size': 4,
       'text-rotation': 'autorotate',
       'overlay-opacity': 0,
-      'text-background-color': 'white'
+      'text-background-color': 'white',
+      'text-wrap': 'wrap',
+      'line-height': 0.6
     }
   }
 ];
