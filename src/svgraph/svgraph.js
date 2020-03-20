@@ -547,7 +547,7 @@ function legend(fpoints, ID_LEGEND, START_X) {
     for (j=i; j<_i; j++) {
       _fpoint = fpoints[j];
 
-      fname_full = _fpoint.f.replace('w','ω');
+      fname_full = _fpoint.f.replace(/w/g,'ω');
       fname = sg_CLAMP_STRING(fname_full, maxChars);
       if (fname.length > max_width) {
         max_width = fname.length;
