@@ -3,6 +3,7 @@ const dropArea = document.getElementById("drop-area");
 const fileUpload = document.getElementById("fileUpload");
 const customText = document.getElementById("custom-text");
 const submit = document.getElementById("generate");
+let fileExist = false;
 
 const SERVER_URI = 'http://localhost:3000';
 
@@ -62,10 +63,8 @@ function previewFile(file) {
 };
 
 function uploadFile(f) {
-//     evt.preventDefault();
-//     previewFile();
     let contents;
-//     let f = evt.target.files[0];
+    fileExist = true;
     
     if (f) {
         var reader = new FileReader();
@@ -106,27 +105,25 @@ async function sendNext(event) {
     // event.preventDefault();
     const eqns = getCookie('sfg_equations');
     console.log(eqns);
-    await fetch(`${SERVER_URI}/computeSFG`)
-      .then( (res) => {
-          console.log(res);
-          return res.json();
-      })
-      .then( (j) => {
-          setLocalStorage('sfg_nodes', JSON.stringify(j.sfg));
-          setLocalStorage('loop_gain', JSON.stringify(j.bode));
-      })
-      .catch((ex) => {
-          console.log(ex);
-        // alert('Failed to computeSFG!')
-    });
-    
-    if (eqns.length === 0) {
-        alert("Must Upload a netlist File");
-        errorMes.innerHTML = "Must Upload a netlist File";
-    }
 
-    else {
+    if (fileExist) {
+        await fetch(`${SERVER_URI}/computeSFG`)
+            .then( (res) => {
+                console.log(res);
+                return res.json();
+            })
+            .then( (j) => {
+                setLocalStorage('sfg_nodes', JSON.stringify(j.sfg));
+                setLocalStorage('loop_gain', JSON.stringify(j.bode));
+            })
+            .catch((ex) => {
+                console.log(ex);
+                // alert('Failed to computeSFG!')
+            });
+
         location.href='./index.html'
+    } else {
+        alert("Must Upload a File First");
     }
 }
 
