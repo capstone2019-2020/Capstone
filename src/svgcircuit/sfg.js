@@ -4,6 +4,7 @@ const SZ_CIRCLE_RADIUS = 5;
 const BEZIER_SAMPLE_RATE = 200;
 const PI_2 = 1.57079632679;
 const PI = Math.PI;
+const two_PI = 6.28318530718;
 const ID_SFG_WRAPPER_G = 'sfg-wrapper-g';
 const WIDTH_EDGE_STROKE = 1.5;
 
@@ -33,7 +34,8 @@ const sfg_CW_ANGLE = (v1, v2) => {
 
   let dot = sfg_DOT(n_v1, n_v2);
   let det = sfg_DET(n_v1, n_v2);
-  return Math.atan2(det, dot);
+  let rad = Math.atan2(det, dot);
+  return rad < 0 ? two_PI+rad : rad;
 };
 const sfg_VECS_TO_POINTS = vecs => vecs.reduce((aggr, v) => aggr+=`${v.x},${v.y} `, '');
 
@@ -108,6 +110,21 @@ function sfg_g(id, ...children) {
     children.forEach(c => g.appendChild(c));
   }
   return g;
+}
+
+function sfg_text(vec, words, config={}) {
+  const t = document.createElementNS(sfg_SVG_NS, 'text');
+  if (typeof words === 'string') {
+    t.innerHTML = words;
+  } else {
+    t.appendChild(words);
+  }
+  t.style.zIndex = '1';
+
+  return sfg___ns(t, {
+    ...config,
+    x: vec.x, y: vec.y
+  });
 }
 
 function finite_diff(vecs, i) {
@@ -382,13 +399,23 @@ function sfg_render(V, E) {
         'stroke-width': 1
       });
   });
+  const node_text = Object.values(V).map(v => {
+    return sfg_text(
+      sfg_ADD(v.vec, sfg___vec(0,17)),
+      v.id, {
+        'font-size': '12px',
+        'stroke': 'black',
+        'stroke-width': 1
+      }
+    );
+  });
 
   let edges = [];
   {
     let E_v = Object.values(E);
     let arrow;
     let p_from, p_to;
-    let v_from, v_to, v_dir;
+    let v_from, v_to;
     let i, e;
     for (i=0; i<E_v.length; i++) {
       e = E_v[i];
@@ -458,7 +485,7 @@ function sfg_render(V, E) {
        */
       let bezier = get_bezier(V, E, p_from, p_to, self_loop);
       bezier = reflect_x(bezier);
-      if (sfg_IN_RANGE(theta,0,90) || sfg_IN_RANGE(270,360)) {
+      if (sfg_IN_RANGE(theta,270,360) || sfg_IN_RANGE(theta,0,90)) {
         if (sfg_IN_RANGE(beta,180,360)) {
           bezier = reflect_x(bezier);
         }
@@ -497,7 +524,7 @@ function sfg_render(V, E) {
 
   removeSFG();
   sfg___ns(getSFG(), {},
-    sfg_g(ID_SFG_WRAPPER_G, ...[...nodes, ...edges])
+    sfg_g(ID_SFG_WRAPPER_G, ...[...nodes, ...edges, ...node_text])
   );
 }
 
