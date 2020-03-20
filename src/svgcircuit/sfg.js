@@ -394,7 +394,7 @@ function sfg_render(V, E) {
   let v_center = sfg_CENTER(Object.values(V).map(v => v.vec));
   const nodes = Object.values(V).map(v => {
     return sfg_circle(v.vec, SZ_CIRCLE_RADIUS, {
-        fill: 'transparent',
+        fill: 'white',
         stroke: 'black',
         'stroke-width': 1
       });
@@ -524,7 +524,7 @@ function sfg_render(V, E) {
 
   removeSFG();
   sfg___ns(getSFG(), {},
-    sfg_g(ID_SFG_WRAPPER_G, ...[...nodes, ...edges, ...node_text])
+    sfg_g(ID_SFG_WRAPPER_G, ...[...edges, ...node_text, ...nodes])
   );
 }
 

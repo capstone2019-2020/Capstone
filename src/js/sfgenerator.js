@@ -36,8 +36,8 @@ function onToggleSvgCircuit(ele) {
 
     let rect = document.getElementById(CIRCUIT_CANVAS_ID).getBoundingClientRect();
     let {nodes} = fromAsc(ltspice, {x: rect.width, y: rect.height});
-    sfg_init(toSFG(nodes, _sfg));
     generateCircuit('circuit-canvas', asc);
+    sfg_init(toSFG(nodes, _sfg));
   }
 }
 
