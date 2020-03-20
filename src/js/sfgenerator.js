@@ -147,9 +147,10 @@ function sfgToCyto(sfg) {
   }
 
   const nodes = [], edges = [];
+  console.log(JSON.stringify(sfg));
   sfg.forEach(n => {
     let _id = n.value !== null ? n.id + '=' + n.value.toString() : n.id;
-    let _value = _id.substring(0, 7);
+    let _value = _id.substring(0, 10);
     nodes.push({
       data: {
         id: n.id,
@@ -160,11 +161,11 @@ function sfgToCyto(sfg) {
     });
 
     n.outgoingEdges.forEach(e => {
-      let _value = e.weight.substring(0, 7);
+      let _value = e.weight.substring(0, 10);
       edges.push({
         data: {
           id: e.id,
-          edgeWeight: _value,
+          edgeWeight: `${_value}`,
           eqn: _value,
           source: e.startNode,
           target: e.endNode
