@@ -164,6 +164,44 @@
     return output;
   }
 
+function eqnsNumCheck(expected_eqns, actual_eqns) {
+    /* Verify number of equations in a test case */
+    if (expected_eqns.length !== actual_eqns.length) {
+        debug_log(`[ERROR] expected ${expected_eqns.length} equations, received ${actual_eqns.length}`);
+            for (j = 0; j < expected_eqns.length; j++) {
+                debug_log(`Expected: ${expected_eqns[j].toString()}`);
+            }
+            for (k = 0; k <actual_eqns.length; k++){
+                debug_log(`Actual: ${actual_eqns[k].toString()}`);
+            }
+        debug_log("Test case failed");
+    }
+    else{
+        debug_log(`[INFO] received ${actual_eqns.length} as expected`);
+    }
+}
+
+function individualEqnsCheck(expected_eqns, actual_eqns) {
+    var correct_eqns = 0;
+    var successful = true;
+
+    /* Verify equations match the expected */
+    for (j = 0; j < expected_eqns.length; j++) {
+        expected_eq = expected_eqns[j].toString();
+        actual_eq = actual_eqns.includes(expected_eq); //enode[j].toString();
+
+        if (actual_eq == undefined || actual_eq == false){
+            debug_log(`[ERROR] Expected equation ${expected_eq} could not be found in actual output`);
+            successful = false;
+        }
+        else{
+            correct_eqns ++;
+        }
+    }
+    debug_log(`[INFO] ${correct_eqns} out of ${expected_eqns.length} equations matched\n`);
+    return successful;
+}
+
 /**
  * Used to verify the equations produced by circuit.js -> dpiAnalysis() function
  *
@@ -174,6 +212,8 @@
  * @returns true if actual output matches expected
  */
 function verifyCircuit(output, expected) {
+    var correct_tcs = 0;
+
     // Loop through each test case
     expected.forEach((node_eqns, tc_num) => {
         var anode = output[tc_num];
@@ -182,28 +222,16 @@ function verifyCircuit(output, expected) {
 
         debug_log(`Test #${tc_num}: ${file_name}`);
 
-        /* Verify number of equations in a test case */
-        if (tc_eqns.length !== anode.length) {
-            debug_log(`ERROR: expected ${tc_eqns.length} equations, received ${anode.length}`);
-                for (j = 0; j < tc_eqns.length; j++) {
-                    debug_log(`Expected: ${tc_eqns[j].toString()}`);
-                }
-                for (k = 0; k <anode.length; k++){
-                    debug_log(`Actual: ${anode[k].toString()}`);
-                }
-            debug_log("Test case failed");
-        }
-
-        /* Verify equations match the expected */
-        for (j = 0; j < tc_eqns.length; j++) {
-            expected_eq = tc_eqns[j].toString();
-            actual_eq = anode.includes(expected_eq); //enode[j].toString();
-    
-            if (actual_eq == undefined || actual_eq == false){
-                debug_log(`ERROR: Expected equation ${expected_eq} could not be found in actual output`);
-            }
+        eqnsNumCheck(tc_eqns, anode);
+        if (individualEqnsCheck(tc_eqns, anode)){
+            correct_tcs ++;
         }
     });
+
+    debug_log("---------- [RESULT] ----------");
+    debug_log(`PASS: ${correct_tcs} test cases`);
+    debug_log(`FAIL: ${expected.length - correct_tcs} test cases`);
+    
   };
 
 (function main(){
