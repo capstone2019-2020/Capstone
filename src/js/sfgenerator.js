@@ -165,7 +165,7 @@ function sfgToCyto(sfg) {
       edges.push({
         data: {
           id: e.id,
-          edgeWeight: `${_value}`,
+          edgeWeight: `${_value}\n` + '‾'.repeat(_value.length),
           eqn: _value,
           source: e.startNode,
           target: e.endNode

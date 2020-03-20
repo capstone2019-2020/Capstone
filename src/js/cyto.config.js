@@ -36,7 +36,9 @@ const style = [ // the stylesheet for the graph
       'font-size': 4,
       'text-rotation': 'autorotate',
       'overlay-opacity': 0,
-      'text-background-color': 'white'
+      'text-background-color': 'white',
+      'text-wrap': 'wrap',
+      'line-height': 0.6
     }
   }
 ];
