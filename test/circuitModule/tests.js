@@ -21,6 +21,7 @@
       console.log(...params);
   }
 
+  var showAllEqns = true;
   /* Some common expressions & values */
   var parallel2Resistors  = new Expression("(1/1000) + (1/2000)").inverse();
   var parallel2Resistors2 = new Expression("(1/1000) + (1/5000)").inverse();
@@ -29,6 +30,9 @@
   var parallel3Resistors2 = new Expression("(1/2) + (1/20) + (1/5)").inverse();
   var parallel3Resistors3 = new Expression("(1/5) + (1/10) + (1/2)").inverse();
   var parallelResistorAndCapacitor = new Expression("(1/4) + 0.002*j*w").inverse();
+  var opampRC1 = new Expression("(1/1000) + 0.0000008 * j*w").inverse();
+  var opampRC2 = new Expression("(1/1000) + 0.0000000004 * j*w").inverse();
+  var opampFeedback = new Expression("(1/1000) + (1/1000)").inverse();
 
   var circuits = [
     /* CASE 1: independent voltage sources with resistors*/
@@ -146,6 +150,26 @@
             new Equation("DPI_n2", parallelResistorAndCapacitor),
             new Equation("ISC_n2", "(V_n1/4)")
         ]
+    },
+
+    /* CASE 9: */
+    {
+        fn: "test/circuitModule/netlist_ann_opampFeedback.txt",
+        eqns: [
+            new Equation("V_n7", "1"),
+            new Equation("V_n3", "10000 * (V_n7 - V_n1)"),
+            new Equation("V_n4", "DPI_n4 * ISC_n4"),
+            new Equation("DPI_n4", opampRC1),
+            new Equation("ISC_n4", "V_n3/1000"),
+            new Equation("V_n5", "V_n4"),
+            new Equation("V_n6", "DPI_n6 * ISC_n6"),
+            new Equation("DPI_n6", opampRC2),
+            new Equation("ISC_n6", "V_n5/1000"),
+            new Equation("V_n2", "V_n6"),
+            new Equation("V_n1", "DPI_n1 * ISC_n1"),
+            new Equation("DPI_n1", opampFeedback),
+            new Equation("ISC_n1", "V_n2/4000")
+        ]
     }
   ];
 
@@ -182,6 +206,7 @@ function eqnsNumCheck(expected_eqns, actual_eqns) {
 }
 function eqnEvaluationCheck(expected_eqn, actual_eqns){
     // check if the simplication bug only happens with imaginary numbers
+    console.log(expected_eqn.toString());
     assert(expected_eqn.rhs.isComplex());
 
     var expectedLhs = expected_eqn.lhs;
@@ -208,11 +233,15 @@ function individualEqnsCheck(expected_eqns, actual_eqns) {
     var correct_eqns = 0;
     var successful = true;
 
+    // for debugging
+    if (showAllEqns){
+        console.log(Object.keys(actual_eqns));
+    }
+
     /* Verify equations match the expected */
     for (j = 0; j < expected_eqns.length; j++) {
         expected_eq = expected_eqns[j].toString();
         actual_eq = actual_eqns[expected_eq]; //serach dictionary by key
-        //console.log(actual_eqns);
         if (actual_eq == undefined){// could be false negative due to simplify bug, so check further
             if (eqnEvaluationCheck(expected_eqns[j], actual_eqns)){
                 correct_eqns ++;
