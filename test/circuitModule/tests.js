@@ -150,14 +150,14 @@
   ];
 
   function loadAndSolve(circuits){
-    var output = []; // 2D array. outer array holds an array of equations for a netlist
+    var output = []; 
     circuits.forEach(circuit => {
         var intermidiary = nl.nlConsume(circuit.fn);
         var cirObj = createCircuit(intermidiary);
         var results = cirObj.dpiAnalysis();
-        var stringyfied_result = [];
+        var stringyfied_result = {};// dictionary. key = equation in string format | value = equation in Expression obj
         results.forEach(eq => {
-            stringyfied_result.push(eq.toString());
+            stringyfied_result[eq.toString()] = eq;
         });
         output.push(stringyfied_result);
     });
@@ -180,6 +180,29 @@ function eqnsNumCheck(expected_eqns, actual_eqns) {
         debug_log(`[INFO] received ${actual_eqns.length} as expected`);
     }
 }
+function eqnEvaluationCheck(expected_eqn, actual_eqns){
+    // check if the simplication bug only happens with imaginary numbers
+    assert(expected_eqn.rhs.isComplex());
+
+    var expectedLhs = expected_eqn.lhs;
+    
+    for (var eqnString in actual_eqns){
+        var actualLhs = actual_eqns[eqnString].lhs; //a_eqn.val.lhs;
+        if (expectedLhs.toString() == actualLhs.toString()){
+            var randNum = Math.random() * 1000000; // just generating randome number that is big enough
+            var expectedEval = expected_eqn.rhs.eval({'w': randNum});
+            var actualEval = actual_eqns[eqnString].rhs.eval({'w': randNum});
+
+            if (expectedEval.toString() == actualEval.toString()){
+                return true;
+            }
+            else{
+                return false;
+            }
+        }
+    }
+    return false;
+}
 
 function individualEqnsCheck(expected_eqns, actual_eqns) {
     var correct_eqns = 0;
@@ -188,11 +211,16 @@ function individualEqnsCheck(expected_eqns, actual_eqns) {
     /* Verify equations match the expected */
     for (j = 0; j < expected_eqns.length; j++) {
         expected_eq = expected_eqns[j].toString();
-        actual_eq = actual_eqns.includes(expected_eq); //enode[j].toString();
-
-        if (actual_eq == undefined || actual_eq == false){
-            debug_log(`[ERROR] Expected equation ${expected_eq} could not be found in actual output`);
-            successful = false;
+        actual_eq = actual_eqns[expected_eq]; //serach dictionary by key
+        //console.log(actual_eqns);
+        if (actual_eq == undefined){// could be false negative due to simplify bug, so check further
+            if (eqnEvaluationCheck(expected_eqns[j], actual_eqns)){
+                correct_eqns ++;
+            }
+            else{
+                debug_log(`[ERROR] Expected equation ${expected_eq} could not be found in actual output`);
+                successful = false;
+            }
         }
         else{
             correct_eqns ++;
@@ -216,13 +244,13 @@ function verifyCircuit(output, expected) {
 
     // Loop through each test case
     expected.forEach((node_eqns, tc_num) => {
-        var anode = output[tc_num];
+        var anode = output[tc_num]; // this returns a dictionary of equations
         var file_name = node_eqns.fn;
         var tc_eqns = node_eqns.eqns; // an array of equations for 1 test case
 
         debug_log(`Test #${tc_num}: ${file_name}`);
 
-        eqnsNumCheck(tc_eqns, anode);
+        eqnsNumCheck(tc_eqns, Object.keys(anode));
         if (individualEqnsCheck(tc_eqns, anode)){
             correct_tcs ++;
         }
