@@ -526,14 +526,14 @@ function createCircuit(components){
 
         var ctrl_pnode_vol, ctrl_nnode_vol;
 
-        if (circuit.unknownVnodes.indexOf(ctrl_pnode.id) != -1){ // in unknown array -> voltage not known
+        if (ctrl_pnode.id != 0){ // in unknown array -> voltage not known
             ctrl_pnode_vol = new Expression(`V_n${ctrl_pnode.id}`);
         } 
         else{
             ctrl_pnode_vol = ctrl_pnode.voltage;
         }
 
-        if (circuit.unknownVnodes.indexOf(ctrl_nnode.id) != -1){ // in unknown array -> voltage not known
+        if (ctrl_nnode.id != 0){ // in unknown array -> voltage not known
             ctrl_nnode_vol = new Expression(`V_n${ctrl_nnode.id}`);
         } 
         else{
@@ -552,14 +552,14 @@ function createCircuit(components){
         var current_val;
         var ctrl_pnode_vol, ctrl_nnode_vol;
 
-        if (circuit.unknownVnodes.indexOf(ctrl_pnode.id) != -1){ // in unknown array -> voltage not known
+        if (ctrl_pnode.id != 0){ // in unknown array -> voltage not known
             ctrl_pnode_vol = new Expression(`V_n${ctrl_pnode.id}`);
         } 
         else{
             ctrl_pnode_vol = ctrl_pnode.voltage;
         }
 
-        if (circuit.unknownVnodes.indexOf(ctrl_nnode.id) != -1){ // in unknown array -> voltage not known
+        if (ctrl_nnode.id != 0){ // in unknown array -> voltage not known
             ctrl_nnode_vol = new Expression(`V_n${ctrl_nnode.id}`);
         } 
         else{

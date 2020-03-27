@@ -158,7 +158,7 @@
         fn: "test/circuitModule/netlist_ann_opampFeedback.txt",
         eqns: [
             new Equation("V_n7", "1"),
-            new Equation("V_n3", "10000 * (1 - V_n1)"),
+            new Equation("V_n3", "10000 * (V_n7 - V_n1)"),
             new Equation("V_n4", "DPI_n4 * ISC_n4"),
             new Equation("DPI_n4", opampRC1),
             new Equation("ISC_n4", "V_n3/1000"),
@@ -207,6 +207,7 @@ function eqnsNumCheck(expected_eqns, actual_eqns) {
 }
 function eqnEvaluationCheck(expected_eqn, actual_eqns){
     // check if the simplication bug only happens with imaginary numbers
+    console.log(expected_eqn.toString());
     assert(expected_eqn.rhs.isComplex());
 
     var expectedLhs = expected_eqn.lhs;
