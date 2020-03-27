@@ -236,7 +236,7 @@ function subtractNodes(originalNodes, nodesToSubtract){
   
   // Quite inefficent... maybe optimize it somehow later
   originalNodes.forEach(n => {
-    allnodes_copy.push(n);
+    allnodes_copy.push(n.copy());
   });
 
   allnodes_copy.forEach(n => {

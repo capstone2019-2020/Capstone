@@ -14,6 +14,19 @@ function Edge (weight, startNode, endNode) {
     this.id = startNode+endNode
 };
 
+Edge.prototype.copy = function() {
+  return new Edge(this.weight, this.startNode, this.endNode);
+};
+
+Node.prototype.copy = function() {
+  let copy = new Node(this.id, this.value);
+  this.outgoingEdges.forEach(e => {
+      copy.outgoingEdges.push(e.copy());
+
+  });
+  return copy;
+};
+
 /**
  * Export classes as part of m1 module
  */
