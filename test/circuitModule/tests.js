@@ -22,6 +22,7 @@
   }
 
   var showAllEqns = true;
+  var accuracyThreshold = Math.pow(1, -12);
   /* Some common expressions & values */
   var parallel2Resistors  = new Expression("(1/1000) + (1/2000)").inverse();
   var parallel2Resistors2 = new Expression("(1/1000) + (1/5000)").inverse();
@@ -32,7 +33,7 @@
   var parallelResistorAndCapacitor = new Expression("(1/4) + 0.002*j*w").inverse();
   var opampRC1 = new Expression("(1/1000) + 0.0000008 * j*w").inverse();
   var opampRC2 = new Expression("(1/1000) + 0.0000000004 * j*w").inverse();
-  var opampFeedback = new Expression("(1/1000) + (1/1000)").inverse();
+  var opampFeedback = new Expression("(1/1000) + (1/4000)").inverse();
 
   var circuits = [
     /* CASE 1: independent voltage sources with resistors*/
@@ -157,7 +158,7 @@
         fn: "test/circuitModule/netlist_ann_opampFeedback.txt",
         eqns: [
             new Equation("V_n7", "1"),
-            new Equation("V_n3", "10000 * (V_n7 - V_n1)"),
+            new Equation("V_n3", "10000 * (1 - V_n1)"),
             new Equation("V_n4", "DPI_n4 * ISC_n4"),
             new Equation("DPI_n4", opampRC1),
             new Equation("ISC_n4", "V_n3/1000"),
@@ -206,7 +207,6 @@ function eqnsNumCheck(expected_eqns, actual_eqns) {
 }
 function eqnEvaluationCheck(expected_eqn, actual_eqns){
     // check if the simplication bug only happens with imaginary numbers
-    console.log(expected_eqn.toString());
     assert(expected_eqn.rhs.isComplex());
 
     var expectedLhs = expected_eqn.lhs;
@@ -218,7 +218,13 @@ function eqnEvaluationCheck(expected_eqn, actual_eqns){
             var expectedEval = expected_eqn.rhs.eval({'w': randNum});
             var actualEval = actual_eqns[eqnString].rhs.eval({'w': randNum});
 
-            if (expectedEval.toString() == actualEval.toString()){
+            // Sometimes, floating point error makes the test fail. 
+            // floataing point error causes the diff to be very small number (order of e-14 ish)
+            // so in this case, treat the comparison result = true
+            var diff = expectedEval.subtract(actualEval)
+            diff = Math.abs(diff.imag.constant);
+
+            if (diff < accuracyThreshold){
                 return true;
             }
             else{

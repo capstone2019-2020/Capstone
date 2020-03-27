@@ -542,7 +542,8 @@ function createCircuit(components){
 
         // This is only true because we limit ourselves to a voltage source connected to the ground
         // voltage =  value * (ctrl_pnode - ctrl_nnode)
-        pnode.voltage = ctrl_pnode_vol.subtract(ctrl_nnode_vol).multiply(vcvs.value);
+        //pnode.voltage = ctrl_pnode_vol.subtract(ctrl_nnode_vol).multiply(vcvs.value);
+        pnode.voltage = algebra.parse(ctrl_pnode_vol.toString()).subtract(ctrl_nnode_vol).multiply(vcvs.value);
     });
 
     VCCS_temp.forEach((vccs) => {
@@ -567,7 +568,7 @@ function createCircuit(components){
 
         // This is only true because we limit ourselves to a voltage source connected to the ground
         // current =  value * (ctrl_pnode - ctrl_nnode)
-        current_val = ctrl_pnode_vol.subtract(ctrl_nnode_vol).multiply(vccs.value);
+        current_val = algebra.parse(ctrl_pnode_vol.toString()).subtract(ctrl_nnode_vol).multiply(vccs.value);
         cSrc  = new CurrentSource(current_val, vccs.pnode, vccs.nnode, true, vccs.ctrlPNode, vccs.ctrlNNode);
         pnode = circuit.findNodeById(vccs.pnode);
         nnode = circuit.findNodeById(vccs.nnode);
