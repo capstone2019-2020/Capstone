@@ -167,7 +167,7 @@ function sfgToCyto(sfg) {
         data: {
           id: e.id,
           edgeWeight: `${_value}`,
-          name: `${_value.substring(0, 10)} ${_value.length > 10 ? '...' : ''}`,
+          name: `${_value.substring(0, 10)} ${_value.length > 10 ? '>>>' : ''}`,
           eqn: _value,
           source: e.startNode,
           target: e.endNode
@@ -294,8 +294,8 @@ async function generateSFG() {
   cy.edges().on('click', function(e) {
     let clicked_edge = e.target;
     const weight = clicked_edge.data().edgeWeight;
-    document.getElementById('edge-weight').innerText = `Weight: ${math.simplify(weight)}`;
     resetEdgeColors();
+    document.getElementById('edge-weight').innerText = `Weight: ${math.simplify(weight)}`;
     clicked_edge.style('color', 'tomato');
   });
   // console.log(loopgraph);
