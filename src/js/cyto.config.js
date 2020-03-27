@@ -32,13 +32,12 @@ const style = [ // the stylesheet for the graph
       'target-arrow-color': '#999',
       'target-arrow-shape': 'vee',
       'arrow-scale': 0.5,
-      'label': 'data(edgeWeight)',
+      'label': 'data(name)',
       'font-size': 4,
       'text-rotation': 'autorotate',
       'overlay-opacity': 0,
       'text-background-color': 'white',
-      'text-wrap': 'wrap',
-      'line-height': 0.6
+      'line-height': 1
     }
   }
 ];

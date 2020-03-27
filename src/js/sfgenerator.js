@@ -2,6 +2,7 @@ const DEFAULT_NODE_CLR = 'black';
 const SELECTED_NODE_CLR = '#f04b4c';
 const GHOST_NODE_CLR = '#528aeb';
 const DEFAULT_EDGE_CLR = '#999';
+const DEFAULT_FONT_CLR = 'black';
 
 const CIRCUIT_CANVAS_ID = 'circuit-canvas';
 
@@ -161,16 +162,19 @@ function sfgToCyto(sfg) {
     });
 
     n.outgoingEdges.forEach(e => {
-      let _value = e.weight.substring(0, 10);
+      let _value = e.weight;//.substring(0, 10);
       edges.push({
         data: {
           id: e.id,
-          edgeWeight: `${_value}\n` + '‾'.repeat(_value.length),
+          edgeWeight: `${_value}`,
+          name: `${_value.substring(0, 10)} ${_value.length > 10 ? '...' : ''}`,
           eqn: _value,
           source: e.startNode,
           target: e.endNode
         }
       });
+      console.log(_value.substring(0, 10));
+
     });
   });
   return {nodes, edges};
@@ -180,6 +184,7 @@ function resetEdgeColors() {
   cy.edges().forEach(e => {
     e.style('line-color', DEFAULT_EDGE_CLR);
     e.style('target-arrow-color', DEFAULT_EDGE_CLR);
+    e.style('color', DEFAULT_FONT_CLR);
   });
   cy.nodes().forEach( n => {
     if (!clickedNodes.includes(n.data().id)) {
@@ -286,6 +291,13 @@ async function generateSFG() {
     console.log(clickedNodes);
   });
 
+  cy.edges().on('click', function(e) {
+    let clicked_edge = e.target;
+    const weight = clicked_edge.data().edgeWeight;
+    document.getElementById('edge-weight').innerText = `Weight: ${math.simplify(weight)}`;
+    resetEdgeColors();
+    clicked_edge.style('color', 'tomato');
+  });
   // console.log(loopgraph);
   loopgraph.put([`f(w) = ${loopElements.magnitude}`], [`f(w) = ${loopElements.phase}`]);
 }
