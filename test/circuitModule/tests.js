@@ -202,12 +202,11 @@ function eqnsNumCheck(expected_eqns, actual_eqns) {
         debug_log("Test case failed");
     }
     else{
-        debug_log(`[INFO] received ${actual_eqns.length} as expected`);
+        debug_log(`[INFO] received ${actual_eqns.length} equations as expected`);
     }
 }
 function eqnEvaluationCheck(expected_eqn, actual_eqns){
     // check if the simplication bug only happens with imaginary numbers
-    console.log(expected_eqn.toString());
     assert(expected_eqn.rhs.isComplex());
 
     var expectedLhs = expected_eqn.lhs;
