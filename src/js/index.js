@@ -5,7 +5,10 @@ const customText = document.getElementById("custom-text");
 const submit = document.getElementById("generate");
 let fileExist = false;
 
-const SERVER_URI = 'http://localhost:80';
+const IS_DEPLOYED = true;
+const SERVER_URI = IS_DEPLOYED
+  ? 'http://ec2-3-86-32-191.compute-1.amazonaws.com'
+  : 'http://localhost:80';
 
 // https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/
 // To prevent default behaviour
@@ -107,7 +110,11 @@ async function sendNext(event) {
     console.log(eqns);
 
     if (fileExist) {
-        await fetch(`${SERVER_URI}/computeSFG`)
+        await fetch(`${SERVER_URI}/computeSFG`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({equations: eqns})
+        })
             .then( (res) => {
                 console.log(res);
                 return res.json();

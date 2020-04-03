@@ -616,8 +616,9 @@ function createCircuit(components){
 //     circuit = createCircuit(c);
 //     var summary = circuit.dpiAnalysis();
 // })();
+// exports.setCircuit = (c) => {
+//     circuit = c;
+// };
 
 exports.createCircuit = createCircuit;
-exports.setCircuit = (c) => {
-    circuit = c;
-};
+

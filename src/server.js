@@ -8,10 +8,11 @@ const app = express();
 const Expression = algebra.Expression;
 const Equation = algebra.Equation;
 const fileupload = require('express-fileupload');
+const {Edge, Node} = require("./nodeJS/datamodel");
 const router = express.Router();
 const port = process.env.PORT || 80;
-let equations = [];
-let nodes, startNode, endNode, masonsdata, circuit;
+let GLOBAL_equations = [];
+let GLOBAL_nodes, GLOBAL_startNode, GLOBAL_endNode, GLOBAL_masonsdata, GLOBAL_circuit;
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
@@ -59,168 +60,23 @@ app.post("/input-file", (req, res) => {
         return res.status(400).send("nlConsume Missing");
     }
 
+    let equations = [];
     // The eqns array is emptied every time the input post is used
-    if (equations.length !== 0) {
-        equations = [];
+    if (GLOBAL_equations.length !== 0) {
+        GLOBAL_equations = [];
     }
 
     // Create circuit
-    circuit = circuitjs.createCircuit(c.netlist);
-    let temp = circuit.dpiAnalysis();
+    GLOBAL_circuit = circuitjs.createCircuit(c.netlist);
+    let temp = GLOBAL_circuit.dpiAnalysis();
 
-//     temp.currentEquations.forEach(first => first.forEach(second => second.forEach(eqns => console.log(eqns.toString()))));
-//     temp.currentEquations.forEach((first) =>
-//         first.forEach((second) => second.forEach((eqns) =>
-//             {
-//                 // This is a replacement for solveFor of algebra.js to make all the equations have a format of
-//                 // x1 = x2 +..... => one variable on the LHS and the rest on the RHS
-//                 if (eqns.lhs.real.terms.length !== 1 && eqns.lhs.imag.terms.length !== 1) {
-//                     let newlhs, location, found = false, finaleqn, lhsIsConstant = false, coeff;
-
-//                     // For the case where LHS only has constant and no terms
-//                     if (eqns.lhs.real.terms.length === 0 && eqns.lhs.imag.terms.length === 0) {
-//                         if (eqns.lhs.real.constant !== null || eqns.lhs.imag.constant !== null) {
-//                             // Pick a variable from rhs (first variable)
-//                             if (eqns.rhs.real.terms.length !== 0) {
-//                                 newlhs = new Expression(eqns.rhs.real.terms[0].toString());
-//                                 coeff = eqns.rhs.real.terms[0].coefficient;
-//                             } else {
-//                                 newlhs = new Expression(eqns.rhs.imag.terms[0].toString());
-//                                 coeff = eqns.rhs.imag.terms[0].coefficient;
-//                             }
-//                             lhsIsConstant = true;
-//                         }
-//                     }
-
-//                     // LHS has terms
-//                     if (eqns.lhs.real.terms.length !== 0) {
-//                         newlhs = new Expression(eqns.lhs.real.terms[0].toString());
-//                         coeff = eqns.lhs.real.terms[0].coefficient;
-//                     } else if (eqns.lhs.imag.terms.length !== 0) {
-//                         newlhs = new Expression(eqns.lhs.imag.terms[0].toString());
-//                         coeff = eqns.lhs.imag.terms[0].coefficient;
-//                     }
-
-//                     // Check if the variable already exits
-//                     for (var i = 0; i < equations.length; i++) {
-//                         if (equations[i].lhs.real.terms.length !== 0) {
-//                             if (equations[i].lhs.real.terms[0].toString() === newlhs.toString()) {
-//                                 found = true;
-//                                 location = i;
-//                             }
-//                         } else {
-//                             if (equations[i].lhs.imag.terms[0].toString() === newlhs.toString()) {
-//                                 found = true;
-//                                 location = i;
-//                             }
-//                         }
-//                     }
-
-//                     // Split the string of the expression
-//                     let strOflhs, temprhs, existingRHS;
-//                     if (lhsIsConstant === true) {
-//                         // console.log("ENTERED HERE");
-//                         strOflhs = eqns.toString().split(newlhs.toString());
-//                         // console.log(strOflhs);
-//                         existingRHS = strOflhs[1];
-//                         // console.log(`Existing RHS: ${existingRHS.toString()}}`);
-//                         strOflhs = strOflhs[0].split("=");
-//                         strOflhs = strOflhs[0];
-//                         // console.log(`To become RHS terms: ${strOflhs.toString()}`)
-
-//                         if (existingRHS.toString().substring(0, 2).indexOf('+') != -1) {
-//                             existingRHS = existingRHS.substring(3, existingRHS.length);
-//                         }
-
-//                         // The RHS was not 0
-//                         if (existingRHS.length !== 0) {
-//                             temprhs = new Expression(existingRHS.toString());
-//                             temprhs.multiply(-1);
-//                             // console.log(temprhs.toString());
-//                             // temprhs = temprhs.add(strOflhs.toString());
-//                             temprhs = temprhs.toString() + (strOflhs > 0 ? "+" : "") + strOflhs.toString();
-//                             // console.log(temprhs.toString());
-//                             temprhs = new Expression(temprhs.toString());
-//                         } else {
-//                             temprhs = strOflhs;
-//                         }
-//                         // console.log(temprhs.toString());
-//                     } else {
-//                         // console.log("Entered THERE");
-//                         strOflhs = eqns.toString().split(newlhs.toString());
-//                         strOflhs = strOflhs[1].split("=");
-//                         existingRHS = strOflhs[1];
-//                         strOflhs = strOflhs[0];
-//                         if (strOflhs.toString().substring(0, 2).indexOf('+') !== -1) {
-//                             strOflhs = strOflhs.substring(3, strOflhs.length);
-//                         }
-
-//                         if (existingRHS.toString().substring(0, 2).indexOf('+') !== -1) {
-//                             existingRHS = existingRHS.substring(3, existingRHS.length);
-//                         }
-//                         temprhs = new Expression(strOflhs.toString());
-//                         temprhs.multiply(-1);
-
-//                         // The RHS was not 0
-//                         if (existingRHS.length !== 0) {
-//                             temprhs = temprhs.add(new Expression(existingRHS.toString()));
-//                         }
-//                     }
-
-//                     // The coefficient of the term was not 1
-//                     if (coeff !== 1 && typeof(temprhs) !== "string") {
-//                         // console.log("ENTERED HERE!!!!!")
-//                         temprhs.divide(coeff.toString());
-//                         newlhs = newlhs.divide(coeff.toString());
-//                     }
-//                     // console.log(`New LHS: ${newlhs} and new RHS: ${temprhs}`);
-
-//                     if (found === true) {
-//                         let replacetemp = equations[location].toString().split('=');
-//                         replacetemp = new Expression (replacetemp[1]);
-//                         replacetemp.add(temprhs);
-//                         finaleqn = newlhs.toString() + " = " + replacetemp;
-//                         // console.log(finaleqn.toString());
-//                         equations[location] = algebra.parse(finaleqn.toString());
-//                     } else {
-//                         finaleqn = newlhs.toString() + " = " + temprhs.toString();
-//                         // console.log(finaleqn.toString());
-//                         equations.push(algebra.parse(finaleqn.toString()));
-//                     }
-//                 } else {
-//                     let temp;
-
-//                     // There is a coefficient in the lhs
-//                     if (eqns.lhs.real.terms.length !== 0) {
-//                         if (eqns.lhs.real.terms[0].coefficient !== 1) {
-//                             temp = new Equation(eqns.toString());
-//                             temp.lhs.divide(eqns.lhs.real.terms[0].coefficient);
-//                             temp.rhs.divide(eqns.lhs.real.terms[0].coefficient);
-//                             eqns = new Equation(temp.lhs, temp.rhs);
-//                         }
-//                     } else if (eqns.lhs.imag.terms.length !== 0) {
-//                         if (eqns.lhs.imag.terms[0].coefficient !== 1) {
-//                             temp = new Equation(eqns.toString());
-//                             temp.lhs.divide(eqns.lhs.imag.terms[0].coefficient);
-//                             temp.rhs.divide(eqns.lhs.imag.terms[0].coefficient);
-//                             eqns = new Equation(temp.lhs, temp.rhs);
-//                         }
-//                     }
-
-//                     // console.log(eqns.toString());
-//                     equations.push(algebra.parse(eqns.toString()));
-//                 }
-//             }
-//         ))
-//     );
-
-    console.log(temp.length);
     for (var i = 0; i < temp.length; i++) {
-//         console.log(temp[i].toString());
-        equations.push(temp[i].toString());
+        let strTmp = temp[i].toString();
+        GLOBAL_equations.push(strTmp);
+        equations.push(strTmp);
     }
 
-    if(!circuit) {
+    if(!GLOBAL_circuit) {
         return res.status(400).send("Create circuit missing");
     }
 
@@ -230,7 +86,7 @@ app.post("/input-file", (req, res) => {
 
     // Read the netlist file and save the content
     return res.status(200).send({
-        equations,
+        equations: equations,
         asc: c.asc,
         ascNodes: c.nodes
     });
@@ -241,8 +97,8 @@ app.post("/input-file", (req, res) => {
 // Also saves the start and end node information
 app.post("/input-form", (req, res) => {
     let eqns = req.body.eqns;
-    startNode = req.body.start;
-    endNode = req.body.end;
+    GLOBAL_startNode = req.body.start;
+    GLOBAL_endNode = req.body.end;
 
     // No eqns has been entered
     if (!req.body.eqns) {
@@ -250,32 +106,51 @@ app.post("/input-form", (req, res) => {
     }
     
     // The eqns array is emptied every time the input post is used
-    if (equations.length != 0) {
-        equations.length = 0;
+    if (GLOBAL_equations.length != 0) {
+        GLOBAL_equations.length = 0;
     }
 
-    eqns.forEach((eq) => equations.push(algebra.parse(eq)));
+    eqns.forEach((eq) => GLOBAL_equations.push(algebra.parse(eq)));
     return res.status(200).send(eqns);
 });
 
 // Send back the nodes array as successful
-app.get("/computeSFG", (req, res) => {
-    nodes = m1.computeSFG(equations);
+app.post("/computeSFG", (req, res) => {
+    let equations = JSON.parse(req.body.equations);
+
+    let nodes = m1.computeSFG(equations);
+    GLOBAL_nodes = nodes; // FIXME backwards compatible
+
     const loopGain = m1.computeLoopGain(nodes);
-    res.status(200).send({ sfg: nodes,
-    bode: {
-        phase: loopGain.bode.phase,
-        magnitude: loopGain.bode.magnitude
-    }
+    res.status(200).send({
+        sfg: nodes,
+            bode: {
+                phase: loopGain.bode.phase,
+                magnitude: loopGain.bode.magnitude
+        }
     });
 });
 
 
 // Get the computeMasons eqns
 app.post("/computeMasons", (req, res) => {
-    startNode = req.body.start;
-    endNode = req.body.end;
-    masonsdata = m1.computeMasons(nodes, startNode, endNode);
+    let _nodes = JSON.parse(req.body.nodes);
+    let nodes = _nodes.map(n => {
+        let _n = new Node(n.id, n.value);
+        _n.outgoingEdges = n.outgoingEdges.map(e =>
+            new Edge(e.weight, e.startNode, e.endNode)
+        );
+
+        return _n;
+    });
+    let startNode = req.body.start;
+    let endNode = req.body.end;
+
+    // FIXME backwards compatibility
+    GLOBAL_startNode = req.body.start;
+    GLOBAL_endNode = req.body.end;
+    let masonsdata = m1.computeMasons(nodes, startNode, endNode);
+    GLOBAL_masonsdata = masonsdata; // FIXME backwards compatibility
 
     let letters = /^[A-Za-z]+$/;
     let newDenom = "", newNumer = "";
@@ -287,7 +162,7 @@ app.post("/computeMasons", (req, res) => {
     // Checking the denominators
     for (let i = 0; i < tempdenom.length-1; i++) {
         if (tempdenom[i].match(letters) && tempdenom[i+1].match(letters)) {
-        newDenom = newDenom + tempdenom[i]+"*";
+            newDenom = newDenom + tempdenom[i]+"*";
         }
         else {
         newDenom = newDenom + tempdenom[i];
@@ -308,8 +183,14 @@ app.post("/computeMasons", (req, res) => {
     newNumer = newNumer+tempnumer[tempnumer.length-1];
     newDenom = newDenom+tempdenom[tempdenom.length-1];
 
-    res.status(200).send({n: newNumer.toString(), d: newDenom.toString(),
-                          bode: { phase: masonsdata.bode.phase, magnitude: masonsdata.bode.magnitude }});
+    res.status(200).send({
+        n: newNumer.toString(),
+        d: newDenom.toString(),
+        bode: {
+            phase: masonsdata.bode.phase,
+            magnitude: masonsdata.bode.magnitude
+        }
+    });
 });
 
 

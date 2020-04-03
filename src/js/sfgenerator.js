@@ -309,7 +309,11 @@ async function simulate() {
   await fetch(`${SERVER_URI}/computeMasons`, {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({start: startNode, end: endNode})
+    body: JSON.stringify({
+      nodes: getCookie('sfg_nodes'),
+      start: startNode,
+      end: endNode
+    })
   })
     .then((res) => {
       return res.json();
