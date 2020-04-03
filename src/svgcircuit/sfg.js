@@ -593,4 +593,3 @@ function sfg_init(sfg) {
 
   sfg_render(V, E);
 }
-

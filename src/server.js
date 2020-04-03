@@ -9,7 +9,7 @@ const Expression = algebra.Expression;
 const Equation = algebra.Equation;
 const fileupload = require('express-fileupload');
 const router = express.Router();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 80;
 let equations = [];
 let nodes, startNode, endNode, masonsdata, circuit;
 

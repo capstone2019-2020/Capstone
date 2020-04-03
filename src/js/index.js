@@ -5,7 +5,7 @@ const customText = document.getElementById("custom-text");
 const submit = document.getElementById("generate");
 let fileExist = false;
 
-const SERVER_URI = 'http://localhost:3000';
+const SERVER_URI = 'http://localhost:80';
 
 // https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/
 // To prevent default behaviour
