@@ -37,6 +37,8 @@ function computeMasons(nodes, start, end) {
   const denom = m1helper.calculateDenominator(allLoops, nonTouchingLoops);
   const numer = m1helper.calculateNumerator(start, end, nodes);
 
+  console.log( `numer: {${numer}}`);
+  console.log(`denom: {${denom}}`);
   /*
    * Step 2: Calculate the ACTUAL bode phase and magnitude equations
    *       - Loop Gain = 1 - denom ??
@@ -45,9 +47,9 @@ function computeMasons(nodes, start, end) {
    * instead of an expression object as the math library does not currently
    * support functions
    */
-  let transferFunc = numer.copy().divide(denom.copy());
-  const bodePhase = transferFunc.phase();
-  const bodeMag = transferFunc.magnitude();
+
+  const bodePhase = `${numer.phase()} - ${denom.phase()}`;
+  const bodeMag = `20 * log10 ( (${numer.magnitude()}) / (${denom.magnitude()}))`;
 
   return {n: numer, // Expression
           d: denom, // Expression
@@ -66,7 +68,7 @@ function computeLoopGain(nodes) {
   const loopGain = denom.subtract(1);
   return { bode: {
             phase: loopGain.phase(),
-            magnitude:loopGain.magnitude()
+            magnitude:loopGain.bodeMag()
             }
           };
 

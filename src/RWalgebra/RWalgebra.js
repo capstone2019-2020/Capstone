@@ -654,10 +654,15 @@ Expression.prototype.phase = function() {
  *
  * @returns {string}
  */
+Expression.prototype.bodeMag = function() {
+  /* |T(jw)| = 20 * log10 ( sqrt(real^2 + imag^2)) */
+  return `20 * ${LOG_10} ( ${this.magnitude()})`;
+};
+
 Expression.prototype.magnitude = function() {
   if (!this.real.terms.length && !this.imag.terms.length
-      && (this.real.constant === 0 || this.real.constant === null)
-      && (this.imag.constant === 0 || this.imag.constant === null))
+    && (this.real.constant === 0 || this.real.constant === null)
+    && (this.imag.constant === 0 || this.imag.constant === null))
     return '0';
   const copy = this.copy();
   const terms = convertToTerms(copy);
@@ -680,14 +685,7 @@ Expression.prototype.magnitude = function() {
   else
     real_exp = new Expression(real);
 
-  if (DEBUG) {
-    console.log(`magnitude imag: ${imag_exp}`);
-    console.log(`magnitude real: ${real_exp}`);
-    console.log(`magnitude: 20 * ${LOG_10} ( ${SQRT}( (${real_exp})^2 + (${imag_exp})^2 ))`);
-  }
-
-  /* |T(jw)| = 20 * log10 ( sqrt(real^2 + imag^2)) */
-  return `20 * ${LOG_10} ( ${SQRT}( (${real_exp})^2 + (${imag_exp})^2 ))`;
+  return `${SQRT}( (${real_exp})^2 + (${imag_exp})^2 )`;
 };
 
 
