@@ -5,7 +5,7 @@ const customText = document.getElementById("custom-text");
 const submit = document.getElementById("generate");
 let fileExist = false;
 
-const IS_DEPLOYED = true;
+const IS_DEPLOYED = false;
 const SERVER_URI = IS_DEPLOYED
   ? 'http://ec2-3-86-32-191.compute-1.amazonaws.com'
   : 'http://localhost:80';
