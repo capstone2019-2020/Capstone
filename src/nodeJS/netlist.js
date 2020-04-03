@@ -20,8 +20,8 @@ exports.ascConsume = filepath => {
 
 exports.ascConsumeArr = ascArr => {
   const asc = fromAsc(ascArr);
-  console.log(JSON.stringify(asc.asc));
-  console.log(JSON.stringify(asc.nodes));
+  // console.log(JSON.stringify(asc.asc));
+  // console.log(JSON.stringify(asc.nodes));
   return asc;
 };
 
