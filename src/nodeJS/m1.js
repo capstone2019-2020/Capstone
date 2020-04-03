@@ -29,6 +29,7 @@ function getEquations() {
  * @returns {{phase, d: *, magnitude, n: *}}
  */
 function computeMasons(nodes, start, end) {
+  console.log('in computeMasons');
   /*
    * Step 1: Calculate numerator and denominator of transfer function separately
    */
