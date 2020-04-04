@@ -645,7 +645,7 @@ Expression.prototype.phase = function() {
 
   const imag = new Expression(imag_terms);
   const real = new Expression(real_terms);
-  return `atan((${imag.toString()}) / (${real.toString()})) * 180 / pi`;
+  return `atan2((${imag.toString()}), (${real.toString()})) * 180 / pi`;
 };
 
 /**
