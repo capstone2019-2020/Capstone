@@ -3,16 +3,17 @@ const MATHML_NS = 'http://www.w3.org/1998/Math/MathML';
 
 const MIN_XGRID = 8, MIN_YGRID = 8, MIN_X = 1, MIN_Y = 1;
 const MAX_XGRID = 15, MAX_YGRID = 15;
-const MAX_LOG_XGRID = 5;
+const MAX_LOG_XGRID = 1000;
 const SAMPLE_RATE = 10, SAMPLE_INTERVAL = 200; /* ms */
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
 const GRID_MODE = true;
 const SEMI_LOG_MODE = true;
+const IS_CROSS_X_AXIS = true;
 const MAX_WIDTH = 800, MIN_WIDTH = 400;
 const MAX_HEIGHT = 700, MIN_HEIGHT = 300;
 const SHOW_TRACER_GUIDE = true;
 
-const LOG_LEVEL = 1;
+const LOG_LEVEL = 3;
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
 
 /* 'fake' macros */
@@ -601,8 +602,9 @@ function legend(fpoints, ID_LEGEND, START_X) {
 
 function init_plot(lb, ub, plot_len, parts,is_init=false,
                    seed_offset=0) {
-  lb = sg_ROUND_UP(lb, 5);
-  ub = sg_ROUND_UP(ub, 5);
+  INFO(`lb: ${lb}, ub: ${ub}`);
+  lb = Math.ceil(lb);
+  ub = Math.ceil(ub);
 
   INFO(`lb: ${lb}, ub: ${ub}`);
   if (lb === ub) {
@@ -769,8 +771,10 @@ function generate_logvals(xlb, xub) {
   return logvals;
 }
 
-function eval_log(funcs, xgrid, xlb, xub, ylb, yub) {
+function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
+                  cross_x_intercept=false) {
   let fpoints, points, logvals;
+  INFO('EVAL_LOG', xlb, xub);
 
   /*
    * xlb: lower bound log(x), xub: upper bound log(x)
@@ -783,24 +787,71 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub) {
     parser.evaluate(f);
 
     points = [];
-    logvals = generate_logvals(xlb, xub);
-    let i, yval, xlog;
-    for (i=0; i<logvals.length; i++) {
-      xlog = logvals[i];
-      yval = parser.evaluate(`f(${Math.pow(10, xlog)})`);
-      if (!isNaN(yval) && !sg_INFINITY(yval)) {
-        yub = sg_MAX(yval, yub);
-        ylb = sg_MIN(yval, ylb);
+    let is_reached_0db = false;
+    let is_past_0db = false;
+    let _xlb = xlb, _xub = xub;
+    let points_idx;
+    let num_iters = 0;
+    while ((!is_reached_0db || !is_past_0db) && num_iters < 5) {
+      points_idx = points.length;
+      xub = sg_MAX(xub, _xub);
 
-        points.push(sg___vec(xlog, yval));
-      } else {
-        points.push(sg___vec(xlog, NaN));
+      INFO('BEGIN_ITER:', _xlb, _xub);
+      /* Only 1 iteration if not set */
+      if (!cross_x_intercept) {
+        is_reached_0db = true;
+        is_past_0db = true;
       }
+
+      logvals = generate_logvals(_xlb, _xub);
+      let i, yval, xlog;
+      for (i=0; i<logvals.length; i++) {
+        xlog = logvals[i];
+        yval = parser.evaluate(`f(${Math.pow(10, xlog)})`);
+        if (!isNaN(yval) && !sg_INFINITY(yval)) {
+          yub = sg_MAX(yval, yub);
+          ylb = sg_MIN(yval, ylb);
+
+          if (yval < 0 && !is_reached_0db) {
+            is_reached_0db = true;
+          } else if (yval < 0 && is_reached_0db) {
+            is_past_0db = true;
+          }
+
+          INFO(xlog, yval, is_reached_0db, is_past_0db);
+          points.push(sg___vec(xlog, yval));
+        } else {
+          points.push(sg___vec(xlog, NaN));
+        }
+      }
+
+      /*
+       * We don't want to continue if the function
+       * is a constant.
+       * Measured from the first entry in this iteration
+       * to the last entry in the iteration.
+       * If the "lower bound" of the window is the same
+       * as the size of points -> nothing was inserted,
+       * so exit.
+       */
+      if (points_idx === points.length
+          || points[points.length-1].y >= points[points_idx].y) {
+        is_reached_0db = true;
+        is_past_0db = true;
+      }
+
+      /* Reset */
+      _xlb = Math.floor(_xub);
+      _xub = _xlb + 3; // try increase 3 decades
+      INFO('END_ITER:', is_reached_0db, is_past_0db);
+
+      num_iters++;
     }
 
     return {f, points, color: sg_COLOR()};
   });
 
+  INFO('EVAL_LOG_END:', xlb, xub);
   return {fpoints, sample_amt: 1,
     xub, xlb, yub, ylb};
 }
@@ -810,7 +861,7 @@ function eval(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
 
   if (SEMI_LOG_MODE) {
     return eval_log(funcs, xgrid, xlb, xub,
-      ylb, yub);
+      ylb, yub, IS_CROSS_X_AXIS);
   }
 
   /*
