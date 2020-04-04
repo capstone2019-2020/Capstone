@@ -60,9 +60,6 @@ const srandPeriod = [
 const DEFINED = (v) => v !== null && v !== undefined;
 const nl_CLAMP = (v, min, max) => Math.min(Math.max(min, v), max);
 
-// export these to be used in other modules
-exports.TYPES = {R_t, L_t, C_t, V_t, I_t, VCVS_t, VCCS_t};
-
 function assert(bool) {
   if (!bool) {
     throw new Error('Assertion failed!');
@@ -568,7 +565,8 @@ function fromAsc(lines, dim={x:1500,y:1000}) {
 try {
   module.exports = {
     toNetlist,
-    fromAsc
+    fromAsc,
+    TYPES: {R_t, L_t, C_t, V_t, I_t, VCVS_t, VCCS_t}
   };
 } catch(err) {
   /* Swallow error */
