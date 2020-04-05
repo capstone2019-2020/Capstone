@@ -790,7 +790,10 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
     let is_reached_0db = false;
     let is_past_0db = false;
     let _xlb = xlb, _xub = xub;
-    while (!is_reached_0db || !is_past_0db) {
+    let points_idx;
+    let num_iters = 0;
+    while ((!is_reached_0db || !is_past_0db) && num_iters < 5) {
+      points_idx = points.length;
       xub = sg_MAX(xub, _xub);
 
       INFO('BEGIN_ITER:', _xlb, _xub);
@@ -825,8 +828,14 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
       /*
        * We don't want to continue if the function
        * is a constant.
+       * Measured from the first entry in this iteration
+       * to the last entry in the iteration.
+       * If the "lower bound" of the window is the same
+       * as the size of points -> nothing was inserted,
+       * so exit.
        */
-      if (points[points.length-1].y >= points[0].y) {
+      if (points_idx === points.length
+          || points[points.length-1].y >= points[points_idx].y) {
         is_reached_0db = true;
         is_past_0db = true;
       }
@@ -835,6 +844,8 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
       _xlb = Math.floor(_xub);
       _xub = _xlb + 3; // try increase 3 decades
       INFO('END_ITER:', is_reached_0db, is_past_0db);
+
+      num_iters++;
     }
 
     return {f, points, color: sg_COLOR()};
