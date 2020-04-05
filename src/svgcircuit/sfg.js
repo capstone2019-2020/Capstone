@@ -7,6 +7,10 @@ const PI = Math.PI;
 const two_PI = 6.28318530718;
 const ID_SFG_WRAPPER_G = 'sfg-wrapper-g';
 const WIDTH_EDGE_STROKE = 1.5;
+const CLR_NODES = 'red';
+const CLR_ARROWS = 'red';
+const CLR_EDGES = 'red';
+const CLR_TEXT = 'red';
 
 /* Fake macros */
 const sfg_ELEM = (id) => document.getElementById(id);
@@ -395,7 +399,7 @@ function sfg_render(V, E) {
   const nodes = Object.values(V).map(v => {
     return sfg_circle(v.vec, SZ_CIRCLE_RADIUS, {
         fill: 'white',
-        stroke: 'black',
+        stroke: CLR_NODES,
         'stroke-width': 1
       });
   });
@@ -404,7 +408,7 @@ function sfg_render(V, E) {
       sfg_ADD(v.vec, sfg___vec(0,17)),
       v.id, {
         'font-size': '12px',
-        'stroke': 'black',
+        'stroke': CLR_TEXT,
         'stroke-width': 1
       }
     );
@@ -498,7 +502,7 @@ function sfg_render(V, E) {
       bezier = trans(bezier, p_from);
       edges.push(sfg_polyline(sfg_VECS_TO_POINTS(bezier),
         {
-          stroke: 'black',
+          stroke: CLR_EDGES,
           fill: 'none',
           'stroke-width': WIDTH_EDGE_STROKE
         }
@@ -517,7 +521,7 @@ function sfg_render(V, E) {
       arrow = trans(arrow, bezier[Math.floor(bezier.length/2)]);
       edges.push(sfg_polygon(
         sfg_VECS_TO_POINTS(arrow),
-        {fill: 'black'}
+        {fill: CLR_ARROWS}
       ));
     }
   }
