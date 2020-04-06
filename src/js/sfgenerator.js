@@ -43,6 +43,7 @@ function onToggleSvgCircuit(ele) {
 }
 
 function initSvgraph() {
+  console.log('initSVGraph');
   let svgraph_initializer = new SVGraph_initializer('svg-graph');
   let loopgraph_initializer = new SVGraph_initializer('loop-graph');
   svgraph_initializer.onXChange(xval => onSvgraphXChange('w', xval));
@@ -104,7 +105,7 @@ function initSvgraph() {
 
 function onSvgraphXChange(varName, replaceWith) {
   const {Expression} = rwalgebra;
-  const replace = (eles, eqnName, dataName) => {
+  const replace = (eles, eqnName, dataNames) => {
     let json, expr, evaluated;
     eles.forEach(ele => {
       json = ele.json().data;
@@ -127,12 +128,13 @@ function onSvgraphXChange(varName, replaceWith) {
         return;
       }
 
-      ele.data({[dataName]: str});
+      dataNames.forEach(id =>
+        ele.data({[id]: str}));
     });
   };
 
-  replace(cy.nodes(), 'eqn', 'value');
-  replace(cy.edges(), 'eqn', 'edgeWeight');
+  replace(cy.nodes(), 'eqn', ['value']);
+  replace(cy.edges(), 'eqn', ['edgeWeight', 'name']);
 }
 
 /**
@@ -295,7 +297,14 @@ async function generateSFG() {
     let clicked_edge = e.target;
     const weight = clicked_edge.data().edgeWeight;
     resetEdgeColors();
-    document.getElementById('edge-weight').innerText = `Weight: ${math.simplify(weight)}`;
+
+    let weightText;
+    try{
+      weightText = math.simplify(weight);
+    } catch (err) {
+      weightText = weight;
+    }
+    document.getElementById('edge-weight').innerText = `Weight: ${weightText}`;
     clicked_edge.style('color', 'tomato');
   });
   // console.log(loopgraph);

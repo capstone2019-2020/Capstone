@@ -4,7 +4,7 @@ const MATHML_NS = 'http://www.w3.org/1998/Math/MathML';
 const MIN_XGRID = 8, MIN_YGRID = 8, MIN_X = 1, MIN_Y = 1;
 const MAX_XGRID = 15, MAX_YGRID = 15;
 const MAX_LOG_XGRID = 1000;
-const SAMPLE_RATE = 10, SAMPLE_INTERVAL = 200; /* ms */
+const SAMPLE_RATE = 10, SAMPLE_INTERVAL = 70; /* ms */
 const HEIGHT_TRACE = 15, WIDTH_TRACE = 80;
 const GRID_MODE = true;
 const SEMI_LOG_MODE = true;
@@ -43,7 +43,7 @@ const sg_CLAMP_STRING = (str, limit) => str.length > limit ? `${str.slice(0,limi
 /* loggers */
 const __LOG = (l, msg, ...p) => {
   if (LOG_LEVELS[l] <= LOG_LEVEL) {
-    console.log(msg, ...p);
+    a(msg, ...p);
   }
 };
 const DEBUG = (msg, ...p) => __LOG('debug', msg, ...p);
@@ -1222,7 +1222,8 @@ const SVGraph_initializer = (function()
   };
 
   __proto__.onXChange = function(cb) {
-    DEBUG('Binded onXChange() callback function', cb);
+    console.log('binded debug');
+    INFO('Binded onXChange() callback function', cb);
     this.cb_OnXChange = cb;
   };
 
