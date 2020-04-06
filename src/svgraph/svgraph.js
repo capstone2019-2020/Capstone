@@ -5,7 +5,7 @@ const MIN_XGRID = 8, MIN_YGRID = 8, MIN_X = 1, MIN_Y = 1;
 const MAX_XGRID = 15, MAX_YGRID = 15;
 const MAX_LOG_XGRID = 1000;
 const SAMPLE_RATE = 10, SAMPLE_INTERVAL = 200; /* ms */
-const HEIGHT_TRACE = 15, WIDTH_TRACE = 55;
+const HEIGHT_TRACE = 15, WIDTH_TRACE = 80;
 const GRID_MODE = true;
 const SEMI_LOG_MODE = true;
 const IS_CROSS_X_AXIS = true;
@@ -149,8 +149,8 @@ const __Tracer = function(tracerId, xval, yval, xratio, yratio, ylb) {
           id: `${tracerId}-text`,
           textLength: WIDTH_TRACE-5,
           style: sg_CSS({
-            'font-size': '9px',
-            'font-weight': 'bold',
+            'font-size': '12px',
+            'font-weight': 'normal',
             padding: '5px',
           })
         }),
@@ -716,7 +716,7 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
   }
 }
 
-function generate_logvals(xlb, xub) {
+function generate_logvals(xlb, xub, is_sparse=false) {
   /*
    * Here is the log-scale conversion -> we need to evaluate
    * each function at f(x) for x = {1,2,3,..,10,20,30,..,},
@@ -749,21 +749,24 @@ function generate_logvals(xlb, xub) {
    * be placed, we can, for each decade, add fixed pre-
    * computed amounts onto the base value of the decade.
    */
-  let logdist = [
-    0,
-    0.301,
-    0.477,
-    0.602,
-    0.699,
-    0.778,
-    0.845,
-    0.903,
-    0.954
-  ];
+  const N = 100; /* Dense log samples */
+  const logdist = is_sparse
+    ? [
+      0,
+      0.301,
+      0.477,
+      0.602,
+      0.699,
+      0.778,
+      0.845,
+      0.903,
+      0.954
+    ]
+    : [...Array(N).keys()].map(v => (v+1)/N);
 
   let logvals = [];
   let xval;
-  for (xval=xlb; xval<=xub; xval++) {
+  for (xval=xlb; xval<xub; xval++) {
     let i;
     for (i=0; i<logdist.length; i++) {
       logvals.push(xval+logdist[i]);
@@ -1067,7 +1070,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
       START_X: this.START_X,
       START_Y: this.START_Y,
       LENGTH_X: this.LENGTH_X
-    }, generate_logvals(xlb, xub))),
+    }, generate_logvals(xlb, xub, true))),
     sg_g(this.ID_LEFT_Y_AXIS, ...yaxis({
       leny: this.LENGTH_Y,
       lenx: this.LENGTH_X,
@@ -1264,6 +1267,8 @@ const SVGraph_initializer = (function()
      * within the SVG element. Used to handle all dynamic
      * graph renders. See implementation below for details.
      */
+    let logvals = generate_logvals(0,1);
+    INFO('logvals (dense):', logvals);
     let _this = this;
     let X, Y;
     _this.get_Svgraph().addEventListener('mousemove', event => {
@@ -1303,31 +1308,24 @@ const SVGraph_initializer = (function()
            * Same ranges used in eval_log(), see that for
            * more detailed explanation.
            */
-          if (sg_RANGE(_d, 0.1, 0.301))
-            _add = 1;
-          else if (sg_RANGE(_d, 0.301, 0.477))
-            _add = 2;
-          else if (sg_RANGE(_d, 0.477, 0.602))
-            _add = 3;
-          else if (sg_RANGE(_d, 0.602, 0.699))
-            _add = 4;
-          else if (sg_RANGE(_d, 0.699, 0.778))
-            _add = 5;
-          else if (sg_RANGE(_d, 0.778, 0.845))
-            _add = 6;
-          else if (sg_RANGE(_d, 0.845, 0.903))
-            _add = 7;
-          else if (sg_RANGE(_d, 0.903, 0.945))
-            _add = 8;
-          else if (sg_RANGE(_d, 0.945, 1))
-            _add = 9;
+          let lower, upper;
+          let i;
+          for (i=0; i<logvals.length-1; i++) {
+            lower = logvals[i];
+            upper = logvals[i+1];
+            if (sg_RANGE(_d, lower, upper)) {
+              _add = i;
+              break;
+            }
+          }
 
           /*
            * The *9 is because there are 9 values stored per
            * grid interval. So the formula comes down to:
            * idx = (# spaces in interval)*(# intervals) + (offset spaces)
            */
-          idx = 9*_base + _add;
+          DEBUG('Index to add:', _add);
+          idx = logvals.length * _base + _add;
         }
 
         if (sg_FIXED(idx%1, 1) === '0.0' && SHOW_TRACER_GUIDE) {
