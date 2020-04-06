@@ -152,40 +152,9 @@ app.post("/computeMasons", (req, res) => {
     let masonsdata = m1.computeMasons(nodes, startNode, endNode);
     GLOBAL_masonsdata = masonsdata; // FIXME backwards compatibility
 
-    let letters = /^[A-Za-z]+$/;
-    let newDenom = "", newNumer = "";
-
-    // Changing into format that can be parsed by algebra.js
-    tempdenom = masonsdata.d.toString().split("");
-    tempnumer = masonsdata.n.toString().split("");
-
-    // Checking the denominators
-    for (let i = 0; i < tempdenom.length-1; i++) {
-        if (tempdenom[i].match(letters) && tempdenom[i+1].match(letters)) {
-            newDenom = newDenom + tempdenom[i]+"*";
-        }
-        else {
-        newDenom = newDenom + tempdenom[i];
-        }
-    }
-
-    // Checking the numerators
-    for (let i = 0; i < tempnumer.length-1; i++) {
-        if (tempnumer[i].match(letters) && tempnumer[i+1].match(letters)) {
-        newNumer = newNumer + tempnumer[i]+"*";
-        }
-        else {
-        newNumer = newNumer + tempnumer[i];
-        }
-    }
-    
-    // Include the last part of the denom and numer
-    newNumer = newNumer+tempnumer[tempnumer.length-1];
-    newDenom = newDenom+tempdenom[tempdenom.length-1];
-
     res.status(200).send({
-        n: newNumer.toString(),
-        d: newDenom.toString(),
+        n: masonsdata.n.toString(),
+        d: masonsdata.d.toString(),
         bode: {
             phase: masonsdata.bode.phase,
             magnitude: masonsdata.bode.magnitude

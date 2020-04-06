@@ -321,8 +321,8 @@ async function simulate() {
     .then((j) => {
       setLocalStorage('transfer_func', JSON.stringify(j));
 
-      let mag = math.simplify(j.bode.magnitude).toString();
-      let phase = math.simplify(j.bode.phase).toString();
+      let mag = j.bode.magnitude;
+      let phase = j.bode.phase;
 
       svgraph.put([`f(w) = ${mag}`], [`f(w) = ${phase}`]);
     });
