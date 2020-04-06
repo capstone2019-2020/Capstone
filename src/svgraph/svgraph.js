@@ -13,7 +13,7 @@ const MAX_WIDTH = 800, MIN_WIDTH = 400;
 const MAX_HEIGHT = 700, MIN_HEIGHT = 300;
 const SHOW_TRACER_GUIDE = true;
 
-const LOG_LEVEL = 3;
+const LOG_LEVEL = 1;
 const LOG_LEVELS = {debug: 4, info: 3, warn: 2, error: 1};
 
 /* 'fake' macros */
@@ -772,7 +772,8 @@ function generate_logvals(xlb, xub) {
 }
 
 function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
-                  cross_x_intercept=false) {
+                  cross_x_intercept=false,
+                  fix_wrap_around=false) {
   let fpoints, points, logvals;
   INFO('EVAL_LOG', xlb, xub);
 
@@ -790,10 +791,11 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
     let is_reached_0db = false;
     let is_past_0db = false;
     let _xlb = xlb, _xub = xub;
-    let points_idx;
+    let beg_idx;
+    let prev_yval;
     let num_iters = 0;
     while ((!is_reached_0db || !is_past_0db) && num_iters < 5) {
-      points_idx = points.length;
+      beg_idx = points.length;
       xub = sg_MAX(xub, _xub);
 
       INFO('BEGIN_ITER:', _xlb, _xub);
@@ -823,6 +825,8 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
         } else {
           points.push(sg___vec(xlog, NaN));
         }
+
+        prev_yval = yval;
       }
 
       /*
@@ -834,8 +838,10 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
        * as the size of points -> nothing was inserted,
        * so exit.
        */
-      if (points_idx === points.length
-          || points[points.length-1].y >= points[points_idx].y) {
+      let beg_y, end_y;
+      beg_y = Math.floor(points[beg_idx].y);
+      end_y = Math.floor(points[points.length-1].y);
+      if (points.length === beg_idx || end_y >= beg_y) {
         is_reached_0db = true;
         is_past_0db = true;
       }
