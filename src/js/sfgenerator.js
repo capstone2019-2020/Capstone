@@ -43,14 +43,14 @@ function onToggleSvgCircuit(ele) {
 }
 
 function initSvgraph() {
-  let initializer = new SVGraph_initializer('svg-graph');
-  let initate = new SVGraph_initializer('loop-graph');
-  initializer.onXChange(xval => onSvgraphXChange('w', xval));
-  initate.onXChange(xval => onSvgraphXChange('w', xval));
+  let svgraph_initializer = new SVGraph_initializer('svg-graph');
+  let loopgraph_initializer = new SVGraph_initializer('loop-graph');
+  svgraph_initializer.onXChange(xval => onSvgraphXChange('w', xval));
+  loopgraph_initializer.onXChange(xval => onSvgraphXChange('w', xval));
 
-  svgraph = initializer.init({
+  loopgraph = loopgraph_initializer.init({
     "x_axis": {
-      "label": "frequency (Hz)",
+      "label": "frequency (rad/s)",
       "scale": "log-log",
       "fixed": true,
       "lb": 0,
@@ -58,7 +58,7 @@ function initSvgraph() {
       "num_grids": 10
     },
     "left_y_axis": {
-      "label": "magnitude (dB)",
+      "label": "loop gain - magnitude (dB)",
       "scale": "linear",
       "fixed": true,
       "lb": -60,
@@ -66,7 +66,7 @@ function initSvgraph() {
       "num_grids": 9
     },
     "right_y_axis": {
-      "label": "phase (degrees)",
+      "label": "loop gain - phase (deg)",
       "scale": "linear",
       "fixed": true,
       "lb": -90,
@@ -75,9 +75,9 @@ function initSvgraph() {
     }
   });
 
-  loopgraph = initate.init({
+  svgraph = svgraph_initializer.init({
     "x_axis": {
-      "label": "frequency (Hz)",
+      "label": "frequency (rad/s)",
       "scale": "log-log",
       "fixed": true,
       "lb": 0,
@@ -85,7 +85,7 @@ function initSvgraph() {
       "num_grids": 10
     },
     "left_y_axis": {
-      "label": "magnitude (dB)",
+      "label": "transfer function - magnitude (dB)",
       "scale": "linear",
       "fixed": true,
       "lb": -60,
@@ -93,7 +93,7 @@ function initSvgraph() {
       "num_grids": 9
     },
     "right_y_axis": {
-      "label": "phase (degrees)",
+      "label": "transfer function - phase (deg)",
       "scale": "linear",
       "fixed": true,
       "lb": -90,

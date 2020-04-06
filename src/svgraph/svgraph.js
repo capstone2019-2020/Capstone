@@ -125,7 +125,9 @@ const __Tracer = function(tracerId, xval, yval, xratio, yratio, ylb) {
     sg_MIN(__gY(yval-ylb, yratio, this.START_Y), this.START_Y),
     this.START_Y-this.LENGTH_Y
   );
-  const coords = `(${sg_FIXED(xval, 2)}, ${sg_FIXED(yval, 2)})`;
+  const coords = SEMI_LOG_MODE
+    ? `(10e+${sg_FIXED(xval, 2)}, ${sg_FIXED(yval, 2)})`
+    : `(${sg_FIXED(xval, 2)}, ${sg_FIXED(yval, 2)})`;
 
   if (!tracer && !isNaN(yval)) {
     /*

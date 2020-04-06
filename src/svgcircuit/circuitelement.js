@@ -55,9 +55,9 @@ const create = (type, id, center, R, coord1, coord2, toggle) => {
     _DEFAULT_FONT_COLOR_ = 'black';
     _DEFAULT_NODE_COLOR_ = 'black';
   } else {
-    _DEFAULT_COLOR_ = '#bababa';
-    _DEFAULT_FONT_COLOR_ = '#8f8f8f';
-    _DEFAULT_NODE_COLOR_ = '#8f8f8f';
+    _DEFAULT_COLOR_ = 'black';
+    _DEFAULT_FONT_COLOR_ = 'black';
+    _DEFAULT_NODE_COLOR_ = 'black';
   }
 
   let element = createSVGGroup();

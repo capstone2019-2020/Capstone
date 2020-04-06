@@ -67,6 +67,7 @@ app.post("/input-file", (req, res) => {
     }
 
     // Create circuit
+    console.log(c.netlist);
     GLOBAL_circuit = circuitjs.createCircuit(c.netlist);
     let temp = GLOBAL_circuit.dpiAnalysis();
 
