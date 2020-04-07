@@ -81,16 +81,17 @@ function initSvgraph() {
       "label": "frequency (rad/s)",
       "scale": "log-log",
       "fixed": true,
-      "lb": 0,
-      "ub": 10,
+      "max": 7,
+      "lb": 3,
+      "ub": 7,
       "num_grids": 10
     },
     "left_y_axis": {
       "label": "transfer function - magnitude (dB)",
       "scale": "linear",
       "fixed": true,
-      "lb": -60,
-      "ub": 30,
+      "lb": -10,
+      "ub": 10,
       "num_grids": 9
     },
     "right_y_axis": {

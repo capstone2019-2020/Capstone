@@ -43,7 +43,7 @@ const sg_CLAMP_STRING = (str, limit) => str.length > limit ? `${str.slice(0,limi
 /* loggers */
 const __LOG = (l, msg, ...p) => {
   if (LOG_LEVELS[l] <= LOG_LEVEL) {
-    a(msg, ...p);
+    console.log(msg, ...p);
   }
 };
 const DEBUG = (msg, ...p) => __LOG('debug', msg, ...p);
@@ -85,7 +85,8 @@ const sg_EXP = (f, d) => f.toExponential(d);
 const sg_ROUND = (f) => sg___ROUND(f).toFixed(0);
 const sg_FIXED = (f, d) => sg___ROUND(f).toFixed(d);
 const sg_ROUND_UP = (f, n) => {
-  if (f === 0) return f;
+  if (f === 0 || n === 0) return f;
+
   let r;
   if ((r = Math.abs(f) % n) === 0)
     return f;
@@ -115,7 +116,7 @@ const __Guide = function(guideId, vec1, vec2, config={}) {
   }
 };
 
-const __Tracer = function(tracerId, xval, yval, xratio, yratio, ylb) {
+const __Tracer = function(tracerId, coords, xval, yval, xratio, yratio, ylb) {
   const tracer = sg_ELEM(tracerId);
   const tracerRect = sg_ELEM(`${tracerId}-rect`);
   const tracerTxt = sg_ELEM(`${tracerId}-text`);
@@ -125,9 +126,6 @@ const __Tracer = function(tracerId, xval, yval, xratio, yratio, ylb) {
     sg_MIN(__gY(yval-ylb, yratio, this.START_Y), this.START_Y),
     this.START_Y-this.LENGTH_Y
   );
-  const coords = SEMI_LOG_MODE
-    ? `(10e+${sg_FIXED(xval, 2)}, ${sg_FIXED(yval, 2)})`
-    : `(${sg_FIXED(xval, 2)}, ${sg_FIXED(yval, 2)})`;
 
   if (!tracer && !isNaN(yval)) {
     /*
@@ -309,15 +307,22 @@ function sg_title(title, config={}) {
 
 function plot(ORIGIN_X, dp, x_cratio, y_cratio, color, ylb,
               START_X, START_Y, LENGTH_X) {
+  INFO(`START_X: ${START_X}, ORIGIN_X: ${ORIGIN_X}`);
+  INFO(`START_Y: ${START_Y}, LENGTH_X: ${LENGTH_X}`);
+  INFO(`x_cratio: ${x_cratio}, y_cratio: ${y_cratio}`);
   let points = '';
   let i;
   let x_coord, y_coord;
   let dp_e;
+  let p0 = dp[0];
+  let x,y;
   for (i=0; i<dp.length; i++) {
     dp_e = dp[i];
     if (!isNaN(dp_e.y)) {
-      x_coord = sg_MIN(__gX(ORIGIN_X, dp_e.x, x_cratio), START_X+LENGTH_X);
-      y_coord = sg_MIN(__gY(dp_e.y-ylb, y_cratio, START_Y), START_Y);
+      x = dp_e.x - p0.x;
+      y = dp_e.y;
+      x_coord = sg_MIN(__gX(ORIGIN_X, x, x_cratio), START_X+LENGTH_X);
+      y_coord = sg_MIN(__gY(y-ylb, y_cratio, START_Y), START_Y);
 
       points += `${x_coord},${y_coord}`;
       if (i+1 !== dp.length) {
@@ -361,7 +366,7 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio,
       )
     );
     xval = lb+sg_SCALE(part_val, i);
-    xval = Math.abs(xval) < 1 ? sg_FIXED(xval, 1) : sg_ROUND(xval);
+    xval = Number.isInteger(xval) ? xval : sg_FIXED(xval, 2);
     if (SEMI_LOG_MODE) {
       partitions.push(exponent(
         sg___vec(sg_RIGHT(x_coord, -10), sg_DOWN(ORIGIN_Y1, 5)),
@@ -394,9 +399,10 @@ function xaxis({leny, lenx, lb, ub, parts, label, grid, x_cratio,
   }
 
   if (SEMI_LOG_MODE && grid) {
+    let p0 = logvals[0];
     let i;
     for (i=0; i<logvals.length; i++) {
-      x_coord = sg_MIN(__gX(ORIGIN_X, logvals[i], x_cratio),
+      x_coord = sg_MIN(__gX(ORIGIN_X, logvals[i]-p0, x_cratio),
         START_X + LENGTH_X);
       partitions.push(sg_line(
         sg___vec(x_coord, sg_UP(START_Y, 5)),
@@ -604,14 +610,12 @@ function legend(fpoints, ID_LEGEND, START_X) {
 
 function init_plot(lb, ub, plot_len, parts,is_init=false,
                    seed_offset=0) {
-  INFO(`lb: ${lb}, ub: ${ub}`);
   lb = Math.ceil(lb);
   ub = Math.ceil(ub);
 
-  INFO(`lb: ${lb}, ub: ${ub}`);
   if (lb === ub) {
     return {
-      lb: lb-5, ub: ub+5,
+      lb: lb - 5, ub: ub + 5,
       offset: seed_offset, parts
     }
   }
@@ -625,6 +629,10 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
     l_parts = parts;
   } else if (lb === 0) {
     u_parts = parts;
+  } else if (lb > 0) {
+    u_parts = parts;
+  } else if (ub < 0) {
+    l_parts = parts;
   } else {
     let t_ub = Math.abs(ub), t_lb = Math.abs(lb);
     u_parts = Math.ceil(parts*(t_ub/(t_ub+t_lb)));
@@ -653,10 +661,10 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
    * grid interval to be used.
    */
   let partition = Math.abs(l_parts !== 0
-    ? new_lb/l_parts
-    : new_ub/u_parts
+    ? (new_lb-sg_MIN(0,new_ub))/l_parts
+    : (new_ub-sg_MAX(0,new_lb))/u_parts
   );
-  u_parts = Math.ceil(abs_ub/partition);
+  u_parts = Math.ceil(Math.abs(new_ub-sg_MAX(0,new_lb))/partition);
 
   /*
    * Do some adjustments to the upper/lower bounds given the
@@ -666,9 +674,10 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
    * size determined by l_parts*partition amount (since we
    * don't want to miss any necessary grid space)
    */
-  if (is_init) {
-    let lb_ru = sg_ROUND_UP(abs_lb, partition*l_parts);
-    let ub_ru = sg_ROUND_UP(abs_ub, partition*u_parts);
+  let lb_ru, ub_ru;
+  if (is_init && !SEMI_LOG_MODE) {
+    lb_ru = sg_ROUND_UP(abs_lb, partition*l_parts);
+    ub_ru = sg_ROUND_UP(abs_ub, partition*u_parts);
     new_lb -= (lb_ru - Math.abs(new_lb));
     new_ub += (ub_ru - Math.abs(new_ub));
   }
@@ -676,6 +685,7 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
   parts = l_parts+u_parts;
 
   INFO(`partition: ${partition}`);
+  INFO(`lb_ru: ${lb_ru}, ub_ru: ${ub_ru}`);
   INFO(`lparts: ${l_parts}, uparts: ${u_parts}`);
   INFO(`new_lb: ${new_lb}, new_ub: ${new_ub}`);
   INFO('=======AFTER========');
@@ -687,6 +697,7 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
 
   let i, val, offset;
   let px_per_partition = plot_len/parts;
+  offset = 0;
   for (i = 0; i <= parts; i++) {
     val = sg_FIXED(new_lb+sg_SCALE(partition, i), 2);
     DEBUG(`VALUE: ${val}`);
@@ -704,15 +715,17 @@ function init_plot(lb, ub, plot_len, parts,is_init=false,
 
         new_ub+=(p*partition);
         new_lb+=(p*partition);
-        INFO(`ub: ${new_ub}, lb: ${new_lb}`);
       }
 
-      return {
-        lb: new_lb, ub: new_ub,
-        offset: offset,
-        parts
-      }
+      break;
     }
+  }
+
+  INFO(`ub: ${new_ub}, lb: ${new_lb}, offset: ${offset}`);
+  return {
+    lb: new_lb, ub: new_ub,
+    offset: offset,
+    parts
   }
 }
 
@@ -776,7 +789,7 @@ function generate_logvals(xlb, xub, is_sparse=false) {
   return logvals;
 }
 
-function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
+function eval_log(funcs, xgrid, xlb, xub, xmax, ylb, yub,
                   cross_x_intercept=false,
                   fix_wrap_around=false) {
   let fpoints, points, logvals;
@@ -785,29 +798,28 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
   /*
    * xlb: lower bound log(x), xub: upper bound log(x)
    */
-  xlb = 0;
-  xub = sg_MIN(xgrid, MAX_LOG_XGRID);
+  xub = sg_MIN(xub, MAX_LOG_XGRID);
 
   const parser = math.parser();
   fpoints = funcs.map(f => {
     parser.evaluate(f);
 
     points = [];
-    let is_reached_0db = false;
-    let is_past_0db = false;
+    let is_gm = false, is_past_gm = false;
     let _xlb = xlb, _xub = xub;
     let beg_idx;
     let prev_yval;
     let num_iters = 0;
-    while ((!is_reached_0db || !is_past_0db) && num_iters < 5) {
+    console.log(_xub, xmax);
+    while ((!is_gm || !is_past_gm) && num_iters < 2 && _xub <= xmax) {
       beg_idx = points.length;
       xub = sg_MAX(xub, _xub);
 
       INFO('BEGIN_ITER:', _xlb, _xub);
       /* Only 1 iteration if not set */
       if (!cross_x_intercept) {
-        is_reached_0db = true;
-        is_past_0db = true;
+        is_gm = true;
+        is_past_gm = true;
       }
 
       logvals = generate_logvals(_xlb, _xub);
@@ -819,13 +831,13 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
           yub = sg_MAX(yval, yub);
           ylb = sg_MIN(yval, ylb);
 
-          if (yval < 0 && !is_reached_0db) {
-            is_reached_0db = true;
-          } else if (yval < 0 && is_reached_0db) {
-            is_past_0db = true;
+          if (yval < 0 && !is_gm) {
+            is_gm = true;
+          } else if (yval < 0 && is_gm) {
+            is_past_gm = true;
           }
 
-          INFO(xlog, yval, is_reached_0db, is_past_0db);
+          INFO(xlog, yval, is_gm, is_past_gm);
           points.push(sg___vec(xlog, yval));
         } else {
           points.push(sg___vec(xlog, NaN));
@@ -847,14 +859,14 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
       beg_y = Math.floor(points[beg_idx].y);
       end_y = Math.floor(points[points.length-1].y);
       if (points.length === beg_idx || end_y >= beg_y) {
-        is_reached_0db = true;
-        is_past_0db = true;
+        is_gm = true;
+        is_past_gm = true;
       }
 
       /* Reset */
       _xlb = Math.floor(_xub);
-      _xub = _xlb + 3; // try increase 3 decades
-      INFO('END_ITER:', is_reached_0db, is_past_0db);
+      _xub = _xlb + 1; // try increase 3 decades
+      INFO('END_ITER:', is_gm, is_past_gm);
 
       num_iters++;
     }
@@ -867,11 +879,11 @@ function eval_log(funcs, xgrid, xlb, xub, ylb, yub,
     xub, xlb, yub, ylb};
 }
 
-function eval(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
+function eval(funcs, xgrid, xlb, xub, xmax, ylb, yub, is_init=false) {
   let sample_amt, fpoints;
 
   if (SEMI_LOG_MODE) {
-    return eval_log(funcs, xgrid, xlb, xub,
+    return eval_log(funcs, xgrid, xlb, xub, xmax,
       ylb, yub, IS_CROSS_X_AXIS);
   }
 
@@ -919,7 +931,7 @@ function eval(funcs, xgrid, xlb, xub, ylb, yub, is_init=false) {
     xub, xlb, yub, ylb};
 }
 
-function render(config, changeSet, funcs1, funcs2, xlb, xub,
+function render(config, changeSet, funcs1, funcs2, xlb, xub, xmax,
                 ylb1, yub1, ylb2, yub2,
                 xgrid, ygrid1, ygrid2,
                 sample_amt1, sample_amt2,
@@ -965,7 +977,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
     ({
       fpoints: fpoints1, sample_amt: sample_amt1,
       xlb, xub, ylb: ylb1, yub: yub1
-    } = eval(funcs1, xgrid, xlb, xub, ylb1, yub1,
+    } = eval(funcs1, xgrid, xlb, xub, xmax, ylb1, yub1,
       !sg_DEFINED(changeSet)));
   } else {
     fpoints1 = [];
@@ -975,7 +987,7 @@ function render(config, changeSet, funcs1, funcs2, xlb, xub,
     ({
       fpoints: fpoints2, sample_amt: sample_amt2,
       xlb, xub, ylb: ylb2, yub: yub2
-    } = eval(funcs2, xgrid, xlb, xub, ylb2, yub2,
+    } = eval(funcs2, xgrid, xlb, xub, xmax, ylb2, yub2,
       !sg_DEFINED(changeSet)));
   } else {
     fpoints2 = [];
@@ -1243,6 +1255,7 @@ const SVGraph_initializer = (function()
     let {left_y_axis, right_y_axis, x_axis} = config;
 
     let xlb=x_axis.lb, xub=x_axis.ub;
+    let xmax = x_axis.max || Infinity;
     let ylb1=left_y_axis.lb, yub1=left_y_axis.ub;
     let ylb2=right_y_axis.lb, yub2=right_y_axis.ub;
     let ygrid1=left_y_axis.num_grids, ygrid2=right_y_axis.num_grids;
@@ -1258,7 +1271,7 @@ const SVGraph_initializer = (function()
       sample_amt1, sample_amt2, fpoints1, fpoints2
     } = render.bind(this)(config, undefined,
       [], [],
-      xlb, xub, ylb1, yub1, ylb2, yub2,
+      xlb, xub, xmax, ylb1, yub1, ylb2, yub2,
       xgrid, ygrid1, ygrid2,
       sample_amt1, sample_amt2,
       fpoints1, fpoints2));
@@ -1324,9 +1337,18 @@ const SVGraph_initializer = (function()
            * The *9 is because there are 9 values stored per
            * grid interval. So the formula comes down to:
            * idx = (# spaces in interval)*(# intervals) + (offset spaces)
+           *
+           * When xlb is not 0, we shift _base left
+           * by floor(xlb) so _base represents the 0th
+           * index of points array.
+           *
+           * --------------!!!!WARNING!!!!!--------------
+           * This assumes xlb for LOG plots is ALWAYS an
+           * integer!
            */
-          DEBUG('Index to add:', _add);
-          idx = logvals.length * _base + _add;
+          _base -= Math.floor(xlb);
+          idx = (logvals.length * _base) + _add;
+          DEBUG('Index to add:', idx, _add, _base);
         }
 
         if (sg_FIXED(idx%1, 1) === '0.0' && SHOW_TRACER_GUIDE) {
@@ -1350,10 +1372,14 @@ const SVGraph_initializer = (function()
            * ID convention.
            */
           fpoints.forEach(({points}, i) => {
+            let p0 = points[0];
             let vec = points[idx];
             if (sg_DEFINED(vec)) {
               __Tracer.bind(_this)(`tracer-${id}-${i}`,
-                vec.x, vec.y,
+                SEMI_LOG_MODE
+                  ? `(10e+${sg_FIXED(vec.x, 2)}, ${sg_FIXED(vec.y, 2)})`
+                  : `(${sg_FIXED(vec.x, 2)}, ${sg_FIXED(vec.y, 2)})`,
+                vec.x-p0.x, vec.y,
                 sg_RATIO(_this.LENGTH_X, xub - xlb),
                 sg_RATIO(_this.LENGTH_Y, yub - ylb),
                 ylb
@@ -1502,7 +1528,7 @@ const SVGraph_initializer = (function()
             sample_amt1, sample_amt2, fpoints1, fpoints2
           } = render.bind(_this)(config, c,
             axis1_funcs, axis2_funcs,
-            xlb, xub, ylb1, yub1, ylb2, yub2,
+            xlb, xub, xmax, ylb1, yub1, ylb2, yub2,
             xgrid, ygrid1, ygrid2,
             sample_amt1, sample_amt2,
             fpoints1, fpoints2)
@@ -1530,7 +1556,7 @@ const SVGraph_initializer = (function()
           sample_amt1, sample_amt2, fpoints1, fpoints2
         } = render.bind(this._this)(config, undefined,
           left_funcs, right_funcs,
-          xlb, xub, ylb1, yub1, ylb2, yub2,
+          xlb, xub, xmax, ylb1, yub1, ylb2, yub2,
           xgrid, ygrid1, ygrid2,
           sample_amt1, sample_amt2,
           fpoints1, fpoints2, true));
@@ -1548,7 +1574,7 @@ const SVGraph_initializer = (function()
           sample_amt1, sample_amt2, fpoints1, fpoints2
         } = render.bind(this._this)(config, undefined,
           axis1_funcs, axis2_funcs,
-          xlb, xub, ylb1, yub1, ylb2, yub2,
+          xlb, xub, xmax, ylb1, yub1, ylb2, yub2,
           xgrid, ygrid1, ygrid2,
           sample_amt1, sample_amt2,
           fpoints1, fpoints2, true));
