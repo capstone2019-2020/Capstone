@@ -43,14 +43,15 @@ function onToggleSvgCircuit(ele) {
 }
 
 function initSvgraph() {
-  let initializer = new SVGraph_initializer('svg-graph');
-  let initate = new SVGraph_initializer('loop-graph');
-  initializer.onXChange(xval => onSvgraphXChange('w', xval));
-  initate.onXChange(xval => onSvgraphXChange('w', xval));
+  console.log('initSVGraph');
+  let svgraph_initializer = new SVGraph_initializer('svg-graph');
+  let loopgraph_initializer = new SVGraph_initializer('loop-graph');
+  svgraph_initializer.onXChange(xval => onSvgraphXChange('w', xval));
+  loopgraph_initializer.onXChange(xval => onSvgraphXChange('w', xval));
 
-  svgraph = initializer.init({
+  loopgraph = loopgraph_initializer.init({
     "x_axis": {
-      "label": "frequency (Hz)",
+      "label": "frequency (rad/s)",
       "scale": "log-log",
       "fixed": true,
       "lb": 0,
@@ -58,7 +59,7 @@ function initSvgraph() {
       "num_grids": 10
     },
     "left_y_axis": {
-      "label": "magnitude (dB)",
+      "label": "loop gain - magnitude (dB)",
       "scale": "linear",
       "fixed": true,
       "lb": -60,
@@ -66,7 +67,7 @@ function initSvgraph() {
       "num_grids": 9
     },
     "right_y_axis": {
-      "label": "phase (degrees)",
+      "label": "loop gain - phase (deg)",
       "scale": "linear",
       "fixed": true,
       "lb": -90,
@@ -75,25 +76,26 @@ function initSvgraph() {
     }
   });
 
-  loopgraph = initate.init({
+  svgraph = svgraph_initializer.init({
     "x_axis": {
-      "label": "frequency (Hz)",
+      "label": "frequency (rad/s)",
       "scale": "log-log",
       "fixed": true,
-      "lb": 0,
-      "ub": 10,
+      "max": 7,
+      "lb": 3,
+      "ub": 7,
       "num_grids": 10
     },
     "left_y_axis": {
-      "label": "magnitude (dB)",
+      "label": "transfer function - magnitude (dB)",
       "scale": "linear",
       "fixed": true,
-      "lb": -60,
-      "ub": 30,
+      "lb": -10,
+      "ub": 10,
       "num_grids": 9
     },
     "right_y_axis": {
-      "label": "phase (degrees)",
+      "label": "transfer function - phase (deg)",
       "scale": "linear",
       "fixed": true,
       "lb": -90,
@@ -104,7 +106,7 @@ function initSvgraph() {
 
 function onSvgraphXChange(varName, replaceWith) {
   const {Expression} = rwalgebra;
-  const replace = (eles, eqnName, dataName) => {
+  const replace = (eles, eqnName, dataNames) => {
     let json, expr, evaluated;
     eles.forEach(ele => {
       json = ele.json().data;
@@ -127,12 +129,13 @@ function onSvgraphXChange(varName, replaceWith) {
         return;
       }
 
-      ele.data({[dataName]: str});
+      dataNames.forEach(id =>
+        ele.data({[id]: str}));
     });
   };
 
-  replace(cy.nodes(), 'eqn', 'value');
-  replace(cy.edges(), 'eqn', 'edgeWeight');
+  replace(cy.nodes(), 'eqn', ['value']);
+  replace(cy.edges(), 'eqn', ['edgeWeight', 'name']);
 }
 
 /**
@@ -295,7 +298,14 @@ async function generateSFG() {
     let clicked_edge = e.target;
     const weight = clicked_edge.data().edgeWeight;
     resetEdgeColors();
-    document.getElementById('edge-weight').innerText = `Weight: ${math.simplify(weight)}`;
+
+    let weightText;
+    try{
+      weightText = math.simplify(weight);
+    } catch (err) {
+      weightText = weight;
+    }
+    document.getElementById('edge-weight').innerText = `Weight: ${weightText}`;
     clicked_edge.style('color', 'tomato');
   });
   // console.log(loopgraph);

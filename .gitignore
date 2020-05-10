@@ -5,3 +5,4 @@ node_modules/
 test/m5/output.txt
 output.txt
 *-min.js
+config.js
