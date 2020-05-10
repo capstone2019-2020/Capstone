@@ -1,0 +1,9 @@
+[submodule "src/sfgjs"]
+	path = src/sfgjs
+	url = https://github.com/capstone2019-2020/sfgjs.git
+[submodule "src/circuitjs"]
+	path = src/circuitjs
+	url = https://github.com/capstone2019-2020/circuitjs.git
+[submodule "src/rwalgebrajs"]
+	path = src/rwalgebrajs
+	url = https://github.com/capstone2019-2020/rwalgebrajs.git
