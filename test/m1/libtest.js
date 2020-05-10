@@ -1,5 +1,5 @@
 const suite = require('./suite');
-const m1 = require('../../src/nodeJS/m1');
+const m1 = require('../../src/sfgjs/m1');
 const {equations} = require('./tests');
 const algebra = require('algebra.js');
 

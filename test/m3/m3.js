@@ -21,7 +21,7 @@ const algebra = require('algebra.js');
  * Output: Circuit data structures obtained from net list
  */
 describe('nlConsume()', function() {
-  const {nlConsume} = require('../../src/nodeJS/netlist');
+  const {nlConsume} = require('../../src/circuitjs/netlist');
 
   const test_netlist = nl => {
     let circuit;
@@ -48,7 +48,7 @@ describe('nlConsume()', function() {
  * circuit.js -> nodalAnalysis()
  */
 describe('nodalAnalysis()', function () {
-  const circuit = require('../../src/nodeJS/circuit');
+  const circuit = require('../../src/circuitjs/circuit');
   console.log(circuit);
 
   const test_nodalAnalysis = (expected) => {

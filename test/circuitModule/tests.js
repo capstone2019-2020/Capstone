@@ -11,10 +11,10 @@
    * }
    */
 
-  const {Expression, Equation} = require('../../src/RWalgebra/RWalgebra.js');
+  const {Expression, Equation} = require('../../src/rwalgebrajs/RWalgebra.js');
   const assert = require('assert');
-  const nl = require('../../src/nodeJS/netlist.js');
-  const circuitjs = require('../../src/nodeJS/circuit.js');
+  const nl = require('../../src/circuitjs/netlist.js');
+  const circuitjs = require('../../src/circuitjs/circuit.js');
   const createCircuit = circuitjs.createCircuit;
 
   const debug_log = (...params) => {

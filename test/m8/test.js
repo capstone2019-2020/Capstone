@@ -1,5 +1,5 @@
-const nl = require('../../src/nodeJS/netlist.js');
-const {Expression, Equation} = require('../../src/RWalgebra/RWalgebra.js');
+const nl = require('../../src/circuitjs/netlist.js');
+const {Expression, Equation} = require('../../src/rwalgebrajs/RWalgebra.js');
 
 const netlist = [
   'V1 1 0 24',
