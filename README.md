@@ -1,6 +1,8 @@
 # Project Description
 The objective of this project is to help analog circuit designers analyze feedback characteristics of linear circuits, therefore, gain insights into the circuits' stability. The approach taken to fulfill this objective involves applying DPI (Driving Point Impedance) analysis to the input circuit, generating the SFG (Signal Flow Graph) based on the series of equations resulted from the DPI analysis and visualizing the transfer function and the loop gain in the form of bode magnitude/phase plot.
 
+Visit [here][http://capstone-45-sfg.s3-website-us-east-1.amazonaws.com/] to test out the final version of this application. Note that you will be required to give an input file following the format described in a section below.
+
 ### Dependencies
 * [algebra.js](https://algebra.js.org/)
 * [mathjs](https://mathjs.org/)
